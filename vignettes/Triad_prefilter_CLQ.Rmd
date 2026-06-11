@@ -1,0 +1,119 @@
+---
+title: "Prefiltering cell type triads using CLQ permutation test"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Triad_prefilter_CLQ}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r knitr settings, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE, # Suppresses package startup messages
+  warning = FALSE,  # Suppresses warning messages
+  dpi = 400,
+  out.width='100%', 
+  fig.align = "center")
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+```{r setup}
+library(SCOPE.CTN)
+library(tidyverse)
+library(cowplot)
+```
+SCOPE identifies niches driven by cell-type triads. However, as the number of cell types grows, the combinations of three cell types increase exponentially. To reduce the computational burden, we utilize a colocation quotient (CLQ) permutation test to prioritize cell type triads that exhibit significant spatial proximity. 
+
+```{r load packages, fig.width=4, fig.height=2.5, out.width="50%"}
+data.frame(n_celltype = 3:50, n_combn = choose(3:50, 3)) %>%
+  ggplot(aes(x = n_celltype, y = n_combn)) +
+  geom_point(size = 1) +
+  theme_cowplot() + 
+  labs(x = "Number of Cell Types", y = "Number of triads")
+```
+
+Following [Bouchard et al.](https://doi.org/10.1038/s41467-024-55129-6), the colocalization of a pair of cell types $a$ and $b$ in tissue section $l$ can be evaluated with metric 
+
+$$CLQ_{b\rightarrow a}^{(l)} = \begin{cases}
+\frac{C_{b\rightarrow a}^{(l)} / N_a^{(l)}}{N_b^{(l)} / (N^{(l)} - 1)} &
+N_a^{(l)} > 5 \mbox{ and} \ N_b^{(l)} > 5 \\
+0, & \text{otherwise}\end{cases},$$
+
+where $CLQ_{b\rightarrow a}^{(l)}$ is the number of cells of cell type $b$ within the neighborhood of cell type $a$; $N_a^{(l)}$, $N_b^{(l)}$, and $N^{(l)}$ are the number of cells for cell type $a$, $b$ and the total number of cells in tissue section $l$, respectively. 
+
+Here we use the 45-sample pulmonary fibrosis (PF) Xenium dataset from [Vannan et al. *Nat Genet* 2025](https://www.nature.com/articles/s41588-025-02080-x) to demonstrate how to perform CLQ permutation test. This dataset contains 47 cell types, which can form 16,215 potential triads.
+
+For each tissue section, we first calculate an observed CLQ value $CLQ_{b\rightarrow a}^{(l),obs}$ using the true cell type labels. Please refer to the [Detecting TLS-like CTNs in PF Xenium data](PF_Xenium.html) to see how `PF_Xenium_dat_in` and `PF_Xenium_cell_neighbor_results` were obtained.
+
+```{r Load input data}
+# Load data
+data("PF_Xenium_dat_in")
+data("PF_Xenium_cell_neighbor_results")
+
+# Neighborhood cell counts
+cell_neighbor_counts <- lapply(
+  cell_neighbor_results_maxdist, "[[", "count.df") %>%
+  do.call("rbind", .)
+# Nearest neighbor cell ids
+cell_neighbor_ids <- lapply(
+  cell_neighbor_results_maxdist, "[[", "count.df") %>%
+  do.call("rbind", .)
+```
+
+```{r observed CLQ, eval = FALSE}
+CLQ_obs <- compute_CLQ_observed(
+  cell_neighbor_counts = cell_neighbor_counts,
+  dat_in = dat_in)
+
+head(CLQ_obs)
+```
+
+We then randomly shuffle the cell type labels for 500 times to create a null distribution of CLQs assuming that the cell types are distributed randomly. $CLQ_{b\rightarrow a}^{(l),k},k = 1,2,…,500$. 
+
+```{r permutated CLQ, eval = FALSE}
+CLQ_perm <- compute_CLQ_permutated(
+  cell_neighbor_ids = cell_neighbor_ids, dat_in = dat_in,
+  iter.num = 500, seed = 42, n_cores = 5)
+```
+
+The permutation test p-value is defined as 
+
+$$p_{b\rightarrow a}^{(l)} = \sum_{k=1}^{500}{I\left(CLQ_{b\rightarrow a}^{(l), k} > CLQ_{b\rightarrow a}^{(l), obs}\right)},$$
+
+where $I$ is the indicator function. 
+
+```{r compute p values, eval = FALSE}
+CLQ_perm_pval <- CLQ_permutation_test(CLQ_obs = CLQ_obs, CLQ_perm = CLQ_perm)
+```
+
+The function returns both nominal and Benjamini-Hochberg (BH) adjusted p-values. We prioritize cell type triads all constituent pairs exhibit significant CLQs (adjusted p-value < 0.05) in at least 10 tissue sections.
+
+```{r filter triads, eval = FALSE}
+## Exclude cell types with too few cells
+celltype_to_exclude <- table(dat_in$Celltype)[table(dat_in$Celltype) < 500]
+
+## All cell type combinations
+celltype_combs <- combn(setdiff(levels(dat_in$Celltype), celltype_to_exclude), 3) %>%
+  t() %>% as.data.frame()
+celltype_combs_signif <- celltype_combs %>%
+  left_join(CLQ_perm_pval, by = c("V1" = "Celltype", "V2" = "Celltype_neighbor")) %>%
+  left_join(CLQ_perm_pval, by = c("V1" = "Celltype", "V3" = "Celltype_neighbor", "ImageID"),
+            suffix = c(".1", "")) %>%
+  left_join(CLQ_perm_pval, by = c("V2" = "Celltype", "V3" = "Celltype_neighbor", "ImageID"),
+            suffix = c(".2", ".3")) 
+
+combination_table_filtered = celltype_combs_signif %>%
+  filter(p_perm.adj.1 < 0.05 & p_perm.adj.2 < 0.05 & p_perm.adj.3 < 0.05) %>%
+  group_by(V1, V2, V3) %>%
+  summarise(n = n()) %>%
+  filter(n >= 10) %>%
+  select(-n)
+
+print("Number of cell type triads: ", nrow(combination_table_filtered))
+```
+
+```{r session info}
+sessionInfo()
+```

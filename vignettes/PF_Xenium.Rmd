@@ -1,0 +1,398 @@
+---
+title: "Detecting TLS-like CTNs in PF Xenium data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{PF_Xenium}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This tutorial shows an example of detecting the tertiary lymphoid structure (TLS)-like niches characterized by the $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ triad in the pulmonary fibrosis (PF) Xenium data using SCOPE. The dataset comes from [Vannan et al. *Nat Genet* 2025](https://www.nature.com/articles/s41588-025-02080-x) and is composed of 35 PF and 10 unaffected samples.
+
+```{r knitr setting, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE, # Suppresses package startup messages
+  warning = FALSE,  # Suppresses warning messages
+  dpi = 400,
+  out.width='100%', 
+  fig.align = "center")
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+First, we load the packages that will be used for the analysis and visualization.
+
+```{r Load packages}
+library(SCOPE.CTN)
+library(Seurat)
+library(data.table)
+library(tidyverse)
+library(ggtext)
+library(ggrepel)
+library(cowplot)
+library(RColorBrewer)
+library(aricode); library(caret) # for clustering evaluation
+
+dataset_name <- "PF_Xenium"
+data_path <- "data/"
+source(paste0("palettes/", dataset_name, "_celltype_palette.R")) # cell type color palette
+```
+
+```{r Load input data, include = FALSE}
+driver_celltypes <- c("B cells", "CD4+ T-cells", "CD8+ T-cells")
+load(paste0(data_path, dataset_name, "_dat_in.RData"))
+load(paste0(data_path, dataset_name, "_cell_neighbor_results.RData"))
+load(paste0(data_path, dataset_name, "_B_CD4T_CD8T.RData"))
+slide_list <- unique(PF_Xenium_dat_in$ImageID)
+```
+
+## 1. Preparing input data
+
+The `rds` file containing a Seurat object of this dataset can be downloaded from Gene Expression Omnibus (GEO) under accesssion number [GSE250346](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE250346). 
+
+```{r read data, eval=FALSE}
+PF_Xenium_obj <- readRDS(paste0(data_path, "GSE250346_Seurat_GSE250346_CORRECTED_SEE_RDS_README_082024.rds"))
+clinical_data <- distinct(PF_Xenium_obj@meta.data, sample, sample_affect)
+save(clinical_data, file = paste0(data_path, dataset_name, "_clinical_data.RData")))
+```
+
+We will also use the `cells_partitioned_by_annotation.csv` file in `GSE250346_HE_annotations.tar.gz` which contains annotations of PF histopathological features (including TLSs). The samples in this file need to renamed following [the code from the original paper](https://github.com/Banovich-Lab/Spatial_PF/blob/828db997a122531e6b907b792f58ae1bbd997662/figures.R#L260):
+
+```{r read annotation}
+# load(paste0(data_path, dataset_name, "_clinical_data.RData"))
+# PF_Xenium_annot <- read.csv(paste0(data_path, "cells_partitioned_by_annotation.csv")) %>%
+#   ## keeping only the relevant columns to reduce data size
+#   select(CellID = cell_id, ImageID = sample, Annotation_Type, annotation_type_instance) %>%
+#   mutate(patient = str_extract(ImageID, "(THD|TILD|VUHD|VUILD)[0-9]+")) %>%
+#   left_join(clinical_data[, c("patient", "sample_affect")], by = "patient") %>%
+#   ## Change sample name based on the code from the original paper (
+#   ## Initial rename
+#   mutate(ImageID_new = case_when(
+#     sample_affect == "Less Affected" ~ paste0(patient, "LA"),
+#     sample_affect == "More Affected"  ~ paste0(patient, "MA"),
+#     TRUE ~ ImageID)) %>%
+#   ## Fix additional names
+#   mutate(ImageID_new = case_when(
+#     ImageID == "TILD117MF" ~ "TILD117MA1",
+#     ImageID == "TILD117MFB" ~ "TILD117MA2",
+#     ImageID == "VUILD104LF" ~ "VUILD104MA1",
+#     ImageID == "VUILD104MF" ~ "VUILD104MA2",
+#     ImageID == "VUILD105LF" ~ "VUILD105MA1",
+#     ImageID == "VUILD105MF" ~ "VUILD105MA2",
+#     ImageID == "VUILD48LF" ~ "VUILD48LA1",
+#     ImageID == "VUILD48MF" ~ "VUILD48LA2",
+#     str_detect(ImageID_new, 'LF$') ~ str_replace(ImageID_new, "LF$", "LA"),
+#     str_detect(ImageID_new, 'MF$') ~ str_replace(ImageID_new, "MF$", "MA"),
+#     TRUE ~ ImageID_new)) %>%
+#   mutate(CellID = paste(ImageID_new, CellID, sep = "_")) %>%
+#   select(-ImageID) %>%
+#   rename(ImageID = ImageID_new)
+#
+# save(PF_Xenium_annot, file = paste0(data_path, dataset_name, "_annotations.RData"))
+load(paste0(data_path, dataset_name, "_annotations.RData"))
+```
+
+The input data frame for SCOPE should contain the following columns:
+
+* `CellID`: cell id
+* `ImageID`: sample id
+* `X`: X coordinate
+* `Y`: Y coordinate
+* `Celltype`: cell type labels
+
+```{r Prepare input data, eval = FALSE}
+PF_Xenium_dat_in <- PF_Xenium_obj@meta.data %>%
+  select(CellID = full_cell_id, ImageID = sample, 
+         X = x_centroid, Y = y_centroid, Celltype = final_CT)
+## save(PF_Xenium_dat_in, file = paste0(data_path, dataset_name, "_dat_in.RData"))
+```
+
+
+Below are the four samples containing TLSs:
+
+```{r Visualize celltype, fig.width=11, fig.height=5, fig.show = "hold"}
+TLS_img_list <- unique(subset(PF_Xenium_annot, Annotation_Type == "TLS")$ImageID)
+
+## Images containing TLSs, colored by cell type
+PF_Xenium_dat_in %>%
+  filter(ImageID %in% c(TLS_img_list)) %>%
+  ggplot(aes(x = X, y = Y, color = Celltype)) +
+  geom_point(shape = 16, size= 0.1) +
+  scale_color_manual(values = PF_Xenium_celltype_palette, 
+                     breaks = names(PF_Xenium_celltype_palette)) +
+  guides(color = guide_legend(override.aes = list(size = 3))) +
+  facet_wrap(~ImageID, scales = "free", nrow = 1) +
+  theme_void(base_size = 14) +
+  coord_cartesian(expand = FALSE) +
+  theme(legend.key.size = unit(2.5, "mm"),
+        panel.background = element_blank(),
+        aspect.ratio = 1,
+        legend.key.spacing.y = unit(0.5, "mm"),
+        legend.position = "bottom")
+
+## Images containing TLSs, colored by annotations
+PF_Xenium_dat_in %>%
+  left_join(PF_Xenium_annot[, c("CellID", "Annotation_Type")], by = "CellID") %>%
+  filter(ImageID %in% c(TLS_img_list)) %>%
+  ggplot(aes(x = X, y = Y, color = Annotation_Type)) +
+  geom_point(shape = 16, size= 0.1) +
+  scale_color_manual(breaks = names(annotation_palette), na.value = "grey90",
+                     values = annotation_palette, name = NULL) +
+  guides(color = guide_legend(override.aes = list(size = 3))) +
+  facet_wrap(~ImageID, scales = "free", nrow = 1) +
+  theme_void(base_size = 14) +
+  coord_cartesian(expand = FALSE) +
+  theme(legend.key.size = unit(2.5, "mm"),
+        panel.background = element_blank(),
+        aspect.ratio = 1,
+        legend.key.spacing.y = unit(0.5, "mm"),
+        legend.position = "bottom")
+```
+
+## 2. Create neighborhood cell proportion matrix
+
+Next, we use the k-nearest neighbors algorithm to define the spatial neighborhood and compute the neighborhood cell type composition matrix. The default number of nearest clusters $k$ is 20, however we can increase $k$ for larger tissues. Since this dataset contains 3-5mm lung tissue cores, here we set $k=50$.
+
+In addition, we enforce a distance boundary for the nearest neighbors and exclude the cells falling outside this radius. The boundary is initially defined as the 99th percentile of all distances from focal cells to their nearest neighbors. If it falls outside a predefined range, we reset it to either the minimum (`min.radius`) or maximum threshold (`max.radius`).
+
+
+```{r Compute neighborhood cell type proportion, eval=FALSE}
+slide_list <- unique(PF_Xenium_dat_in$ImageID)
+
+cell_neighbor_results_maxdist <- pbmcapply::pbmclapply(
+  slide_list, function(s) {
+    Build_cell_neighbor_maxdist(
+      dat_slide=subset(PF_Xenium_dat_in, ImageID == s),
+      knn_num = 50, cell_types_available = unique(PF_Xenium_dat_in$Celltype),
+      min.radius = 100,       # lower limit for the boundary
+      max.radius = 500,       # upper limit for the boundary
+      min.n.neighbors = 10,   # minimum no. of neighbors,
+      return.nn.ids = TRUE,   # Whether to return nearest neighbor IDs
+      prob_list = seq(0, 1, 0.1))},
+  mc.cores = 4) # set mc.cores=1 on Windows machine
+save(cell_neighbor_results_maxdist,
+      file = paste0(data_path, dataset_name, "_cell_neighbor_results.RData"))
+```
+
+
+We can examine the distribution of the 99th percentile of all distance to the nearest neighbors to select the threshold parameters min.radius and max.radius accordingly. Here we set `max.radius` and `min.radius` to their default values (500 and 100 respectively).
+
+```{r Examine distance distribution, out.width='50%', fig.width=3.5, fig.height=2.2}
+## 99th percentile of the distance to nearest neighbors
+dist_99th <- sapply(cell_neighbor_results_maxdist, "[[", "dist.quantiles") %>%
+  `colnames<-`(slide_list) %>%
+  as.data.frame() %>% rownames_to_column("perc") %>%
+  mutate(perc = as.numeric(str_remove(perc, "%"))) %>%
+  pivot_longer(2:ncol(.), names_to = "ImageID", values_to = "value") %>%
+  filter(perc == 99)
+
+## Distribution of 99th percentile
+dist_99th %>%
+  ggplot(aes(x = value)) +
+  geom_histogram(color = "white", fill = "skyblue", bins = 20) +
+  geom_boxplot() +
+  geom_text(data = subset(dist_99th, value > 150), 
+            aes(label = ImageID, y = 2), 
+            hjust = 0, size = 3.5, angle = 90) +
+  labs(y = "99th percentile of Dist.\nto Nearest Neighbors", x = NULL) +
+  theme_cowplot(font_size = 12) +
+  theme(axis.text.x = element_text(hjust = 1, angle = 45))
+```
+
+We can see that the two outlier samples represent sparsely populated regions of the tissue.
+
+```{r Sparse samples, fig.width=9, fig.height= 4, fig.show = "hold"}
+img_outliers <- arrange(subset(dist_99th, value > 150), value)$ImageID
+PF_Xenium_dat_in %>%
+  filter(ImageID %in% img_outliers) %>%
+  ggplot(aes(x = X, y = Y, color = Celltype)) +
+  geom_point(shape = 16, size= 0.1) +
+  scale_color_manual(values = PF_Xenium_celltype_palette, 
+                     breaks = names(PF_Xenium_celltype_palette),
+                     labels = rename_celltype, name = NULL) +
+  guides(color = guide_legend(override.aes = list(size = 3), ncol = 5)) +
+  facet_wrap(~ factor(ImageID, img_outliers), scales = "free") +
+  theme_void(base_size = 14) +
+  coord_cartesian(expand = FALSE) +
+  theme(legend.key.size = unit(2.5, "mm"),
+        panel.background = element_blank(),
+        aspect.ratio = 1,
+        legend.key.spacing.y = unit(0.2, "mm"),
+        legend.position = "bottom")
+```
+
+```{r Combine proportion matrix}
+# Combine neighborhood proportion table
+cell_neighbor_table_maxdist <- lapply(
+  cell_neighbor_results_maxdist, "[[", "prop.df") %>%
+  do.call("rbind", .)
+```
+
+For cells retaining fewer than `min.n.neighbors` neighbors within the distance boundary, the neighborhood cell-type proportions will all be set to `NaN` and they will be excluded from subsequent niche clustering. Here we set `min.n.neighbors` to 10.
+
+```{r Examine loose cells, fig.width=9, fig.height=3.5}
+cells_to_exclude = apply(cell_neighbor_table_maxdist, 1, function(x) {any(is.na(x))}) %>%
+  as.data.frame() %>%
+  `colnames<-`("is_na") %>%
+  rownames_to_column("CellID") %>%
+  left_join(PF_Xenium_dat_in[, c("CellID", "X", "Y", "ImageID")], by = "CellID")
+
+# Number of cells to exclude
+table(cells_to_exclude$is_na)
+
+# Cells to be removed from the two sparse samples
+cells_to_exclude %>%
+  filter(ImageID %in% img_outliers) %>%
+  ggplot(aes(x = X, y = Y, color = is_na, size = is_na)) +
+  geom_point(shape = 16) +
+  scale_color_manual(values = c("brown2", "grey90"), 
+                     breaks = c(TRUE, FALSE), name = "Cells To\nExclude") +
+  scale_size_manual(values = c(0.1, 1)) +
+  guides(color = guide_legend(override.aes = list(size = 3), ncol = 1), size = "none") +
+  facet_wrap(~factor(ImageID, img_outliers), scales = "free") +
+  theme_void() +
+  coord_cartesian(expand = FALSE) +
+  theme(legend.key.size = unit(2.5, "mm"),
+        aspect.ratio = 1,
+        panel.background = element_blank())
+
+# Cells to be removed from the samples containing TLSs
+cells_to_exclude %>%
+  filter(ImageID %in% TLS_img_list) %>%
+  ggplot(aes(x = X, y = Y, color = is_na, size = is_na)) +
+  geom_point(shape = 16) +
+  scale_color_manual(values = c("brown2", "grey90"), 
+                     breaks = c(TRUE, FALSE), name = "Cells To\nExclude") +
+  scale_size_manual(values = c(0.1, 0.5)) +
+  guides(color = guide_legend(override.aes = list(size = 3), ncol = 1), size = "none") +
+  facet_wrap(~ImageID, scales = "free", nrow = 1) +
+  theme_void() +
+  coord_cartesian(expand = FALSE) +
+  theme(legend.key.size = unit(2.5, "mm"),
+        aspect.ratio = 1,
+        panel.background = element_blank())
+```
+
+## 3. Cell type triad niche (CTN) detection using SCOPE
+
+Next, we apply SCOPE to the $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ triad using default configurations for the following parameters:
+
+* `min.prop`: The minimum neighborhood cell-type proportion threshold. Proportions below this value are set to 0 (default: 0.3).
+* `mgcv_df`: The dimension of the basis used for thin-plate regression spline smoothing of the driver cell-type proportions (default: 15; see `mgcv::s()` for details).
+
+We set the number of clusters `clusternum` at 3 to separate the B cell and T cell zones.
+
+```{r Run SCOPE, eval = FALSE}
+driver_celltypes <- c("B cells", "CD4+ T-cells", "CD8+ T-cells")
+
+CTN_df <- run_SCOPE(
+  combination_table = as.data.frame(matrix(driver_celltypes, nrow = 1)),
+  cell_neighbor_table = cell_neighbor_table_maxdist,
+  dat_in = PF_Xenium_dat_in,
+  save_results = FALSE, 
+  clusternum = 3, min.prop = 0.3,
+  linear = FALSE, mgcv_df = 15, iter.max = 100)
+save(CTN_df, file = paste0(data_path, dataset_name, "_B_CD4T_CD8T.RData"))
+```
+
+Here we can see that the $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ CTNs closely aligns with the lymphocyte aggregates in the CRC samples, where CTN1 resembles the B cell zone and CTN2 resembles the surrounding T cell zone.
+
+```{r Cell count}
+# Number of cells per CTN
+table(CTN_df$label)
+```
+
+```{r Visualize results, fig.width=11, fig.height=3, fig.show='hold', class.source = "fold-hide"}
+# CTN label with colored dots separating the cell types
+CTN_label <- color_CTN_names(
+  paste(driver_celltypes, collapse = "_"), PF_Xenium_celltype_palette) 
+
+# Visualizing B cell/CD4+ T cell/CD8+ T cell CTN
+CTN_df %>%
+  left_join(PF_Xenium_dat_in, by = "CellID") %>%
+  filter(ImageID %in% TLS_img_list) %>%
+  ggplot(aes(x = X, y = Y, color = label)) +
+  geom_point(shape = 16, size= 0.1) +
+  guides(color = guide_legend(override.aes = list(size = 3), ncol = 1)) +
+  facet_wrap(~ImageID, scales = "free", nrow = 1) +
+  theme_void(base_size = 14) +
+  labs(title = CTN_label) +
+  scale_color_manual(values = c("CTN1" = "#E69F00", "CTN2" = "#56B4E9", 
+                                "Unassigned" = "grey90"), name = NULL) +
+  coord_cartesian(expand = FALSE) +
+  theme(legend.key.size = unit(2.5, "mm"),
+        plot.title = element_markdown(hjust = 0.5),
+        panel.background = element_blank(),
+        aspect.ratio = 1)
+
+# Show driver cell types only
+PF_Xenium_dat_in %>%
+  filter(ImageID %in% TLS_img_list) %>%
+  filter(CellID %in% CTN_df$CellID) %>% # dropping cells with few neighbors
+  mutate(Celltype = ifelse(Celltype %in% driver_celltypes, as.character(Celltype), "Other")) %>%
+  ggplot(aes(x = X, y = Y, color = Celltype)) +
+  geom_point(shape = 16, size= 0.1) +
+  scale_color_manual(values = c(PF_Xenium_celltype_palette, "Other" = "grey90")) +
+  guides(color = guide_legend(override.aes = list(size = 3), ncol = 1)) +
+  facet_wrap(~ImageID, scales = "free", nrow = 1) +
+  theme_void(base_size = 14) +
+  labs(title = "Driver cell type triad") +
+  coord_cartesian(expand = FALSE) +
+  theme(legend.key.size = unit(2.5, "mm"),
+        plot.title = element_text(hjust = 0.5),
+        panel.background = element_blank())
+```
+
+```{r proportion of cells, out.width='55%', fig.width=5.5, fig.height=3.5, class.source="fold-hide"}
+CTN_df %>%
+  left_join(PF_Xenium_dat_in, by = "CellID") %>%
+  count(Celltype, label) %>%
+  ggplot(aes(x = n, y = label, fill = factor(Celltype, names(PF_Xenium_celltype_palette)))) +
+  geom_col(position = position_fill(reverse = TRUE)) +
+  scale_fill_manual(values = PF_Xenium_celltype_palette, name = NULL,
+                    labels = rename_celltype) +
+  labs(title = CTN_label) +
+  scale_y_discrete(limits = rev) +
+  coord_cartesian(expand = FALSE, clip = "off") +
+  guides(fill = guide_legend(ncol = 4)) +
+  cowplot::theme_cowplot(font_size = 12) +
+  labs(x = "Proportion of Cells", y = NULL) +
+  theme(plot.title = element_markdown(hjust = 0.5),
+        legend.key.size = unit(3, "mm"),
+        legend.key.spacing.y = unit(0.2, "mm"),
+        legend.position = "bottom",
+        legend.location = "plot",
+        legend.justification = "right")
+```
+
+We can then compute the evaluation metrics comparing CTN1 with ground truth TLS annotations
+
+```{r evaluation metrics}
+cluster_eval_metrics <- CTN_df %>% 
+  mutate(label_binary = ifelse(label == "CTN1", "TLS", "Other")) %>%
+  left_join(PF_Xenium_annot, by = "CellID") %>%
+  filter(ImageID %in% TLS_img_list) %>%
+  mutate(annot_binary = ifelse(Annotation_Type == "TLS", "TLS", "Other")) %>%
+  split(f = .$ImageID) %>%
+  lapply(function(df_sub) {
+    # ARI and NMI
+    ARI <- aricode::ARI(df_sub$label_binary, df_sub$annot_binary)
+    NMI <- aricode::NMI(df_sub$label_binary, df_sub$annot_binary)
+    
+    # F-1 score
+    conf_mat <- caret::confusionMatrix(
+      data = factor(df_sub$label_binary, c("TLS", "Other")),
+      reference = factor(df_sub$annot_binary, c("TLS", "Other")))
+    F1 <- conf_mat$byClass["F1"] #for multiclass classification problems
+    
+    data.frame(ARI = ARI, NMI = NMI, F1 = F1)
+  }) %>%
+  rbindlist(idcol = "ImageID")
+
+cluster_eval_metrics
+```
+
+```{r session info}
+sessionInfo()
+```

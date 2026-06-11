@@ -1,0 +1,14 @@
+.Rproj.user
+*.Rproj
+.Rhistory
+inst/doc
+*.DS_Store
+
+# knitr and R markdown default cache directories
+*_cache/
+/cache/
+/doc/
+/Meta/
+docs
+README.Rmd
+data

@@ -1,0 +1,276 @@
+---
+title: "Detecting lymphocyte aggregate-like niches in CRC VisiumHD data"
+output: 
+  rmarkdown::html_vignette:
+    code_folding: "show"
+vignette: >
+  %\VignetteIndexEntry{CRC_VisiumHD}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This tutorial shows an example of detecting the **lymphocyte aggregate (LA)-like niches** characterized by the $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ triad in the colorectal cancer (CRC) VisiumHD data using SCOPE. The dataset comes from [Oliveira et al. *Nat Genet* 2025](https://www.nature.com/articles/s41588-025-02193-3) and is composed of 3 CRC and 2 normal adjacent tissue samples. For this tutorial, we will focus on the 3 CRC samples collected from different patients (P1, P2, P5).
+
+First, we load the packages that will be used for the analysis and visualization.
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE, # Suppresses package startup messages
+  warning = FALSE,  # Suppresses warning messages
+  dpi = 300,
+  out.width='100%', 
+  fig.align = "center")
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+```{r Load packages}
+library(SCOPE.CTN)
+library(data.table)
+library(tidyverse)
+library(ggtext)
+library(cowplot)
+library(arrow) # for loading parquet files
+dataset_name <- "CRC_VisiumHD"
+source(paste0("palettes/", dataset_name, "_celltype_palette.R")) # cell type color palette
+```
+
+```{r Load results, include=FALSE}
+driver_celltypes <- c("B cell", "CD4 T cell", "CD8 T cell")
+load(paste0("data/", dataset_name, "_dat_in.RData"))
+load(paste0("data/", dataset_name, "_cell_neighbor_results.RData"))
+load(paste0("data/", dataset_name, "_B_CD4T_CD8T.RData"))
+slide_list <- unique(CRC_VisiumHD_dat_in$ImageID)
+```
+
+## 1. Preparing input data
+
+The metadata parquet files for this dataset can be downloaded from [Zenodo](https://zenodo.org/records/15042463) or [GitHub](https://github.com/10XGenomics/HumanColonCancer_VisiumHD). We will simplify the `DeconvolutionLabel1` column and use them as the input cell type labels. It contains the cell types of the 8-$\mu$m binned data predicted by deconvolution using the single-cell RNA-seq reference.
+
+```{r load metadata, eval = FALSE}
+CRC_VisiumHD_metadata <- sapply(c("P1", "P2", "P5"), function(x) {
+  read_parquet(paste0("https://github.com/10XGenomics/HumanColonCancer_VisiumHD/",
+                      "raw/refs/heads/main/MetaData/", x, "CRC_Metadata.parquet"))
+  }, simplify = FALSE, USE.NAMES = TRUE) %>%
+  data.table::rbindlist(idcol = "ImageID") %>%
+  # Make cell ids unique
+  mutate(barcode = paste(barcode, ImageID, sep = "_")) %>%
+  # Simplifying cell type annotations
+  mutate(Celltype = case_when(
+    DeconvolutionLabel1 %in% c("Mature B", "Memory B") ~ "B cell",  
+    DeconvolutionLabel1 %in% c("Proliferating Macrophages", 
+                               "Proliferating Immune II") ~ "Prolif_Immune",
+    DeconvolutionLabel1 %in% c("Fibroblast", "Vascular Fibroblast", 
+                               "Proliferating Fibroblast") ~ "Fibroblast", 
+    DeconvolutionLabel1 %in% c("Enteric Glial", "Enterocyte", "Neuroendocrine") ~ "Neuronal", 
+    str_detect(DeconvolutionLabel1, "Tumor") ~ "Tumor",
+    DeconvolutionLabel1 %in% c("Epithelial", "Tuft", "Goblet") ~ "Epithelial", 
+    DeconvolutionLabel1 %in% c("Smooth Muscle", "SM Stress Response", "vSM") ~ "Smooth Muscle",  
+    DeconvolutionLabel1 %in% c("Unknown III (SM)", "Adipocyte") ~ "Other",
+    TRUE ~ DeconvolutionLabel1
+  )) 
+```
+
+The input data frame for SCOPE should contain the following columns:
+
+* `CellID`: cell id
+* `ImageID`: sample id
+* `X`: X coordinate
+* `Y`: Y coordinate
+* `Celltype`: cell type labels
+
+We will remove the bins that were assigned as "doublets" or "rejected" by the deconvolution algorithm and only focus on the singlet bins.
+
+```{r Prepare input data, eval = FALSE}
+CRC_VisiumHD_dat_in <- CRC_VisiumHD_metadata %>%
+  # Keeping only the singlet bins
+  filter(DeconvolutionClass == "singlet") %>%
+  select(CellID = barcode, ImageID, X = X, Y = Y, Celltype = Celltype) 
+# save(CRC_VisiumHD_dat_in, file = paste0("data/", dataset_name, "_dat_in.RData"))
+```
+
+
+```{r Show input data}
+head(CRC_VisiumHD_dat_in) # 810,330 bins
+```
+
+```{r Visualize celltype, fig.width=10.5, fig.height=4}
+CRC_VisiumHD_dat_in %>%
+  ggplot(aes(x = X, y = Y, color = Celltype)) +
+  geom_point(shape = 16, size= 0.1) +
+  scale_color_manual(values = celltype_colors, 
+                     breaks = names(celltype_colors)) +
+  guides(color = guide_legend(override.aes = list(size = 3), ncol = 1)) +
+  facet_wrap(~ImageID, scales = "free") +
+  theme_void(base_size = 14) +
+  coord_cartesian(expand = FALSE) +
+  theme(legend.key.size = unit(2.5, "mm"),
+        panel.background = element_blank())
+```
+
+## 2. Create neighborhood cell proportion matrix
+
+Next, we use the k-nearest neighbors algorithm to define the spatial neighborhood and compute the neighborhood cell type composition matrix. The default number of nearest clusters $k$ is 20, however we can increase $k$ for larger tissue slices. Here we set $k$=50.
+
+In addition, we enforce a distance boundary for the nearest neighbors and exclude the cells falling outside this radius. The boundary is initially defined as the 99th percentile of all distances from focal cells to their nearest neighbors. If it falls outside a predefined range, we reset it to either the minimum (`min.radius`) or maximum threshold (`max.radius`).
+
+
+```{r Compute neighborhood cell type proportion, eval=FALSE}
+slide_list <- unique(CRC_VisiumHD_dat_in$ImageID)
+
+cell_neighbor_results_maxdist <- pbmcapply::pbmclapply(
+  slide_list, function(s) {
+    Build_cell_neighbor_maxdist(
+      dat_slide=subset(CRC_VisiumHD_dat_in, ImageID == s),
+      knn_num = 50, cell_types_available = unique(CRC_VisiumHD_dat_in$Celltype),
+      min.radius = 1,       # lower limit for the boundary
+      max.radius = 2,       # upper limit for the boundary
+      min.n.neighbors = 15, # minimum no. of neighbors
+      prob_list = seq(0, 1, 0.1))},
+  mc.cores = 3) # set mc.cores to 1 on Windows
+# save(cell_neighbor_results_maxdist, 
+#      file = paste0("data/", dataset_name, "_cell_neighbor_results.RData"))
+```
+
+
+We can examine the distribution of 99th percentile of all distance to the nearest neighbors to select the threshold parameters min.radius and max.radius accordingly. The 99th percentiles are 2.466, 1.679, and 1.939 for P1, P2, P5 respectively, while the other percentiles remain nearly identical across the three samples. Therefore we set `max.radius` to 2 and `min.radius` to 1.
+
+```{r Examine distance distribution, out.width='50%', fig.width=4, fig.height=2.2}
+length(cell_neighbor_results_maxdist)
+sapply(cell_neighbor_results_maxdist, "[[", "dist.quantiles") %>%
+  as.data.frame() %>% 
+  rownames_to_column("perc") %>%
+  mutate(perc = as.numeric(str_remove(perc, "%"))) %>%
+  pivot_longer(2:ncol(.), names_to = "ImageID", values_to = "value") %>%
+  ggplot(aes(x = perc, y = value)) +
+  geom_point(aes(color = ImageID)) +
+  scale_color_discrete(labels = slide_list) +
+  scale_x_continuous(labels = function(x) {paste0(x, "%")}) +
+  labs(y = "Distance to\nNearest Neighbors", x = "Percentile") +
+  theme_cowplot(font_size = 12)
+```
+
+```{r Combine proportion matrix}
+# Combine neighborhood proportion table from the three samples
+cell_neighbor_table_maxdist <- lapply(
+  cell_neighbor_results_maxdist, "[[", "prop.df") %>%
+  do.call("rbind", .)
+```
+
+Cells that retain fewer than `min.n.neighbors` neighbors within the distance boundary will have their neighborhood cell-type proportions set to `NaN` and will be excluded from subsequent niche clustering. Here we set `min.n.neighbors` to 10.
+
+```{r Examine loose cells, fig.width=8, fig.height=3}
+cells_to_exclude = apply(cell_neighbor_table_maxdist, 1, function(x) {any(is.na(x))}) %>%
+  as.data.frame() %>%
+  `colnames<-`("is_na") %>%
+  rownames_to_column("CellID") %>%
+  left_join(CRC_VisiumHD_dat_in[, c("CellID", "X", "Y", "ImageID")], by = "CellID")
+
+# Number of cells to exclude
+table(cells_to_exclude$is_na)
+
+cells_to_exclude %>%
+  ggplot(aes(x = X, y = Y, color = is_na)) +
+  geom_point(shape = 16, size= 0.1) +
+  scale_color_manual(values = c("brown2", "grey90"), 
+                     breaks = c(TRUE, FALSE), name = "Cells To\nExclude") +
+  guides(color = guide_legend(override.aes = list(size = 3), ncol = 1)) +
+  facet_wrap(~ImageID, scales = "free") +
+  theme_void() +
+  coord_cartesian(expand = FALSE) +
+  theme(legend.key.size = unit(2.5, "mm"),
+        panel.background = element_blank())
+```
+
+## 3. Cell type triad niche (CTN) detection using SCOPE
+
+Next, we apply SCOPE to the $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ triad using default configurations for the following parameters:
+
+* `min.prop`: The minimum neighborhood cell-type proportion threshold. Proportions below this value are set to 0 (default: 0.3).
+* `mgcv_df`: The dimension of the basis used for thin-plate regression spline smoothing of the driver cell-type proportions (default: 15; see `mgcv::s()` for details).
+
+We set the number of clusters `clusternum` at 3 to separate the B cell and T cell zones.
+
+```{r Run SCOPE, eval = FALSE}
+driver_celltypes <- c("B cell", "CD4 T cell", "CD8 T cell")
+
+CTN_df <- run_SCOPE(
+  combination_table = as.data.frame(matrix(driver_celltypes, nrow = 1)),
+  cell_neighbor_table = cell_neighbor_table_maxdist,
+  dat_in = CRC_VisiumHD_dat_in,
+  save_results = FALSE, 
+  clusternum = 3, min.prop = 0.3,
+  linear = FALSE, mgcv_df = 15, iter.max = 100)
+# save(CTN_df, file = paste0("data/", dataset_name, "_B_CD4T_CD8T.RData"))
+```
+
+Here we can see that the $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ CTNs closely aligns with the lymphocyte aggregates in the CRC samples, where CTN1 resembles the B cell zone and CTN2 resembles the surrounding T cell zone.
+
+```{r Cell count}
+# Number of cells per CTN
+table(CTN_df$label)
+```
+
+```{r Visualize results, fig.width=10, fig.height=4, fig.show='hold', class.source = "fold-hide"}
+# CTN label with colored dots separating the cell types
+CTN_label <- color_CTN_names(
+  paste(driver_celltypes, collapse = "_"), celltype_colors) 
+
+# Visualizing B cell/CD4+ T cell/CD8+ T cell CTN
+CTN_df %>%
+  left_join(CRC_VisiumHD_dat_in, by = "CellID") %>%
+  ggplot(aes(x = X, y = Y, color = label)) +
+  geom_point(shape = 16, size= 0.1) +
+  guides(color = guide_legend(override.aes = list(size = 3), ncol = 1)) +
+  facet_wrap(~ImageID, scales = "free") +
+  theme_void(base_size = 14) +
+  labs(title = CTN_label) +
+  scale_color_manual(values = c("CTN1" = "#E69F00", "CTN2" = "#56B4E9", 
+                                "Unassigned" = "grey90"), name = NULL) +
+  coord_cartesian(expand = FALSE) +
+  theme(legend.key.size = unit(2.5, "mm"),
+        plot.title = element_markdown(hjust = 0.5),
+        panel.background = element_blank())
+
+# Show driver cell types only
+CRC_VisiumHD_dat_in %>%
+  mutate(Celltype = ifelse(Celltype %in% driver_celltypes, Celltype, "Other")) %>%
+  ggplot(aes(x = X, y = Y, color = Celltype)) +
+  geom_point(shape = 16, size= 0.1) +
+  scale_color_manual(values = celltype_colors, 
+                     breaks = names(celltype_colors)) +
+  guides(color = guide_legend(override.aes = list(size = 3), ncol = 1)) +
+  facet_wrap(~ImageID, scales = "free") +
+  theme_void(base_size = 14) +
+  labs(title = "Driver cell type triad") +
+  coord_cartesian(expand = FALSE) +
+  theme(legend.key.size = unit(2.5, "mm"),
+        plot.title = element_text(hjust = 0.5),
+        panel.background = element_blank())
+```
+
+```{r proportion of cells, out.width='55%', fig.width=4.5, fig.height=3, class.source="fold-hide"}
+CTN_df %>%
+  left_join(CRC_VisiumHD_dat_in, by = "CellID") %>%
+  count(Celltype, label) %>%
+  ggplot(aes(x = n, y = label, fill = factor(Celltype, names(celltype_colors)))) +
+  geom_col(position = position_fill(reverse = TRUE)) +
+  scale_fill_manual(values = celltype_colors, name = NULL) +
+  labs(title = CTN_label) +
+  scale_y_discrete(limits = rev) +
+  coord_cartesian(expand = FALSE, clip = "off") +
+  guides(fill = guide_legend(ncol = 3)) +
+  cowplot::theme_cowplot(font_size = 12) +
+  labs(x = "Proportion of Cells", y = NULL) +
+  theme(plot.title = element_markdown(hjust = 0.5),
+        legend.key.size = unit(3, "mm"),
+        legend.key.spacing.y = unit(0.5, "mm"),
+        legend.position = "bottom",
+        legend.location = "plot",
+        legend.justification = "right")
+```
+
+```{r session info}
+sessionInfo()
+```
