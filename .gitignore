@@ -3,12 +3,12 @@
 .Rhistory
 inst/doc
 *.DS_Store
+.RData
 
 # knitr and R markdown default cache directories
 *_cache/
 /cache/
 /doc/
 /Meta/
-docs
 README.Rmd
 data

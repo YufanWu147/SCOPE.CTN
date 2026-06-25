@@ -13,13 +13,14 @@ SCOPE integrates multiple spatial colocalization patterns within a
 multi-view learning framework to derive reusable niche vocabularies from
 spatially resolved single-cell data.
 
-![](man/figures/SCOPE_schematic.png){width=95%}
+![](man/figures/SCOPE_schematic.png)
 
 ## Installation
 
-Install the released version of `SCOPE.CTN` from CRAN:
+Install `SCOPE.CTN` from GitHub:
 
 ``` r
-install.packages("SCOPE.CTN")
+install.packages("devtools")
+devtools::install_github("YufanWu147/SCOPE.CTN")
 ```
 
