@@ -194,6 +194,7 @@ compute_CLQ_permutated <- function(cell_neighbor_ids, dat_in, min.ncell = 100, n
 #'
 #' @return A data frame containing the nominal and Benjamini-Hochberg-adjusted CLQ permutation test p-values.
 #' @import dplyr tibble tidyr data.table
+#' @importFrom stats p.adjust
 #' @export
 #' @references
 #' Bouchard, G. et al. A quantitative spatial cell-cell colocalizations framework enabling comparisons between in vitro assembloids and pathological specimens.

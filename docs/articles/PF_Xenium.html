@@ -58,6 +58,7 @@
 
       <h1>Detecting TLS-like CTNs in PF Xenium data</h1>
             
+            <h4 data-toc-skip class="date">Compiled: 2026-06-25</h4>
       
 
       <div class="d-none name"><code>PF_Xenium.Rmd</code></div>
@@ -76,64 +77,69 @@ unaffected samples.</p>
 visualization.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SCOPE.CTN</span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://satijalab.org/seurat" class="external-link">Seurat</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://wilkelab.org/ggtext/" class="external-link">ggtext</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggrepel.slowkow.com/" class="external-link">ggrepel</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://wilkelab.org/cowplot/" class="external-link">cowplot</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">RColorBrewer</span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jchiquet/aricode" class="external-link">aricode</a></span><span class="op">)</span>; <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/topepo/caret/" class="external-link">caret</a></span><span class="op">)</span> <span class="co"># for clustering evaluation</span></span>
 <span></span>
 <span><span class="va">dataset_name</span> <span class="op">&lt;-</span> <span class="st">"PF_Xenium"</span></span>
-<span><span class="va">data_path</span> <span class="op">&lt;-</span> <span class="st">"data/"</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"palettes/"</span>, <span class="va">dataset_name</span>, <span class="st">"_celltype_palette.R"</span><span class="op">)</span><span class="op">)</span> <span class="co"># cell type color palette</span></span></code></pre></div>
+<span><span class="va">data_path</span> <span class="op">&lt;-</span> <span class="st">"vignette_data/"</span>         <span class="co"># !!! Change this line to your own directory</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="st">"palettes/"</span>, </span>
+<span>              <span class="va">dataset_name</span>, <span class="st">"_celltype_palette.R"</span><span class="op">)</span><span class="op">)</span> <span class="co"># cell type color palette</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="preparing-input-data">1. Preparing input data<a class="anchor" aria-label="anchor" href="#preparing-input-data"></a>
 </h2>
 <p>The <code>rds</code> file containing a Seurat object of this dataset
 can be downloaded from Gene Expression Omnibus (GEO) under accesssion
-number <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE250346" class="external-link">GSE250346</a>.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>PF_Xenium_obj <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"../data/GSE250346_Seurat_GSE250346_CORRECTED_SEE_RDS_README_082024.rds"</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>clinical_data <span class="ot">&lt;-</span> <span class="fu">distinct</span>(PF_Xenium_obj<span class="sc">@</span>meta.data, sample, sample_affect)</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">save</span>(clinical_data, <span class="at">file =</span> <span class="fu">paste0</span>(data_path, dataset_name, <span class="st">"_clinical_data.RData"</span>))<span class="er">)</span></span></code></pre></div>
+number <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE250346" class="external-link">GSE250346</a>.
+We downloaded the
+<code>GSE250346_Seurat_GSE250346_CORRECTED_SEE_RDS_README_082024.rds</code>
+file and saved it under <code>&lt;data_path&gt;/</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://satijalab.org/seurat" class="external-link">Seurat</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">PF_Xenium_obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="st">"GSE250346_Seurat_GSE250346_CORRECTED_SEE_RDS_README_082024.rds"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">clinical_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="va">PF_Xenium_obj</span><span class="op">@</span><span class="va">meta.data</span>, <span class="va">sample</span>, <span class="va">sample_affect</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># save(clinical_data, file = paste0(data_path, dataset_name, "_clinical_data.RData")))</span></span></code></pre></div>
 <p>We will also use the <code>cells_partitioned_by_annotation.csv</code>
 file in <code>GSE250346_HE_annotations.tar.gz</code> which contains
 annotations of PF histopathological features (including TLSs). The
 samples in this file need to renamed following <a href="https://github.com/Banovich-Lab/Spatial_PF/blob/828db997a122531e6b907b792f58ae1bbd997662/figures.R#L260" class="external-link">the
 code from the original paper</a>:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># load(paste0(data_path, dataset_name, "_clinical_data.RData"))</span></span>
-<span><span class="co"># PF_Xenium_annot &lt;- read.csv(paste0(data_path, "cells_partitioned_by_annotation.csv")) %&gt;%</span></span>
-<span><span class="co">#   ## keeping only the relevant columns to reduce data size</span></span>
-<span><span class="co">#   select(CellID = cell_id, ImageID = sample, Annotation_Type, annotation_type_instance) %&gt;%</span></span>
-<span><span class="co">#   mutate(patient = str_extract(ImageID, "(THD|TILD|VUHD|VUILD)[0-9]+")) %&gt;%</span></span>
-<span><span class="co">#   left_join(clinical_data[, c("patient", "sample_affect")], by = "patient") %&gt;%</span></span>
-<span><span class="co">#   ## Change sample name based on the code from the original paper (</span></span>
-<span><span class="co">#   ## Initial rename</span></span>
-<span><span class="co">#   mutate(ImageID_new = case_when(</span></span>
-<span><span class="co">#     sample_affect == "Less Affected" ~ paste0(patient, "LA"),</span></span>
-<span><span class="co">#     sample_affect == "More Affected"  ~ paste0(patient, "MA"),</span></span>
-<span><span class="co">#     TRUE ~ ImageID)) %&gt;%</span></span>
-<span><span class="co">#   ## Fix additional names</span></span>
-<span><span class="co">#   mutate(ImageID_new = case_when(</span></span>
-<span><span class="co">#     ImageID == "TILD117MF" ~ "TILD117MA1",</span></span>
-<span><span class="co">#     ImageID == "TILD117MFB" ~ "TILD117MA2",</span></span>
-<span><span class="co">#     ImageID == "VUILD104LF" ~ "VUILD104MA1",</span></span>
-<span><span class="co">#     ImageID == "VUILD104MF" ~ "VUILD104MA2",</span></span>
-<span><span class="co">#     ImageID == "VUILD105LF" ~ "VUILD105MA1",</span></span>
-<span><span class="co">#     ImageID == "VUILD105MF" ~ "VUILD105MA2",</span></span>
-<span><span class="co">#     ImageID == "VUILD48LF" ~ "VUILD48LA1",</span></span>
-<span><span class="co">#     ImageID == "VUILD48MF" ~ "VUILD48LA2",</span></span>
-<span><span class="co">#     str_detect(ImageID_new, 'LF$') ~ str_replace(ImageID_new, "LF$", "LA"),</span></span>
-<span><span class="co">#     str_detect(ImageID_new, 'MF$') ~ str_replace(ImageID_new, "MF$", "MA"),</span></span>
-<span><span class="co">#     TRUE ~ ImageID_new)) %&gt;%</span></span>
-<span><span class="co">#   mutate(CellID = paste(ImageID_new, CellID, sep = "_")) %&gt;%</span></span>
-<span><span class="co">#   select(-ImageID) %&gt;%</span></span>
-<span><span class="co">#   rename(ImageID = ImageID_new)</span></span>
-<span><span class="co">#</span></span>
-<span><span class="co"># save(PF_Xenium_annot, file = paste0(data_path, dataset_name, "_annotations.RData"))</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_annotations.RData"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_clinical_data.RData"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">PF_Xenium_annot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="st">"cells_partitioned_by_annotation.csv"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="co">## keeping only the relevant columns to reduce data size</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span>CellID <span class="op">=</span> <span class="va">cell_id</span>, ImageID <span class="op">=</span> <span class="va">sample</span>, <span class="va">Annotation_Type</span>, <span class="va">annotation_type_instance</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>patient <span class="op">=</span> <span class="fu"><a href="https://stringr.tidyverse.org/reference/str_extract.html" class="external-link">str_extract</a></span><span class="op">(</span><span class="va">ImageID</span>, <span class="st">"(THD|TILD|VUHD|VUILD)[0-9]+"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">clinical_data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"patient"</span>, <span class="st">"sample_affect"</span><span class="op">)</span><span class="op">]</span>, by <span class="op">=</span> <span class="st">"patient"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="co">## Change sample name based on the code from the original paper (</span></span>
+<span>  <span class="co">## Initial rename</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>ImageID_new <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>    <span class="va">sample_affect</span> <span class="op">==</span> <span class="st">"Less Affected"</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">patient</span>, <span class="st">"LA"</span><span class="op">)</span>,</span>
+<span>    <span class="va">sample_affect</span> <span class="op">==</span> <span class="st">"More Affected"</span>  <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">patient</span>, <span class="st">"MA"</span><span class="op">)</span>,</span>
+<span>    <span class="cn">TRUE</span> <span class="op">~</span> <span class="va">ImageID</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="co">## Fix additional names</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>ImageID_new <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>    <span class="va">ImageID</span> <span class="op">==</span> <span class="st">"TILD117MF"</span> <span class="op">~</span> <span class="st">"TILD117MA1"</span>,</span>
+<span>    <span class="va">ImageID</span> <span class="op">==</span> <span class="st">"TILD117MFB"</span> <span class="op">~</span> <span class="st">"TILD117MA2"</span>,</span>
+<span>    <span class="va">ImageID</span> <span class="op">==</span> <span class="st">"VUILD104LF"</span> <span class="op">~</span> <span class="st">"VUILD104MA1"</span>,</span>
+<span>    <span class="va">ImageID</span> <span class="op">==</span> <span class="st">"VUILD104MF"</span> <span class="op">~</span> <span class="st">"VUILD104MA2"</span>,</span>
+<span>    <span class="va">ImageID</span> <span class="op">==</span> <span class="st">"VUILD105LF"</span> <span class="op">~</span> <span class="st">"VUILD105MA1"</span>,</span>
+<span>    <span class="va">ImageID</span> <span class="op">==</span> <span class="st">"VUILD105MF"</span> <span class="op">~</span> <span class="st">"VUILD105MA2"</span>,</span>
+<span>    <span class="va">ImageID</span> <span class="op">==</span> <span class="st">"VUILD48LF"</span> <span class="op">~</span> <span class="st">"VUILD48LA1"</span>,</span>
+<span>    <span class="va">ImageID</span> <span class="op">==</span> <span class="st">"VUILD48MF"</span> <span class="op">~</span> <span class="st">"VUILD48LA2"</span>,</span>
+<span>    <span class="fu"><a href="https://stringr.tidyverse.org/reference/str_detect.html" class="external-link">str_detect</a></span><span class="op">(</span><span class="va">ImageID_new</span>, <span class="st">'LF$'</span><span class="op">)</span> <span class="op">~</span> <span class="fu"><a href="https://stringr.tidyverse.org/reference/str_replace.html" class="external-link">str_replace</a></span><span class="op">(</span><span class="va">ImageID_new</span>, <span class="st">"LF$"</span>, <span class="st">"LA"</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://stringr.tidyverse.org/reference/str_detect.html" class="external-link">str_detect</a></span><span class="op">(</span><span class="va">ImageID_new</span>, <span class="st">'MF$'</span><span class="op">)</span> <span class="op">~</span> <span class="fu"><a href="https://stringr.tidyverse.org/reference/str_replace.html" class="external-link">str_replace</a></span><span class="op">(</span><span class="va">ImageID_new</span>, <span class="st">"MF$"</span>, <span class="st">"MA"</span><span class="op">)</span>,</span>
+<span>    <span class="cn">TRUE</span> <span class="op">~</span> <span class="va">ImageID_new</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>CellID <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">ImageID_new</span>, <span class="va">CellID</span>, sep <span class="op">=</span> <span class="st">"_"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">ImageID</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>ImageID <span class="op">=</span> <span class="va">ImageID_new</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># save(PF_Xenium_annot, file = paste0(data_path, dataset_name, "_annotations.RData"))</span></span></code></pre></div>
 <p>The input data frame for SCOPE should contain the following
 columns:</p>
 <ul>
@@ -222,11 +228,23 @@ maximum threshold (<code>max.radius</code>).</p>
 <span>      min.radius <span class="op">=</span> <span class="fl">100</span>,       <span class="co"># lower limit for the boundary</span></span>
 <span>      max.radius <span class="op">=</span> <span class="fl">500</span>,       <span class="co"># upper limit for the boundary</span></span>
 <span>      min.n.neighbors <span class="op">=</span> <span class="fl">10</span>,   <span class="co"># minimum no. of neighbors,</span></span>
-<span>      return.nn.ids <span class="op">=</span> <span class="cn">TRUE</span>,   <span class="co"># Whether to return nearest neighbor IDs</span></span>
+<span>      return.nn.ids <span class="op">=</span> <span class="cn">TRUE</span>,   <span class="co"># Whether to return nearest neighbor Cell IDs</span></span>
 <span>      prob_list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0.1</span><span class="op">)</span><span class="op">)</span><span class="op">}</span>,</span>
 <span>  mc.cores <span class="op">=</span> <span class="fl">4</span><span class="op">)</span> <span class="co"># set mc.cores=1 on Windows machine</span></span>
-<span><span class="co"># save(cell_neighbor_results_maxdist,</span></span>
-<span><span class="co">#      file = paste0("../data/", dataset_name, "_cell_neighbor_results.RData"))</span></span></code></pre></div>
+<span></span>
+<span><span class="co"># Extract neighborhood cell count and ids and save it into a separate file</span></span>
+<span><span class="va">cell_neighbor_counts_nnids</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span>
+<span>  <span class="va">cell_neighbor_results_maxdist</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span><span class="va">x</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"count.df"</span>, <span class="st">"neighbor.cell.ids"</span><span class="op">)</span><span class="op">]</span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">cell_neighbor_counts_nnids</span>,</span>
+<span>     file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_cell_neighbor_counts_nnids.RData"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># Extract neighborhood cell type proportion and </span></span>
+<span><span class="co"># quantiles of distance to nearest neighbors</span></span>
+<span><span class="va">cell_neighbor_props_dist.quantiles</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span>
+<span>  <span class="va">cell_neighbor_results_maxdist</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span><span class="va">x</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"prop.df"</span>, <span class="st">"dist.quantiles"</span><span class="op">)</span><span class="op">]</span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">cell_neighbor_props_dist.quantiles</span>, </span>
+<span>     file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_cell_neighbor_props_dist.quantiles.RData"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/rm.html" class="external-link">rm</a></span><span class="op">(</span><span class="va">cell_neighbor_results_maxdist</span><span class="op">)</span></span></code></pre></div>
 <p>We can examine the distribution of the 99th percentile of all
 distance to the nearest neighbors to select the threshold parameters
 min.radius and max.radius accordingly. Here we set
@@ -234,7 +252,7 @@ min.radius and max.radius accordingly. Here we set
 values (500 and 100 respectively).</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## 99th percentile of the distance to nearest neighbors</span></span>
-<span><span class="va">dist_99th</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">cell_neighbor_results_maxdist</span>, <span class="st">"[["</span>, <span class="st">"dist.quantiles"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span><span class="va">dist_99th</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">cell_neighbor_props_dist.quantiles</span>, <span class="st">"[["</span>, <span class="st">"dist.quantiles"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu">`colnames&lt;-`</span><span class="op">(</span><span class="va">slide_list</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/rownames.html" class="external-link">rownames_to_column</a></span><span class="op">(</span><span class="st">"perc"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>perc <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_remove.html" class="external-link">str_remove</a></span><span class="op">(</span><span class="va">perc</span>, <span class="st">"%"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -277,7 +295,7 @@ regions of the tissue.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Combine neighborhood proportion table</span></span>
 <span><span class="va">cell_neighbor_table_maxdist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span>
-<span>  <span class="va">cell_neighbor_results_maxdist</span>, <span class="st">"[["</span>, <span class="st">"prop.df"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="va">cell_neighbor_props_dist.quantiles</span>, <span class="st">"[["</span>, <span class="st">"prop.df"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="st">"rbind"</span>, <span class="va">.</span><span class="op">)</span></span></code></pre></div>
 <p>For cells retaining fewer than <code>min.n.neighbors</code> neighbors
 within the distance boundary, the neighborhood cell-type proportions
@@ -295,7 +313,7 @@ subsequent niche clustering. Here we set <code>min.n.neighbors</code> to
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">cells_to_exclude</span><span class="op">$</span><span class="va">is_na</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   FALSE    TRUE </span></span>
-<span><span class="co">#&gt; 1628026    2293</span></span>
+<span><span class="co">#&gt; 1628906    1413</span></span>
 <span></span>
 <span><span class="co"># Cells to be removed from the two sparse samples</span></span>
 <span><span class="va">cells_to_exclude</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -360,7 +378,7 @@ separate the B cell and T cell zones.</p>
 <span>  save_results <span class="op">=</span> <span class="cn">FALSE</span>, </span>
 <span>  clusternum <span class="op">=</span> <span class="fl">3</span>, min.prop <span class="op">=</span> <span class="fl">0.3</span>,</span>
 <span>  linear <span class="op">=</span> <span class="cn">FALSE</span>, mgcv_df <span class="op">=</span> <span class="fl">15</span>, iter.max <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
-<span><span class="co"># save(CTN_df, file = paste0("../data/", dataset_name, "_B_CD4T_CD8T.RData"))</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">CTN_df</span>, file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_B_CD4T_CD8T.RData"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Here we can see that the
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mtext mathvariant="normal">B cell/CD4</mtext><mo>+</mo></msup><msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell/CD8</mtext></mrow><mo>+</mo></msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell</mtext></mrow></mrow><annotation encoding="application/x-tex">\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}</annotation></semantics></math>
 CTNs closely aligns with the lymphocyte aggregates in the CRC samples,
@@ -371,7 +389,7 @@ T cell zone.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">CTN_df</span><span class="op">$</span><span class="va">label</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;       CTN1       CTN2 Unassigned </span></span>
-<span><span class="co">#&gt;      36343      51050    1540633</span></span></code></pre></div>
+<span><span class="co">#&gt;      42777      44617    1541512</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># CTN label with colored dots separating the cell types</span></span>
 <span><span class="va">CTN_label</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/color_CTN_names.html">color_CTN_names</a></span><span class="op">(</span></span>
@@ -424,7 +442,7 @@ T cell zone.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_discrete.html" class="external-link">scale_y_discrete</a></span><span class="op">(</span>limits <span class="op">=</span> <span class="va">rev</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_cartesian.html" class="external-link">coord_cartesian</a></span><span class="op">(</span>expand <span class="op">=</span> <span class="cn">FALSE</span>, clip <span class="op">=</span> <span class="st">"off"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guide_legend.html" class="external-link">guide_legend</a></span><span class="op">(</span>ncol <span class="op">=</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">cowplot</span><span class="fu">::</span><span class="fu"><a href="https://wilkelab.org/cowplot/reference/theme_cowplot.html" class="external-link">theme_cowplot</a></span><span class="op">(</span>font_size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://wilkelab.org/cowplot/reference/theme_cowplot.html" class="external-link">theme_cowplot</a></span><span class="op">(</span>font_size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Proportion of Cells"</span>, y <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>plot.title <span class="op">=</span> <span class="fu"><a href="https://wilkelab.org/ggtext/reference/element_markdown.html" class="external-link">element_markdown</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,</span>
 <span>        legend.key.size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">3</span>, <span class="st">"mm"</span><span class="op">)</span>,</span>
@@ -436,7 +454,9 @@ T cell zone.</p>
 <p>We can then compute the evaluation metrics comparing CTN1 with ground
 truth TLS annotations</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cluster_eval_metrics</span> <span class="op">&lt;-</span> <span class="va">CTN_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jchiquet/aricode" class="external-link">aricode</a></span><span class="op">)</span>; <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/topepo/caret/" class="external-link">caret</a></span><span class="op">)</span> <span class="co"># for clustering evaluation</span></span>
+<span></span>
+<span><span class="va">cluster_eval_metrics</span> <span class="op">&lt;-</span> <span class="va">CTN_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>label_binary <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">label</span> <span class="op">==</span> <span class="st">"CTN1"</span>, <span class="st">"TLS"</span>, <span class="st">"Other"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">PF_Xenium_annot</span>, by <span class="op">=</span> <span class="st">"CellID"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">ImageID</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">TLS_img_list</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -444,11 +464,11 @@ truth TLS annotations</p>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span>f <span class="op">=</span> <span class="va">.</span><span class="op">$</span><span class="va">ImageID</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">df_sub</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="co"># ARI and NMI</span></span>
-<span>    <span class="va">ARI</span> <span class="op">&lt;-</span> <span class="fu">aricode</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/aricode/man/ARI.html" class="external-link">ARI</a></span><span class="op">(</span><span class="va">df_sub</span><span class="op">$</span><span class="va">label_binary</span>, <span class="va">df_sub</span><span class="op">$</span><span class="va">annot_binary</span><span class="op">)</span></span>
-<span>    <span class="va">NMI</span> <span class="op">&lt;-</span> <span class="fu">aricode</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/aricode/man/NMI.html" class="external-link">NMI</a></span><span class="op">(</span><span class="va">df_sub</span><span class="op">$</span><span class="va">label_binary</span>, <span class="va">df_sub</span><span class="op">$</span><span class="va">annot_binary</span><span class="op">)</span></span>
+<span>    <span class="va">ARI</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/aricode/man/ARI.html" class="external-link">ARI</a></span><span class="op">(</span><span class="va">df_sub</span><span class="op">$</span><span class="va">label_binary</span>, <span class="va">df_sub</span><span class="op">$</span><span class="va">annot_binary</span><span class="op">)</span></span>
+<span>    <span class="va">NMI</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/aricode/man/NMI.html" class="external-link">NMI</a></span><span class="op">(</span><span class="va">df_sub</span><span class="op">$</span><span class="va">label_binary</span>, <span class="va">df_sub</span><span class="op">$</span><span class="va">annot_binary</span><span class="op">)</span></span>
 <span>    </span>
 <span>    <span class="co"># F-1 score</span></span>
-<span>    <span class="va">conf_mat</span> <span class="op">&lt;-</span> <span class="fu">caret</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html" class="external-link">confusionMatrix</a></span><span class="op">(</span></span>
+<span>    <span class="va">conf_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html" class="external-link">confusionMatrix</a></span><span class="op">(</span></span>
 <span>      data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">df_sub</span><span class="op">$</span><span class="va">label_binary</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TLS"</span>, <span class="st">"Other"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>      reference <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">df_sub</span><span class="op">$</span><span class="va">annot_binary</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TLS"</span>, <span class="st">"Other"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="va">F1</span> <span class="op">&lt;-</span> <span class="va">conf_mat</span><span class="op">$</span><span class="va">byClass</span><span class="op">[</span><span class="st">"F1"</span><span class="op">]</span> <span class="co">#for multiclass classification problems</span></span>
@@ -460,10 +480,10 @@ truth TLS annotations</p>
 <span><span class="va">cluster_eval_metrics</span></span>
 <span><span class="co">#&gt;        ImageID       ARI       NMI        F1</span></span>
 <span><span class="co">#&gt;         &lt;char&gt;     &lt;num&gt;     &lt;num&gt;     &lt;num&gt;</span></span>
-<span><span class="co">#&gt; 1:   TILD028LA 0.7070873 0.5236775 0.7855695</span></span>
-<span><span class="co">#&gt; 2:   TILD315MA 0.5718259 0.3512873 0.6826156</span></span>
-<span><span class="co">#&gt; 3: VUILD104MA1 0.7288254 0.5088313 0.7753766</span></span>
-<span><span class="co">#&gt; 4:  VUILD110LA 0.3925147 0.1856403 0.4319758</span></span></code></pre></div>
+<span><span class="co">#&gt; 1:   TILD028LA 0.7036145 0.5196893 0.7826087</span></span>
+<span><span class="co">#&gt; 2:   TILD315MA 0.5556865 0.3321899 0.6670288</span></span>
+<span><span class="co">#&gt; 3: VUILD104MA1 0.6636726 0.4296721 0.7218789</span></span>
+<span><span class="co">#&gt; 4:  VUILD110LA 0.3804649 0.1776062 0.4194452</span></span></code></pre></div>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.4.1 (2024-06-14)</span></span>
@@ -488,57 +508,39 @@ truth TLS annotations</p>
 <span><span class="co">#&gt;  [5] cowplot_1.1.3      ggrepel_0.9.6      ggtext_0.1.2       lubridate_1.9.4   </span></span>
 <span><span class="co">#&gt;  [9] forcats_1.0.0      stringr_1.5.1      dplyr_1.1.4        purrr_1.0.4       </span></span>
 <span><span class="co">#&gt; [13] readr_2.1.5        tidyr_1.3.1        tibble_3.2.1       ggplot2_4.0.2.9000</span></span>
-<span><span class="co">#&gt; [17] tidyverse_2.0.0    data.table_1.17.0  Seurat_5.2.1       SeuratObject_5.0.2</span></span>
-<span><span class="co">#&gt; [21] sp_2.2-0           SCOPE.CTN_0.0.1   </span></span>
+<span><span class="co">#&gt; [17] tidyverse_2.0.0    data.table_1.17.0  SCOPE.CTN_0.0.1   </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
-<span><span class="co">#&gt;   [1] RcppAnnoy_0.0.22       splines_4.4.1          later_1.4.2           </span></span>
-<span><span class="co">#&gt;   [4] polyclip_1.10-7        hardhat_1.4.1          pROC_1.19.0.1         </span></span>
-<span><span class="co">#&gt;   [7] rpart_4.1.24           fastDummies_1.7.5      lifecycle_1.0.4       </span></span>
-<span><span class="co">#&gt;  [10] pbmcapply_1.5.1        globals_0.17.0         MASS_7.3-65           </span></span>
-<span><span class="co">#&gt;  [13] magrittr_2.0.3         plotly_4.10.4          sass_0.4.10           </span></span>
-<span><span class="co">#&gt;  [16] rmarkdown_2.29         jquerylib_0.1.4        yaml_2.3.10           </span></span>
-<span><span class="co">#&gt;  [19] httpuv_1.6.16          sctransform_0.4.1      spam_2.11-1           </span></span>
-<span><span class="co">#&gt;  [22] spatstat.sparse_3.1-0  reticulate_1.42.0      pbapply_1.7-2         </span></span>
-<span><span class="co">#&gt;  [25] abind_1.4-8            Rtsne_0.17             nnet_7.3-20           </span></span>
-<span><span class="co">#&gt;  [28] ipred_0.9-15           lava_1.8.1             irlba_2.3.5.1         </span></span>
-<span><span class="co">#&gt;  [31] listenv_0.9.1          spatstat.utils_3.2-1   goftest_1.2-3         </span></span>
-<span><span class="co">#&gt;  [34] RSpectra_0.16-2        spatstat.random_3.4-4  fitdistrplus_1.2-2    </span></span>
-<span><span class="co">#&gt;  [37] parallelly_1.43.0      pkgdown_2.1.1          commonmark_1.9.5      </span></span>
-<span><span class="co">#&gt;  [40] codetools_0.2-20       xml2_1.3.8             tidyselect_1.2.1      </span></span>
-<span><span class="co">#&gt;  [43] farver_2.1.2           gmp_0.7-5.1            matrixStats_1.5.0     </span></span>
-<span><span class="co">#&gt;  [46] stats4_4.4.1           spatstat.explore_3.7-0 jsonlite_2.0.0        </span></span>
-<span><span class="co">#&gt;  [49] e1071_1.7-16           progressr_0.15.1       ggridges_0.5.6        </span></span>
-<span><span class="co">#&gt;  [52] survival_3.8-3         iterators_1.0.14       systemfonts_1.3.1     </span></span>
-<span><span class="co">#&gt;  [55] foreach_1.5.2          tools_4.4.1            ragg_1.4.0            </span></span>
-<span><span class="co">#&gt;  [58] ica_1.0-3              Rcpp_1.1.1             glue_1.8.0            </span></span>
-<span><span class="co">#&gt;  [61] prodlim_2024.06.25     gridExtra_2.3          xfun_0.52             </span></span>
-<span><span class="co">#&gt;  [64] mgcv_1.9-4             withr_3.0.2            fastmap_1.2.0         </span></span>
-<span><span class="co">#&gt;  [67] litedown_0.7           digest_0.6.37          timechange_0.3.0      </span></span>
-<span><span class="co">#&gt;  [70] R6_2.6.1               mime_0.13              textshaping_1.0.0     </span></span>
-<span><span class="co">#&gt;  [73] colorspace_2.1-1       scattermore_1.2        tensor_1.5            </span></span>
-<span><span class="co">#&gt;  [76] markdown_2.0           spatstat.data_3.1-9    generics_0.1.3        </span></span>
-<span><span class="co">#&gt;  [79] recipes_1.2.1          FNN_1.1.4.1            class_7.3-23          </span></span>
-<span><span class="co">#&gt;  [82] httr_1.4.7             htmlwidgets_1.6.4      uwot_0.2.3            </span></span>
-<span><span class="co">#&gt;  [85] ModelMetrics_1.2.2.2   pkgconfig_2.0.3        gtable_0.3.6          </span></span>
-<span><span class="co">#&gt;  [88] timeDate_4041.110      lmtest_0.9-40          S7_0.2.1              </span></span>
-<span><span class="co">#&gt;  [91] htmltools_0.5.8.1      dotCall64_1.2          scales_1.4.0          </span></span>
-<span><span class="co">#&gt;  [94] ClusterR_1.3.6         png_0.1-8              gower_1.0.2           </span></span>
-<span><span class="co">#&gt;  [97] spatstat.univar_3.1-6  knitr_1.50             rstudioapi_0.17.1     </span></span>
-<span><span class="co">#&gt; [100] tzdb_0.5.0             reshape2_1.4.4         nlme_3.1-168          </span></span>
-<span><span class="co">#&gt; [103] proxy_0.4-27           cachem_1.1.0           zoo_1.8-14            </span></span>
-<span><span class="co">#&gt; [106] KernSmooth_2.23-26     parallel_4.4.1         miniUI_0.1.1.1        </span></span>
-<span><span class="co">#&gt; [109] desc_1.4.3             pillar_1.10.2          grid_4.4.1            </span></span>
-<span><span class="co">#&gt; [112] vctrs_0.6.5            RANN_2.6.2             promises_1.3.2        </span></span>
-<span><span class="co">#&gt; [115] xtable_1.8-4           cluster_2.1.8.1        evaluate_1.0.3        </span></span>
-<span><span class="co">#&gt; [118] cli_3.6.4              compiler_4.4.1         rlang_1.1.6           </span></span>
-<span><span class="co">#&gt; [121] future.apply_1.11.3    labeling_0.4.3         plyr_1.8.9            </span></span>
-<span><span class="co">#&gt; [124] fs_1.6.6               stringi_1.8.7          viridisLite_0.4.2     </span></span>
-<span><span class="co">#&gt; [127] deldir_2.0-4           assertthat_0.2.1       lazyeval_0.2.2        </span></span>
-<span><span class="co">#&gt; [130] spatstat.geom_3.7-0    Matrix_1.7-3           RcppHNSW_0.6.0        </span></span>
-<span><span class="co">#&gt; [133] hms_1.1.3              patchwork_1.3.2        future_1.40.0         </span></span>
-<span><span class="co">#&gt; [136] shiny_1.10.0           ROCR_1.0-11            gridtext_0.1.5        </span></span>
-<span><span class="co">#&gt; [139] igraph_2.2.2           bslib_0.9.0</span></span></code></pre></div>
+<span><span class="co">#&gt;  [1] pROC_1.19.0.1        rlang_1.1.6          magrittr_2.0.3      </span></span>
+<span><span class="co">#&gt;  [4] e1071_1.7-16         compiler_4.4.1       mgcv_1.9-3          </span></span>
+<span><span class="co">#&gt;  [7] systemfonts_1.3.1    pbmcapply_1.5.1      vctrs_0.6.5         </span></span>
+<span><span class="co">#&gt; [10] reshape2_1.4.4       pkgconfig_2.0.3      fastmap_1.2.0       </span></span>
+<span><span class="co">#&gt; [13] labeling_0.4.3       rmarkdown_2.29       prodlim_2024.06.25  </span></span>
+<span><span class="co">#&gt; [16] markdown_2.0         tzdb_0.5.0           ragg_1.4.0          </span></span>
+<span><span class="co">#&gt; [19] xfun_0.52            cachem_1.1.0         litedown_0.7        </span></span>
+<span><span class="co">#&gt; [22] jsonlite_2.0.0       recipes_1.2.1        gmp_0.7-5.1         </span></span>
+<span><span class="co">#&gt; [25] irlba_2.3.5.1        parallel_4.4.1       R6_2.6.1            </span></span>
+<span><span class="co">#&gt; [28] bslib_0.9.0          stringi_1.8.7        parallelly_1.43.0   </span></span>
+<span><span class="co">#&gt; [31] ClusterR_1.3.3       rpart_4.1.24         jquerylib_0.1.4     </span></span>
+<span><span class="co">#&gt; [34] Rcpp_1.1.1           assertthat_0.2.1     iterators_1.0.14    </span></span>
+<span><span class="co">#&gt; [37] knitr_1.50           future.apply_1.11.3  FNN_1.1.4.1         </span></span>
+<span><span class="co">#&gt; [40] Matrix_1.7-3         splines_4.4.1        nnet_7.3-20         </span></span>
+<span><span class="co">#&gt; [43] timechange_0.3.0     tidyselect_1.2.1     rstudioapi_0.17.1   </span></span>
+<span><span class="co">#&gt; [46] yaml_2.3.10          timeDate_4041.110    codetools_0.2-20    </span></span>
+<span><span class="co">#&gt; [49] listenv_0.9.1        plyr_1.8.9           withr_3.0.2         </span></span>
+<span><span class="co">#&gt; [52] S7_0.2.1             evaluate_1.0.3       future_1.40.0       </span></span>
+<span><span class="co">#&gt; [55] desc_1.4.3           survival_3.8-3       proxy_0.4-27        </span></span>
+<span><span class="co">#&gt; [58] xml2_1.3.8           pillar_1.10.2        stats4_4.4.1        </span></span>
+<span><span class="co">#&gt; [61] foreach_1.5.2        generics_0.1.3       hms_1.1.3           </span></span>
+<span><span class="co">#&gt; [64] commonmark_1.9.5     scales_1.4.0         globals_0.17.0      </span></span>
+<span><span class="co">#&gt; [67] class_7.3-23         glue_1.8.0           tools_4.4.1         </span></span>
+<span><span class="co">#&gt; [70] ModelMetrics_1.2.2.2 gower_1.0.2          fs_1.6.6            </span></span>
+<span><span class="co">#&gt; [73] grid_4.4.1           ipred_0.9-15         nlme_3.1-168        </span></span>
+<span><span class="co">#&gt; [76] cli_3.6.4            textshaping_1.0.0    lava_1.8.1          </span></span>
+<span><span class="co">#&gt; [79] gtable_0.3.6         sass_0.4.10          digest_0.6.37       </span></span>
+<span><span class="co">#&gt; [82] htmlwidgets_1.6.4    farver_2.1.2         htmltools_0.5.8.1   </span></span>
+<span><span class="co">#&gt; [85] pkgdown_2.1.1        lifecycle_1.0.4      hardhat_1.4.1       </span></span>
+<span><span class="co">#&gt; [88] gridtext_0.1.5       MASS_7.3-65</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

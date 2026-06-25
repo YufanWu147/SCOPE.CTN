@@ -5,6 +5,7 @@ vignette: >
   %\VignetteIndexEntry{Triad_prefilter_CLQ}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+date: 'Compiled: `r Sys.Date()`'
 ---
 
 ```{r knitr settings, include = FALSE}
@@ -47,10 +48,13 @@ Here we use the 45-sample pulmonary fibrosis (PF) Xenium dataset from [Vannan et
 
 For each tissue section, we first calculate an observed CLQ value $CLQ_{b\rightarrow a}^{(l),obs}$ using the true cell type labels. Please refer to the [Detecting TLS-like CTNs in PF Xenium data](PF_Xenium.html) to see how `PF_Xenium_dat_in` and `PF_Xenium_cell_neighbor_results` were obtained.
 
-```{r Load input data}
+```{r Load input data, eval = FALSE}
+dataset_name <- "PF_Xenium"
+data_path <- "vignette_data/"         # !!! Change this line to your own directory
+
 # Load data
-data("PF_Xenium_dat_in")
-data("PF_Xenium_cell_neighbor_results")
+load(paste0(data_path, dataset_name, "_dat_in.RData"))
+load(paste0(data_path, dataset_name, "_PF_Xenium_cell_neighbor_counts_nnids.RData"))
 
 # Neighborhood cell counts
 cell_neighbor_counts <- lapply(
@@ -58,7 +62,7 @@ cell_neighbor_counts <- lapply(
   do.call("rbind", .)
 # Nearest neighbor cell ids
 cell_neighbor_ids <- lapply(
-  cell_neighbor_results_maxdist, "[[", "count.df") %>%
+  cell_neighbor_results_maxdist, "[[", "neighbor.cell.ids") %>%
   do.call("rbind", .)
 ```
 

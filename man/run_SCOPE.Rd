@@ -59,5 +59,5 @@ run_SCOPE(
 }
 }
 \description{
-Non-linear version of SCOPE used for cell type triad niche (CTN) screening.
+Cell type triad niche (CTN) detection using SCOPE.
 }

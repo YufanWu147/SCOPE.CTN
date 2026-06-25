@@ -16,9 +16,9 @@
 #'   CTN = "B_CD4T_CD8T",
 #'   celltype_palette = c("B" = "#fee440", "CD4T" = "#3a86ff", "CD8T" = "#8338ec"))
 #'
-#' ggplot() +
-#'   labs(title = CTN_colored) +
-#'   theme(plot.title = element_markdown(hjust = 0.5))
+#' # ggplot() +
+#' # labs(title = CTN_colored) +
+#' #  theme(plot.title = element_markdown(hjust = 0.5))
 
 color_CTN_names <- function(CTN, celltype_palette = c("B" =  "#fee440", "CD4T" = "#3a86ff", "CD8T" = "#8338ec"),
                             dot_fontsize = 16, sep = "_") {

@@ -24,6 +24,7 @@
 #' @import dplyr
 #' @importFrom data.table rbindlist
 #' @importFrom FNN get.knn
+#' @importFrom stats quantile
 #' @export
 Build_cell_neighbor_maxdist <- function(
     dat_slide, knn_num, cell_types_available,
@@ -63,7 +64,8 @@ Build_cell_neighbor_maxdist <- function(
                   neighbor.cell.ids = neighbor.cell.ids))
     }
   }, simplify = FALSE)
-  count_df <- lapply(count_df_neighbor_ids, "[[", "count_table") %>% do.call(rbind, .)
+  count_df <- lapply(count_df_neighbor_ids, "[[", "count_table")
+  count_df <- do.call(rbind, count_df)
   rownames(count_df) <- dat_slide$CellID
   colnames(count_df) <- cell_types_available
   prop_df <- prop.table(count_df, margin = 1)

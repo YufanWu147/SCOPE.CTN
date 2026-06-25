@@ -7,6 +7,7 @@ vignette: >
   %\VignetteIndexEntry{CRC_VisiumHD}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+date: 'Compiled: `r Sys.Date()`'
 ---
 
 This tutorial shows an example of detecting the **lymphocyte aggregate (LA)-like niches** characterized by the $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ triad in the colorectal cancer (CRC) VisiumHD data using SCOPE. The dataset comes from [Oliveira et al. *Nat Genet* 2025](https://www.nature.com/articles/s41588-025-02193-3) and is composed of 3 CRC and 2 normal adjacent tissue samples. For this tutorial, we will focus on the 3 CRC samples collected from different patients (P1, P2, P5).
@@ -31,16 +32,16 @@ library(data.table)
 library(tidyverse)
 library(ggtext)
 library(cowplot)
-library(arrow) # for loading parquet files
 dataset_name <- "CRC_VisiumHD"
-source(paste0("palettes/", dataset_name, "_celltype_palette.R")) # cell type color palette
+data_path <- "vignette_data/"         # !!! Change this line to your own directory
+source(paste0(data_path, "palettes/", dataset_name, "_celltype_palette.R")) # cell type color palette
 ```
 
 ```{r Load results, include=FALSE}
 driver_celltypes <- c("B cell", "CD4 T cell", "CD8 T cell")
-load(paste0("data/", dataset_name, "_dat_in.RData"))
-load(paste0("data/", dataset_name, "_cell_neighbor_results.RData"))
-load(paste0("data/", dataset_name, "_B_CD4T_CD8T.RData"))
+load(paste0(data_path, dataset_name, "_dat_in.RData"))
+load(paste0(data_path, dataset_name, "_cell_neighbor_results.RData"))
+load(paste0(data_path, dataset_name, "_B_CD4T_CD8T.RData"))
 slide_list <- unique(CRC_VisiumHD_dat_in$ImageID)
 ```
 
@@ -49,6 +50,8 @@ slide_list <- unique(CRC_VisiumHD_dat_in$ImageID)
 The metadata parquet files for this dataset can be downloaded from [Zenodo](https://zenodo.org/records/15042463) or [GitHub](https://github.com/10XGenomics/HumanColonCancer_VisiumHD). We will simplify the `DeconvolutionLabel1` column and use them as the input cell type labels. It contains the cell types of the 8-$\mu$m binned data predicted by deconvolution using the single-cell RNA-seq reference.
 
 ```{r load metadata, eval = FALSE}
+library(arrow) # for loading parquet files
+
 CRC_VisiumHD_metadata <- sapply(c("P1", "P2", "P5"), function(x) {
   read_parquet(paste0("https://github.com/10XGenomics/HumanColonCancer_VisiumHD/",
                       "raw/refs/heads/main/MetaData/", x, "CRC_Metadata.parquet"))
@@ -261,7 +264,7 @@ CTN_df %>%
   scale_y_discrete(limits = rev) +
   coord_cartesian(expand = FALSE, clip = "off") +
   guides(fill = guide_legend(ncol = 3)) +
-  cowplot::theme_cowplot(font_size = 12) +
+  theme_cowplot(font_size = 12) +
   labs(x = "Proportion of Cells", y = NULL) +
   theme(plot.title = element_markdown(hjust = 0.5),
         legend.key.size = unit(3, "mm"),

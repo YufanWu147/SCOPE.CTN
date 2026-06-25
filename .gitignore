@@ -3,7 +3,7 @@
 .Rhistory
 inst/doc
 *.DS_Store
-.RData
+*.RData
 
 # knitr and R markdown default cache directories
 *_cache/

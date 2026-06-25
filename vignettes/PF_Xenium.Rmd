@@ -5,6 +5,7 @@ vignette: >
   %\VignetteIndexEntry{PF_Xenium}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+date: 'Compiled: `r Sys.Date()`'
 ---
 
 This tutorial shows an example of detecting the tertiary lymphoid structure (TLS)-like niches characterized by the $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ triad in the pulmonary fibrosis (PF) Xenium data using SCOPE. The dataset comes from [Vannan et al. *Nat Genet* 2025](https://www.nature.com/articles/s41588-025-02080-x) and is composed of 35 PF and 10 unaffected samples.
@@ -25,72 +26,74 @@ First, we load the packages that will be used for the analysis and visualization
 
 ```{r Load packages}
 library(SCOPE.CTN)
-library(Seurat)
 library(data.table)
 library(tidyverse)
 library(ggtext)
 library(ggrepel)
 library(cowplot)
 library(RColorBrewer)
-library(aricode); library(caret) # for clustering evaluation
 
 dataset_name <- "PF_Xenium"
-data_path <- "data/"
-source(paste0("palettes/", dataset_name, "_celltype_palette.R")) # cell type color palette
+data_path <- "vignette_data/"         # !!! Change this line to your own directory
+source(paste0(data_path, "palettes/", 
+              dataset_name, "_celltype_palette.R")) # cell type color palette
 ```
 
 ```{r Load input data, include = FALSE}
 driver_celltypes <- c("B cells", "CD4+ T-cells", "CD8+ T-cells")
 load(paste0(data_path, dataset_name, "_dat_in.RData"))
-load(paste0(data_path, dataset_name, "_cell_neighbor_results.RData"))
+load(paste0(data_path, dataset_name, "_cell_neighbor_props_dist.quantiles.RData"))
 load(paste0(data_path, dataset_name, "_B_CD4T_CD8T.RData"))
+load(paste0(data_path, dataset_name, "_annotations.RData"))
 slide_list <- unique(PF_Xenium_dat_in$ImageID)
 ```
 
 ## 1. Preparing input data
 
-The `rds` file containing a Seurat object of this dataset can be downloaded from Gene Expression Omnibus (GEO) under accesssion number [GSE250346](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE250346). 
+The `rds` file containing a Seurat object of this dataset can be downloaded from Gene Expression Omnibus (GEO) under accesssion number [GSE250346](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE250346). We downloaded the `GSE250346_Seurat_GSE250346_CORRECTED_SEE_RDS_README_082024.rds` file and saved it under `<data_path>/`.
 
 ```{r read data, eval=FALSE}
+library(Seurat)
+
 PF_Xenium_obj <- readRDS(paste0(data_path, "GSE250346_Seurat_GSE250346_CORRECTED_SEE_RDS_README_082024.rds"))
 clinical_data <- distinct(PF_Xenium_obj@meta.data, sample, sample_affect)
-save(clinical_data, file = paste0(data_path, dataset_name, "_clinical_data.RData")))
+
+# save(clinical_data, file = paste0(data_path, dataset_name, "_clinical_data.RData")))
 ```
 
 We will also use the `cells_partitioned_by_annotation.csv` file in `GSE250346_HE_annotations.tar.gz` which contains annotations of PF histopathological features (including TLSs). The samples in this file need to renamed following [the code from the original paper](https://github.com/Banovich-Lab/Spatial_PF/blob/828db997a122531e6b907b792f58ae1bbd997662/figures.R#L260):
 
-```{r read annotation}
-# load(paste0(data_path, dataset_name, "_clinical_data.RData"))
-# PF_Xenium_annot <- read.csv(paste0(data_path, "cells_partitioned_by_annotation.csv")) %>%
-#   ## keeping only the relevant columns to reduce data size
-#   select(CellID = cell_id, ImageID = sample, Annotation_Type, annotation_type_instance) %>%
-#   mutate(patient = str_extract(ImageID, "(THD|TILD|VUHD|VUILD)[0-9]+")) %>%
-#   left_join(clinical_data[, c("patient", "sample_affect")], by = "patient") %>%
-#   ## Change sample name based on the code from the original paper (
-#   ## Initial rename
-#   mutate(ImageID_new = case_when(
-#     sample_affect == "Less Affected" ~ paste0(patient, "LA"),
-#     sample_affect == "More Affected"  ~ paste0(patient, "MA"),
-#     TRUE ~ ImageID)) %>%
-#   ## Fix additional names
-#   mutate(ImageID_new = case_when(
-#     ImageID == "TILD117MF" ~ "TILD117MA1",
-#     ImageID == "TILD117MFB" ~ "TILD117MA2",
-#     ImageID == "VUILD104LF" ~ "VUILD104MA1",
-#     ImageID == "VUILD104MF" ~ "VUILD104MA2",
-#     ImageID == "VUILD105LF" ~ "VUILD105MA1",
-#     ImageID == "VUILD105MF" ~ "VUILD105MA2",
-#     ImageID == "VUILD48LF" ~ "VUILD48LA1",
-#     ImageID == "VUILD48MF" ~ "VUILD48LA2",
-#     str_detect(ImageID_new, 'LF$') ~ str_replace(ImageID_new, "LF$", "LA"),
-#     str_detect(ImageID_new, 'MF$') ~ str_replace(ImageID_new, "MF$", "MA"),
-#     TRUE ~ ImageID_new)) %>%
-#   mutate(CellID = paste(ImageID_new, CellID, sep = "_")) %>%
-#   select(-ImageID) %>%
-#   rename(ImageID = ImageID_new)
-#
+```{r read annotation, eval=FALSE}
+load(paste0(data_path, dataset_name, "_clinical_data.RData"))
+PF_Xenium_annot <- read.csv(paste0(data_path, "cells_partitioned_by_annotation.csv")) %>%
+  ## keeping only the relevant columns to reduce data size
+  select(CellID = cell_id, ImageID = sample, Annotation_Type, annotation_type_instance) %>%
+  mutate(patient = str_extract(ImageID, "(THD|TILD|VUHD|VUILD)[0-9]+")) %>%
+  left_join(clinical_data[, c("patient", "sample_affect")], by = "patient") %>%
+  ## Change sample name based on the code from the original paper (
+  ## Initial rename
+  mutate(ImageID_new = case_when(
+    sample_affect == "Less Affected" ~ paste0(patient, "LA"),
+    sample_affect == "More Affected"  ~ paste0(patient, "MA"),
+    TRUE ~ ImageID)) %>%
+  ## Fix additional names
+  mutate(ImageID_new = case_when(
+    ImageID == "TILD117MF" ~ "TILD117MA1",
+    ImageID == "TILD117MFB" ~ "TILD117MA2",
+    ImageID == "VUILD104LF" ~ "VUILD104MA1",
+    ImageID == "VUILD104MF" ~ "VUILD104MA2",
+    ImageID == "VUILD105LF" ~ "VUILD105MA1",
+    ImageID == "VUILD105MF" ~ "VUILD105MA2",
+    ImageID == "VUILD48LF" ~ "VUILD48LA1",
+    ImageID == "VUILD48MF" ~ "VUILD48LA2",
+    str_detect(ImageID_new, 'LF$') ~ str_replace(ImageID_new, "LF$", "LA"),
+    str_detect(ImageID_new, 'MF$') ~ str_replace(ImageID_new, "MF$", "MA"),
+    TRUE ~ ImageID_new)) %>%
+  mutate(CellID = paste(ImageID_new, CellID, sep = "_")) %>%
+  select(-ImageID) %>%
+  rename(ImageID = ImageID_new)
+
 # save(PF_Xenium_annot, file = paste0(data_path, dataset_name, "_annotations.RData"))
-load(paste0(data_path, dataset_name, "_annotations.RData"))
 ```
 
 The input data frame for SCOPE should contain the following columns:
@@ -168,11 +171,23 @@ cell_neighbor_results_maxdist <- pbmcapply::pbmclapply(
       min.radius = 100,       # lower limit for the boundary
       max.radius = 500,       # upper limit for the boundary
       min.n.neighbors = 10,   # minimum no. of neighbors,
-      return.nn.ids = TRUE,   # Whether to return nearest neighbor IDs
+      return.nn.ids = TRUE,   # Whether to return nearest neighbor Cell IDs
       prob_list = seq(0, 1, 0.1))},
   mc.cores = 4) # set mc.cores=1 on Windows machine
-save(cell_neighbor_results_maxdist,
-      file = paste0(data_path, dataset_name, "_cell_neighbor_results.RData"))
+
+# Extract neighborhood cell count and ids and save it into a separate file
+cell_neighbor_counts_nnids <-  lapply(
+  cell_neighbor_results_maxdist, function(x) {x[c("count.df", "neighbor.cell.ids")]})
+save(cell_neighbor_counts_nnids,
+     file = paste0(data_path, dataset_name, "_cell_neighbor_counts_nnids.RData"))
+# Extract neighborhood cell type proportion and 
+# quantiles of distance to nearest neighbors
+cell_neighbor_props_dist.quantiles <-  lapply(
+  cell_neighbor_results_maxdist, function(x) {x[c("prop.df", "dist.quantiles")]})
+save(cell_neighbor_props_dist.quantiles, 
+     file = paste0(data_path, dataset_name, "_cell_neighbor_props_dist.quantiles.RData"))
+
+rm(cell_neighbor_results_maxdist)
 ```
 
 
@@ -180,7 +195,7 @@ We can examine the distribution of the 99th percentile of all distance to the ne
 
 ```{r Examine distance distribution, out.width='50%', fig.width=3.5, fig.height=2.2}
 ## 99th percentile of the distance to nearest neighbors
-dist_99th <- sapply(cell_neighbor_results_maxdist, "[[", "dist.quantiles") %>%
+dist_99th <- sapply(cell_neighbor_props_dist.quantiles, "[[", "dist.quantiles") %>%
   `colnames<-`(slide_list) %>%
   as.data.frame() %>% rownames_to_column("perc") %>%
   mutate(perc = as.numeric(str_remove(perc, "%"))) %>%
@@ -225,7 +240,7 @@ PF_Xenium_dat_in %>%
 ```{r Combine proportion matrix}
 # Combine neighborhood proportion table
 cell_neighbor_table_maxdist <- lapply(
-  cell_neighbor_results_maxdist, "[[", "prop.df") %>%
+  cell_neighbor_props_dist.quantiles, "[[", "prop.df") %>%
   do.call("rbind", .)
 ```
 
@@ -356,7 +371,7 @@ CTN_df %>%
   scale_y_discrete(limits = rev) +
   coord_cartesian(expand = FALSE, clip = "off") +
   guides(fill = guide_legend(ncol = 4)) +
-  cowplot::theme_cowplot(font_size = 12) +
+  theme_cowplot(font_size = 12) +
   labs(x = "Proportion of Cells", y = NULL) +
   theme(plot.title = element_markdown(hjust = 0.5),
         legend.key.size = unit(3, "mm"),
@@ -369,6 +384,8 @@ CTN_df %>%
 We can then compute the evaluation metrics comparing CTN1 with ground truth TLS annotations
 
 ```{r evaluation metrics}
+library(aricode); library(caret) # for clustering evaluation
+
 cluster_eval_metrics <- CTN_df %>% 
   mutate(label_binary = ifelse(label == "CTN1", "TLS", "Other")) %>%
   left_join(PF_Xenium_annot, by = "CellID") %>%
@@ -377,11 +394,11 @@ cluster_eval_metrics <- CTN_df %>%
   split(f = .$ImageID) %>%
   lapply(function(df_sub) {
     # ARI and NMI
-    ARI <- aricode::ARI(df_sub$label_binary, df_sub$annot_binary)
-    NMI <- aricode::NMI(df_sub$label_binary, df_sub$annot_binary)
+    ARI <- ARI(df_sub$label_binary, df_sub$annot_binary)
+    NMI <- NMI(df_sub$label_binary, df_sub$annot_binary)
     
     # F-1 score
-    conf_mat <- caret::confusionMatrix(
+    conf_mat <- confusionMatrix(
       data = factor(df_sub$label_binary, c("TLS", "Other")),
       reference = factor(df_sub$annot_binary, c("TLS", "Other")))
     F1 <- conf_mat$byClass["F1"] #for multiclass classification problems
