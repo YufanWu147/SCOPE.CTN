@@ -34,13 +34,12 @@ library(cowplot)
 library(RColorBrewer)
 
 dataset_name <- "PF_Xenium"
-data_path <- "vignette_data/"         # !!! Change this line to your own directory
-source(paste0(data_path, "palettes/", 
-              dataset_name, "_celltype_palette.R")) # cell type color palette
+data_path <- paste0("vignette_data/", dataset_name, "/")   # !!! Change the directory
+source(paste0(data_path, dataset_name, "_celltype_palette.R")) # cell type color palette
 ```
 
 ```{r Load input data, include = FALSE}
-driver_celltypes <- c("B cells", "CD4+ T-cells", "CD8+ T-cells")
+core_celltypes <- c("B cells", "CD4+ T-cells", "CD8+ T-cells")
 load(paste0(data_path, dataset_name, "_dat_in.RData"))
 load(paste0(data_path, dataset_name, "_cell_neighbor_props_dist.quantiles.RData"))
 load(paste0(data_path, dataset_name, "_B_CD4T_CD8T.RData"))
@@ -155,7 +154,7 @@ PF_Xenium_dat_in %>%
 
 ## 2. Create neighborhood cell proportion matrix
 
-Next, we use the k-nearest neighbors algorithm to define the spatial neighborhood and compute the neighborhood cell type composition matrix. The default number of nearest clusters $k$ is 20, however we can increase $k$ for larger tissues. Since this dataset contains 3-5mm lung tissue cores, here we set $k=50$.
+Next, we use the k-nearest neighbors algorithm to define the spatial neighborhood and compute the neighborhood cell type composition matrix. The default number of nearest neighbors $k$ is 20, however we can increase $k$ for larger tissues. Since this dataset contains 3-5mm lung tissue cores, here we set $k=50$.
 
 In addition, we enforce a distance boundary for the nearest neighbors and exclude the cells falling outside this radius. The boundary is initially defined as the 99th percentile of all distances from focal cells to their nearest neighbors. If it falls outside a predefined range, we reset it to either the minimum (`min.radius`) or maximum threshold (`max.radius`).
 
@@ -178,14 +177,14 @@ cell_neighbor_results_maxdist <- pbmcapply::pbmclapply(
 # Extract neighborhood cell count and ids and save it into a separate file
 cell_neighbor_counts_nnids <-  lapply(
   cell_neighbor_results_maxdist, function(x) {x[c("count.df", "neighbor.cell.ids")]})
-save(cell_neighbor_counts_nnids,
-     file = paste0(data_path, dataset_name, "_cell_neighbor_counts_nnids.RData"))
+# save(cell_neighbor_counts_nnids,
+#      file = paste0(data_path, dataset_name, "_cell_neighbor_counts_nnids.RData"))
 # Extract neighborhood cell type proportion and 
 # quantiles of distance to nearest neighbors
 cell_neighbor_props_dist.quantiles <-  lapply(
   cell_neighbor_results_maxdist, function(x) {x[c("prop.df", "dist.quantiles")]})
-save(cell_neighbor_props_dist.quantiles, 
-     file = paste0(data_path, dataset_name, "_cell_neighbor_props_dist.quantiles.RData"))
+# save(cell_neighbor_props_dist.quantiles, 
+#      file = paste0(data_path, dataset_name, "_cell_neighbor_props_dist.quantiles.RData"))
 
 rm(cell_neighbor_results_maxdist)
 ```
@@ -294,21 +293,21 @@ cells_to_exclude %>%
 Next, we apply SCOPE to the $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ triad using default configurations for the following parameters:
 
 * `min.prop`: The minimum neighborhood cell-type proportion threshold. Proportions below this value are set to 0 (default: 0.3).
-* `mgcv_df`: The dimension of the basis used for thin-plate regression spline smoothing of the driver cell-type proportions (default: 15; see `mgcv::s()` for details).
+* `mgcv_df`: The dimension of the basis used for thin-plate regression spline smoothing of the core cell-type proportions (default: 15; see `mgcv::s()` for details).
 
 We set the number of clusters `clusternum` at 3 to separate the B cell and T cell zones.
 
 ```{r Run SCOPE, eval = FALSE}
-driver_celltypes <- c("B cells", "CD4+ T-cells", "CD8+ T-cells")
+core_celltypes <- c("B cells", "CD4+ T-cells", "CD8+ T-cells")
 
 CTN_df <- run_SCOPE(
-  combination_table = as.data.frame(matrix(driver_celltypes, nrow = 1)),
+  combination_table = as.data.frame(matrix(core_celltypes, nrow = 1)),
   cell_neighbor_table = cell_neighbor_table_maxdist,
   dat_in = PF_Xenium_dat_in,
   save_results = FALSE, 
   clusternum = 3, min.prop = 0.3,
   linear = FALSE, mgcv_df = 15, iter.max = 100)
-save(CTN_df, file = paste0(data_path, dataset_name, "_B_CD4T_CD8T.RData"))
+# save(CTN_df, file = paste0(data_path, dataset_name, "_B_CD4T_CD8T.RData"))
 ```
 
 Here we can see that the $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ CTNs closely aligns with the lymphocyte aggregates in the CRC samples, where CTN1 resembles the B cell zone and CTN2 resembles the surrounding T cell zone.
@@ -321,7 +320,7 @@ table(CTN_df$label)
 ```{r Visualize results, fig.width=11, fig.height=3, fig.show='hold', class.source = "fold-hide"}
 # CTN label with colored dots separating the cell types
 CTN_label <- color_CTN_names(
-  paste(driver_celltypes, collapse = "_"), PF_Xenium_celltype_palette) 
+  paste(core_celltypes, collapse = "_"), PF_Xenium_celltype_palette) 
 
 # Visualizing B cell/CD4+ T cell/CD8+ T cell CTN
 CTN_df %>%
@@ -341,18 +340,18 @@ CTN_df %>%
         panel.background = element_blank(),
         aspect.ratio = 1)
 
-# Show driver cell types only
+# Show core cell types only
 PF_Xenium_dat_in %>%
   filter(ImageID %in% TLS_img_list) %>%
   filter(CellID %in% CTN_df$CellID) %>% # dropping cells with few neighbors
-  mutate(Celltype = ifelse(Celltype %in% driver_celltypes, as.character(Celltype), "Other")) %>%
+  mutate(Celltype = ifelse(Celltype %in% core_celltypes, as.character(Celltype), "Other")) %>%
   ggplot(aes(x = X, y = Y, color = Celltype)) +
   geom_point(shape = 16, size= 0.1) +
   scale_color_manual(values = c(PF_Xenium_celltype_palette, "Other" = "grey90")) +
   guides(color = guide_legend(override.aes = list(size = 3), ncol = 1)) +
   facet_wrap(~ImageID, scales = "free", nrow = 1) +
   theme_void(base_size = 14) +
-  labs(title = "Driver cell type triad") +
+  labs(title = "core cell type triad") +
   coord_cartesian(expand = FALSE) +
   theme(legend.key.size = unit(2.5, "mm"),
         plot.title = element_text(hjust = 0.5),

@@ -25,7 +25,8 @@ library(SCOPE.CTN)
 library(tidyverse)
 library(cowplot)
 ```
-SCOPE identifies niches driven by cell-type triads. However, as the number of cell types grows, the combinations of three cell types increase exponentially. To reduce the computational burden, we utilize a colocation quotient (CLQ) permutation test to prioritize cell type triads that exhibit significant spatial proximity. 
+
+SCOPE identifies niches characterized by cell-type triads. However, as the number of cell types grows, the combinations of three cell types increase exponentially. To reduce the computational burden, we utilize a colocation quotient (CLQ) permutation test to prioritize cell type triads that exhibit significant spatial proximity. 
 
 ```{r load packages, fig.width=4, fig.height=2.5, out.width="50%"}
 data.frame(n_celltype = 3:50, n_combn = choose(3:50, 3)) %>%
@@ -50,7 +51,7 @@ For each tissue section, we first calculate an observed CLQ value $CLQ_{b\righta
 
 ```{r Load input data, eval = FALSE}
 dataset_name <- "PF_Xenium"
-data_path <- "vignette_data/"         # !!! Change this line to your own directory
+data_path <- paste0("vignette_data/", dataset_name, "/")   # !!! Change the directory
 
 # Load data
 load(paste0(data_path, dataset_name, "_dat_in.RData"))
@@ -69,16 +70,15 @@ cell_neighbor_ids <- lapply(
 ```{r observed CLQ, eval = FALSE}
 CLQ_obs <- compute_CLQ_observed(
   cell_neighbor_counts = cell_neighbor_counts,
-  dat_in = dat_in)
-
-head(CLQ_obs)
+  dat_in = Xenium_PF_dat_in, min.ncell = 500)
 ```
 
 We then randomly shuffle the cell type labels for 500 times to create a null distribution of CLQs assuming that the cell types are distributed randomly. $CLQ_{b\rightarrow a}^{(l),k},k = 1,2,…,500$. 
 
 ```{r permutated CLQ, eval = FALSE}
 CLQ_perm <- compute_CLQ_permutated(
-  cell_neighbor_ids = cell_neighbor_ids, dat_in = dat_in,
+  cell_neighbor_ids = cell_neighbor_ids, 
+  dat_in = Xenium_PF_dat_in, min.ncell = 500,
   iter.num = 500, seed = 42, n_cores = 5)
 ```
 
@@ -92,7 +92,7 @@ where $I$ is the indicator function.
 CLQ_perm_pval <- CLQ_permutation_test(CLQ_obs = CLQ_obs, CLQ_perm = CLQ_perm)
 ```
 
-The function returns both nominal and Benjamini-Hochberg (BH) adjusted p-values. We prioritize cell type triads all constituent pairs exhibit significant CLQs (adjusted p-value < 0.05) in at least 10 tissue sections.
+The function returns both nominal and Benjamini-Hochberg (BH) adjusted p-values. We prioritize cell type triads where all constituent pairs exhibit significant CLQs (adjusted p-value < 0.05) in at least 10 tissue sections.
 
 ```{r filter triads, eval = FALSE}
 ## Exclude cell types with too few cells

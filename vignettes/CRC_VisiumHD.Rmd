@@ -33,12 +33,12 @@ library(tidyverse)
 library(ggtext)
 library(cowplot)
 dataset_name <- "CRC_VisiumHD"
-data_path <- "vignette_data/"         # !!! Change this line to your own directory
-source(paste0(data_path, "palettes/", dataset_name, "_celltype_palette.R")) # cell type color palette
+data_path <- paste0("vignette_data/", dataset_name, "/")   # !!! Change the directory
+source(paste0(data_path, dataset_name, "_celltype_palette.R")) # cell type color palette
 ```
 
 ```{r Load results, include=FALSE}
-driver_celltypes <- c("B cell", "CD4 T cell", "CD8 T cell")
+core_celltypes <- c("B cell", "CD4 T cell", "CD8 T cell")
 load(paste0(data_path, dataset_name, "_dat_in.RData"))
 load(paste0(data_path, dataset_name, "_cell_neighbor_results.RData"))
 load(paste0(data_path, dataset_name, "_B_CD4T_CD8T.RData"))
@@ -90,7 +90,7 @@ CRC_VisiumHD_dat_in <- CRC_VisiumHD_metadata %>%
   # Keeping only the singlet bins
   filter(DeconvolutionClass == "singlet") %>%
   select(CellID = barcode, ImageID, X = X, Y = Y, Celltype = Celltype) 
-# save(CRC_VisiumHD_dat_in, file = paste0("data/", dataset_name, "_dat_in.RData"))
+# save(CRC_VisiumHD_dat_in, file = paste0(data_path, dataset_name, "_dat_in.RData"))
 ```
 
 
@@ -114,7 +114,7 @@ CRC_VisiumHD_dat_in %>%
 
 ## 2. Create neighborhood cell proportion matrix
 
-Next, we use the k-nearest neighbors algorithm to define the spatial neighborhood and compute the neighborhood cell type composition matrix. The default number of nearest clusters $k$ is 20, however we can increase $k$ for larger tissue slices. Here we set $k$=50.
+Next, we use the k-nearest neighbors algorithm to define the spatial neighborhood and compute the neighborhood cell type composition matrix. The default number of nearest neighbors $k$ is 20, however we can increase $k$ for larger tissue slices. Here we set $k$=50.
 
 In addition, we enforce a distance boundary for the nearest neighbors and exclude the cells falling outside this radius. The boundary is initially defined as the 99th percentile of all distances from focal cells to their nearest neighbors. If it falls outside a predefined range, we reset it to either the minimum (`min.radius`) or maximum threshold (`max.radius`).
 
@@ -133,7 +133,7 @@ cell_neighbor_results_maxdist <- pbmcapply::pbmclapply(
       prob_list = seq(0, 1, 0.1))},
   mc.cores = 3) # set mc.cores to 1 on Windows
 # save(cell_neighbor_results_maxdist, 
-#      file = paste0("data/", dataset_name, "_cell_neighbor_results.RData"))
+#      file = paste0(data_path, dataset_name, "_cell_neighbor_results.RData"))
 ```
 
 
@@ -191,21 +191,21 @@ cells_to_exclude %>%
 Next, we apply SCOPE to the $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ triad using default configurations for the following parameters:
 
 * `min.prop`: The minimum neighborhood cell-type proportion threshold. Proportions below this value are set to 0 (default: 0.3).
-* `mgcv_df`: The dimension of the basis used for thin-plate regression spline smoothing of the driver cell-type proportions (default: 15; see `mgcv::s()` for details).
+* `mgcv_df`: The dimension of the basis used for thin-plate regression spline smoothing of the core cell-type proportions (default: 15; see `mgcv::s()` for details).
 
 We set the number of clusters `clusternum` at 3 to separate the B cell and T cell zones.
 
 ```{r Run SCOPE, eval = FALSE}
-driver_celltypes <- c("B cell", "CD4 T cell", "CD8 T cell")
+core_celltypes <- c("B cell", "CD4 T cell", "CD8 T cell")
 
 CTN_df <- run_SCOPE(
-  combination_table = as.data.frame(matrix(driver_celltypes, nrow = 1)),
+  combination_table = as.data.frame(matrix(core_celltypes, nrow = 1)),
   cell_neighbor_table = cell_neighbor_table_maxdist,
   dat_in = CRC_VisiumHD_dat_in,
   save_results = FALSE, 
   clusternum = 3, min.prop = 0.3,
   linear = FALSE, mgcv_df = 15, iter.max = 100)
-# save(CTN_df, file = paste0("data/", dataset_name, "_B_CD4T_CD8T.RData"))
+# save(CTN_df, file = paste0(data_path, dataset_name, "_B_CD4T_CD8T.RData"))
 ```
 
 Here we can see that the $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ CTNs closely aligns with the lymphocyte aggregates in the CRC samples, where CTN1 resembles the B cell zone and CTN2 resembles the surrounding T cell zone.
@@ -218,7 +218,7 @@ table(CTN_df$label)
 ```{r Visualize results, fig.width=10, fig.height=4, fig.show='hold', class.source = "fold-hide"}
 # CTN label with colored dots separating the cell types
 CTN_label <- color_CTN_names(
-  paste(driver_celltypes, collapse = "_"), celltype_colors) 
+  paste(core_celltypes, collapse = "_"), celltype_colors) 
 
 # Visualizing B cell/CD4+ T cell/CD8+ T cell CTN
 CTN_df %>%
@@ -236,9 +236,9 @@ CTN_df %>%
         plot.title = element_markdown(hjust = 0.5),
         panel.background = element_blank())
 
-# Show driver cell types only
+# Show core cell types only
 CRC_VisiumHD_dat_in %>%
-  mutate(Celltype = ifelse(Celltype %in% driver_celltypes, Celltype, "Other")) %>%
+  mutate(Celltype = ifelse(Celltype %in% core_celltypes, Celltype, "Other")) %>%
   ggplot(aes(x = X, y = Y, color = Celltype)) +
   geom_point(shape = 16, size= 0.1) +
   scale_color_manual(values = celltype_colors, 
@@ -246,7 +246,7 @@ CRC_VisiumHD_dat_in %>%
   guides(color = guide_legend(override.aes = list(size = 3), ncol = 1)) +
   facet_wrap(~ImageID, scales = "free") +
   theme_void(base_size = 14) +
-  labs(title = "Driver cell type triad") +
+  labs(title = "core cell type triad") +
   coord_cartesian(expand = FALSE) +
   theme(legend.key.size = unit(2.5, "mm"),
         plot.title = element_text(hjust = 0.5),

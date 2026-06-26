@@ -9,6 +9,7 @@ inst/doc
 *_cache/
 /cache/
 /doc/
+/vignettes/vignette_data/
 /Meta/
 README.Rmd
 data
