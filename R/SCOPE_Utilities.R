@@ -64,8 +64,7 @@ Build_cell_neighbor_maxdist <- function(
                   neighbor.cell.ids = neighbor.cell.ids))
     }
   }, simplify = FALSE)
-  count_df <- lapply(count_df_neighbor_ids, "[[", "count_table")
-  count_df <- do.call(rbind, count_df)
+  count_df <- lapply(count_df_neighbor_ids, "[[", "count_table") %>% do.call(rbind, .)
   rownames(count_df) <- dat_slide$CellID
   colnames(count_df) <- cell_types_available
   prop_df <- prop.table(count_df, margin = 1)

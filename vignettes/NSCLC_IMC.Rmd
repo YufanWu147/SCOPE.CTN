@@ -1,0 +1,311 @@
+---
+title: "Systematic CTN screening in NSCLC IMC data"
+output: 
+  rmarkdown::html_vignette:
+    code_folding: "show"
+vignette: >
+  %\VignetteIndexEntry{NSCLC_IMC}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+date: 'Compiled: `r Sys.Date()`'
+---
+
+This tutorial shows an example of systematic screening of cell-type triad niches (CTN) in the non-small cell lung cancer (NSCLC) imaging mass cytometry (IMC) data using SCOPE. The dataset comes from [Cords et al. *Cancer Cell * 2024](https://www.cell.com/cancer-cell/fulltext/S1535-6108(23)00449-X) and is composed of 2,072 tissue samples from a cohort of 1,070 patients. 
+
+First, we load the packages that will be used for the analysis and visualization.
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE, # Suppresses package startup messages
+  warning = FALSE,  # Suppresses warning messages
+  dpi = 300,
+  out.width='100%', 
+  fig.align = "center")
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+```{r Load packages}
+library(SCOPE.CTN)
+library(data.table)
+library(tidyverse)
+library(ggtext)
+library(cowplot)
+dataset_name <- "NSCLC_IMC"
+data_path <- paste0("vignette_data/", dataset_name, "/")   # !!! Change the directory
+source(paste0(data_path, dataset_name, "_celltype_palette.R")) # cell type color palette
+```
+
+```{r Load results, include=FALSE}
+load(paste0(data_path, dataset_name, "_dat_in.RData"))
+ncell_by_slide <- table(NSCLC_IMC_dat_in$ImageID)
+slide_list = unique(names(ncell_by_slide)[which(ncell_by_slide>500)]) # 1984 images left
+```
+
+## 1. Preparing input data
+
+The SingleCellExperiment object and clinical data for this dataset can be downloaded from [Zenodo](https://zenodo.org/records/7961844).
+
+* `sce_all_annotated.rds` can be found in `SingleCellExperiment Objects.zip`.
+* `clinical_data_ROI.csv` can be found in `comp_csv_files.zip`.
+
+```{r load metadata, eval = FALSE}
+library(SingleCellExperiment)
+NSCLC_obj <- readRDS(paste0(data_path, "sce_all_annotated.rds"))
+```
+
+The input data frame for SCOPE should contain the following columns:
+
+* `CellID`: cell id
+* `ImageID`: sample id
+* `X`: X coordinate
+* `Y`: Y coordinate
+* `Celltype`: cell type labels
+
+```{r Formatting input, eval = FALSE}
+# Extract cell metadata
+NSCLC_IMC_dat_in = colData(NSCLC_obj)[,c("Tma_ac","CellID","cell_type","Center_X","Center_Y")]
+NSCLC_IMC_dat_in <- as.data.frame(NSCLC_IMC_dat_in)
+
+# Rename the columns
+colnames(NSCLC_IMC_dat_in) <- c("ImageID","CellID","Celltype","X","Y")
+NSCLC_IMC_dat_in$Celltype <- factor(NSCLC_IMC_dat_in$Celltype, NSCLC_IMC_celltype_levs)
+```
+
+We exclude the images with low cell counts (< 500) from further analysis.
+
+```{r Image QC, eval=FALSE}
+ncell_by_slide <- table(NSCLC_IMC_dat_in$ImageID)
+slide_list = unique(names(ncell_by_slide)[which(ncell_by_slide>500)]) # 1984 images left
+NSCLC_IMC_dat_in <- NSCLC_IMC_dat_in %>%
+  filter(ImageID %in% slide_list)
+save(NSCLC_IMC_dat_in, file = paste0(data_path, dataset_name, "_dat_in.RData"))
+```
+
+
+## 2. Create neighborhood cell proportion matrix
+
+Next, we define the spatial neighborhood using use the k-nearest neighbors and compute the neighborhood cell type composition matrix. Here the number of nearest neighbors $k$ is set at default value 20.
+
+In addition, we enforce a distance boundary for the nearest neighbors and exclude the cells falling outside this radius. The boundary is initially defined as the 99th percentile of all distances from focal cells to their nearest neighbors. If it falls outside a predefined range, we reset it to either the minimum (`min.radius`) or maximum threshold (`max.radius`).
+
+
+```{r Compute neighborhood cell type proportion, eval=FALSE}
+cell_neighbor_results_maxdist = pbmcapply::pbmclapply(
+  1:length(slide_list), function(i) {
+    Build_cell_neighbor_maxdist(
+      dat_slide=dat_in[dat_in$ImageID==slide_list[i], ], knn_num = 20, 
+      min.radius = 100, max.radius = 120, min.n.neighbors = 10,
+      cell_types_available = levels(dat_in$Celltype),
+      return.nn.ids = TRUE)},
+  mc.cores = 5)
+
+
+## cell type proportion within the neighborhood
+cell_neighbor_table_maxdist = lapply(
+  cell_neighbor_results_maxdist, "[[", "prop.df") %>% 
+  do.call(rbind, .)
+## cell counts by cell type within the neighborhood
+cell_neighbor_counts = lapply(
+  cell_neighbor_results_maxdist, "[[", "count.df") %>% 
+  do.call(rbind, .)
+## cell ids of the nearest neighbors
+cell_neighbor_ids = lapply(
+  cell_neighbor_results_maxdist, "[[", "neighbor.cell.ids") %>% 
+  do.call(rbind, .)
+## distance to nearest neighbors
+dist.quantiles = lapply(
+  cell_neighbor_results_maxdist, "[[", "dist.quantiles") %>% 
+  do.call(rbind, .)
+
+save(cell_neighbor_table_maxdist, 
+     file = paste0(data_path, dataset_name, "_cell_neighbor_table_maxdist.RData"))
+save(cell_neighbor_counts, 
+     file = paste0(data_path, dataset_name, "_cell_neighbor_counts.RData"))
+save(cell_neighbor_ids, 
+     file = paste0(data_path, dataset_name, "_cell_neighbor_ids.RData"))
+save(dist.quantiles, 
+     file = paste0(data_path, dataset_name, "_dist.quantiles.RData"))
+rm(cell_neighbor_results_maxdist)
+```
+
+```{r load neighborhood results}
+load(paste0(data_path, dataset_name, "_cell_neighbor_table_maxdist.RData"))
+load(paste0(data_path, dataset_name, "_dist.quantiles.RData"))
+```
+
+We can examine the distribution of 99th percentile of all distance to the nearest neighbors to select the threshold parameters min.radius and max.radius accordingly. 
+
+```{r Examine distance distribution, out.width='50%', fig.width=3, fig.height=2.2}
+dist.quantiles %>%
+  as.data.frame() %>% 
+  ggplot(aes(x = `99%`)) +
+  geom_histogram(color = "white", fill = "skyblue", bins = 20) +
+  labs(y = "99th percentile of Dist.\nto Nearest Neighbors", x = NULL) +
+  theme_cowplot(font_size = 12) +
+  theme(axis.text.x = element_text(hjust = 1, angle = 45))
+```
+
+
+Cells that retain fewer than `min.n.neighbors` neighbors within the distance boundary will have their neighborhood cell-type proportions set to `NaN` and will be excluded from subsequent niche clustering. Here we set `min.n.neighbors` to 10.
+
+```{r Examine loose cells, fig.width=8, fig.height=3}
+cells_to_exclude = apply(cell_neighbor_table_maxdist, 1, function(x) {any(is.na(x))}) %>%
+  as.data.frame() %>%
+  `colnames<-`("is_na") %>%
+  rownames_to_column("CellID") %>%
+  left_join(NSCLC_IMC_dat_in[, c("CellID", "X", "Y", "ImageID")], by = "CellID")
+
+# Number of cells to exclude
+table(cells_to_exclude$is_na)
+
+cells_to_exclude %>%
+  group_by(ImageID) %>%
+  mutate(n_NaN = sum(is_na)) %>%
+  filter(n_NaN > 10) %>% ungroup %>%
+  ggplot(aes(x = X, y = Y, color = is_na)) +
+  geom_point(shape = 16, size= 0.1) +
+  scale_color_manual(values = c("brown2", "grey90"), 
+                     breaks = c(TRUE, FALSE), name = "Cells To\nExclude") +
+  guides(color = guide_legend(override.aes = list(size = 3), ncol = 1)) +
+  facet_wrap(~ImageID, scales = "free", ncol = 7) +
+  theme_void() +
+  coord_cartesian(expand = FALSE) +
+  theme(legend.key.size = unit(2.5, "mm"),
+        panel.background = element_blank(),
+        aspect.ratio = 1)
+```
+
+
+## 3. Prefilter cell type triads using CLQ permutation test
+
+SCOPE identifies niches characterized by cell-type triads. However, as the number of cell types grows, the combinations of three cell types can increase exponentially. Therefore, we utilize a colocation quotient (CLQ) permutation test to prioritize cell-type triads (CTs) that exhibit significant spatial proximity. 
+
+Please refer to the [Prefiltering cell type triads using CLQ permutation test](Triad_prefilter_CLQ.html) vignette for details. 
+
+```{r CLQ permutation test, eval = FALSE}
+load(paste0(data_path, dataset_name, "_cell_neighbor_counts.RData"))
+load(paste0(data_path, dataset_name, "_cell_neighbor_ids.RData"))
+
+# Compute observed CLQ
+CLQ_obs <- compute_CLQ_observed(
+  cell_neighbor_counts = cell_neighbor_counts,
+  dat_in = NSCLC_IMC_dat_in)
+
+# Compute permutated CLQ by randomly shuffling cell type labels for 500 times
+CLQ_perm <- compute_CLQ_permutated(
+  cell_neighbor_ids = cell_neighbor_ids, 
+  dat_in = NSCLC_IMC_dat_in,
+  iter.num = 500, seed = 42, n_cores = 5)
+
+# Compute permutation test p-value
+CLQ_perm_pval <- CLQ_permutation_test(CLQ_obs = CLQ_obs, CLQ_perm = CLQ_perm)
+```
+
+Note that the CLQ permutation test can be time consuming. Here we load the precomputed results and use the Benjamini-Hochberg (BH) adjusted p-values to prioritize cell type triads where all constituent pairs exhibit significant CLQs (FDR < 0.05) in at least 40 tissue sections.
+
+```{r load CLQ permutation test results}
+load(paste0(data_path, dataset_name, "_CLQ_perm_pval_500iter.RData"))
+head(CLQ_perm_pval, 5)
+```
+
+```{r filter triads}
+# Exclude scarce (< 500 cells in total) & uninformative cell types ("Other") 
+ncell_by_celltype <- table(NSCLC_IMC_dat_in$Celltype)
+celltype_to_exclude <- c(names(which(ncell_by_celltype < 500)), "Other")
+print(paste("Cell type(s) to exclude:", celltype_to_exclude))
+
+# All combinations of the rest of the cell types
+celltype_combs <- combn(setdiff(NSCLC_IMC_celltype_levs,
+                                celltype_to_exclude), 3) %>%
+  t() %>% as.data.frame()
+
+# Match CLQ permutation test p-values
+celltype_combs_w_pval <- celltype_combs %>%
+  left_join(CLQ_perm_pval, by = c("V1" = "Celltype", "V2" = "Celltype_neighbor"), 
+            relationship = "many-to-many") %>%
+  left_join(CLQ_perm_pval, by = c("V1" = "Celltype_neighbor", "V3" = "Celltype", "ImageID"),
+            suffix = c(".11", "")) %>%
+  left_join(CLQ_perm_pval, by = c("V1" = "Celltype", "V3" = "Celltype_neighbor", "ImageID"),
+            suffix = c(".12", "")) %>%
+  left_join(CLQ_perm_pval, by = c("V1" = "Celltype_neighbor", "V3" = "Celltype", "ImageID"),
+            suffix = c(".21", "")) %>%
+  left_join(CLQ_perm_pval, by = c("V2" = "Celltype", "V3" = "Celltype_neighbor", "ImageID"),
+            suffix = c(".22", ""))  %>%
+  left_join(CLQ_perm_pval, by = c("V2" = "Celltype_neighbor", "V3" = "Celltype", "ImageID"),
+            suffix = c(".31", ".32")) 
+
+# Filter CTs where cell type triads where all constituent pairs exhibit significant CLQs (FDR < 0.05)
+combination_table_filtered = celltype_combs_w_pval %>% ungroup %>%
+  filter((p_perm.adj.11 < 0.05 | p_perm.adj.12 < 0.05) & 
+         (p_perm.adj.21 < 0.05 | p_perm.adj.22 < 0.05) & 
+         (p_perm.adj.31 < 0.05 | p_perm.adj.32 < 0.05)) %>%
+  group_by(V1, V2, V3) %>%
+  summarise(n = n()) %>%
+  filter(n > 40) %>%
+  select(-n)
+
+print(paste("No of remaining CTs:", nrow(combination_table_filtered)))
+
+# save(combination_table_filtered, 
+#     file = paste0(data_path, dataset_name, "_combination_table_filtered.RData"))
+```
+
+
+```{r remove low density cells}
+celltype_to_exclude <- cell_neighbor_table_maxdist[, unique(unlist(combination_table_filtered))] %>%
+  apply(2, function(x) {sum(x > 0.3, na.rm = TRUE)}) %>% sort() %>%
+  as.data.frame %>%
+  `colnames<-`("n") %>%
+  filter(n <= 50) %>%
+  rownames()
+
+if(length(celltype_to_exclude) > 1) {
+  comb_to_run <- combination_table_filtered %>%
+    mutate(combs = paste(V1, V2, V3, sep = "_")) %>%
+    filter(!str_detect(combs, paste(celltype_to_exclude, collapse = "|"))) %>%
+    #  filter(!combs %in% str_replace_all(str_remove(list.files(paste0(path_ecotype, "_mgcv_K_2_min.prop.3")), ".RData$"), "\\.", "/")) %>%
+    select(-combs)
+} else {
+  comb_to_run <- combination_table_filtered
+}
+
+```
+An alternative way to prioritize cell type triads is to use the index.
+
+
+## 4. Cell type triad niche (CTN) detection using SCOPE
+
+Next, we apply SCOPE to the $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ triad using default configurations for the following parameters:
+
+* `min.prop`: The minimum neighborhood cell-type proportion threshold. Proportions below this value are set to 0 (default: 0.3).
+* `mgcv_df`: The dimension of the basis used for thin-plate regression spline smoothing of the driver cell-type proportions (default: 15; see `mgcv::s()` for details).
+
+Here we set the number of clusters `clusternum` at 2. When setting `save_results = TRUE`, the clustering results of each CT will be saved individual into `output_dir`.
+
+```{r Run SCOPE, eval = FALSE}
+# Load prefiltered CTs
+load(paste0(data_path, dataset_name, "_combination_table_filtered.RData"))
+
+celltype_to_exclude <- cell_neighbor_table_maxdist[, unique(unlist(combination_table_filtered))] %>%
+  apply(2, function(x) {sum(x > 0.3, na.rm = TRUE)}) %>% sort() %>%
+  as.data.frame %>%
+  `colnames<-`("n") %>%
+  filter(n <= 50) %>%
+  rownames()
+
+
+run_SCOPE(
+  combination_table = combination_table_filtered,
+  cell_neighbor_table = cell_neighbor_table_maxdist,
+  dat_in = NSCLC_IMC_dat_in,
+  save_results = TRUE,
+  output_dir = paste0(data_path, "CTN_K_2"),
+  clusternum = 2, min.prop = 0.3,
+  linear = FALSE, mgcv_df = 15, iter.max = 100)
+```
+
+```{r session info}
+sessionInfo()
+```

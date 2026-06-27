@@ -34,6 +34,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/CRC_VisiumHD.html">Detecting lymphocyte aggregate-like niches in CRC VisiumHD data</a></li>
+    <li><a class="dropdown-item" href="../articles/NSCLC_IMC.html">Systematic CTN screening in NSCLC IMC data</a></li>
     <li><a class="dropdown-item" href="../articles/PF_Xenium.html">Detecting TLS-like CTNs in PF Xenium data</a></li>
     <li><a class="dropdown-item" href="../articles/Triad_prefilter_CLQ.html">Prefiltering cell type triads using CLQ permutation test</a></li>
   </ul>
@@ -58,7 +59,7 @@
 
       <h1>Detecting TLS-like CTNs in PF Xenium data</h1>
             
-            <h4 data-toc-skip class="date">Compiled: 2026-06-25</h4>
+            <h4 data-toc-skip class="date">Compiled: 2026-06-26</h4>
       
 
       <div class="d-none name"><code>PF_Xenium.Rmd</code></div>
@@ -85,9 +86,8 @@ visualization.</p>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">RColorBrewer</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">dataset_name</span> <span class="op">&lt;-</span> <span class="st">"PF_Xenium"</span></span>
-<span><span class="va">data_path</span> <span class="op">&lt;-</span> <span class="st">"vignette_data/"</span>         <span class="co"># !!! Change this line to your own directory</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="st">"palettes/"</span>, </span>
-<span>              <span class="va">dataset_name</span>, <span class="st">"_celltype_palette.R"</span><span class="op">)</span><span class="op">)</span> <span class="co"># cell type color palette</span></span></code></pre></div>
+<span><span class="va">data_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"vignette_data/"</span>, <span class="va">dataset_name</span>, <span class="st">"/"</span><span class="op">)</span>   <span class="co"># !!! Change the directory</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_celltype_palette.R"</span><span class="op">)</span><span class="op">)</span> <span class="co"># cell type color palette</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="preparing-input-data">1. Preparing input data<a class="anchor" aria-label="anchor" href="#preparing-input-data"></a>
 </h2>
@@ -118,12 +118,12 @@ code from the original paper</a>:</p>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">clinical_data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"patient"</span>, <span class="st">"sample_affect"</span><span class="op">)</span><span class="op">]</span>, by <span class="op">=</span> <span class="st">"patient"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="co">## Change sample name based on the code from the original paper (</span></span>
 <span>  <span class="co">## Initial rename</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>ImageID_new <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>ImageID_new <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
 <span>    <span class="va">sample_affect</span> <span class="op">==</span> <span class="st">"Less Affected"</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">patient</span>, <span class="st">"LA"</span><span class="op">)</span>,</span>
 <span>    <span class="va">sample_affect</span> <span class="op">==</span> <span class="st">"More Affected"</span>  <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">patient</span>, <span class="st">"MA"</span><span class="op">)</span>,</span>
 <span>    <span class="cn">TRUE</span> <span class="op">~</span> <span class="va">ImageID</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="co">## Fix additional names</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>ImageID_new <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>ImageID_new <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
 <span>    <span class="va">ImageID</span> <span class="op">==</span> <span class="st">"TILD117MF"</span> <span class="op">~</span> <span class="st">"TILD117MA1"</span>,</span>
 <span>    <span class="va">ImageID</span> <span class="op">==</span> <span class="st">"TILD117MFB"</span> <span class="op">~</span> <span class="st">"TILD117MA2"</span>,</span>
 <span>    <span class="va">ImageID</span> <span class="op">==</span> <span class="st">"VUILD104LF"</span> <span class="op">~</span> <span class="st">"VUILD104MA1"</span>,</span>
@@ -197,14 +197,14 @@ columns:</p>
 <span>        aspect.ratio <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>        legend.key.spacing.y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="st">"mm"</span><span class="op">)</span>,</span>
 <span>        legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="PF_Xenium_files/figure-html/Visualize%20celltype-1.png" width="100%" style="display: block; margin: auto;"><img src="PF_Xenium_files/figure-html/Visualize%20celltype-2.png" width="100%" style="display: block; margin: auto;"></p>
+<p><img src="PF_Xenium_files/figure-html/Visualize%20celltype-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"><img src="PF_Xenium_files/figure-html/Visualize%20celltype-2.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
 <h2 id="create-neighborhood-cell-proportion-matrix">2. Create neighborhood cell proportion matrix<a class="anchor" aria-label="anchor" href="#create-neighborhood-cell-proportion-matrix"></a>
 </h2>
 <p>Next, we use the k-nearest neighbors algorithm to define the spatial
 neighborhood and compute the neighborhood cell type composition matrix.
-The default number of nearest clusters
+The default number of nearest neighbors
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
 is 20, however we can increase
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
@@ -235,14 +235,14 @@ maximum threshold (<code>max.radius</code>).</p>
 <span><span class="co"># Extract neighborhood cell count and ids and save it into a separate file</span></span>
 <span><span class="va">cell_neighbor_counts_nnids</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span>
 <span>  <span class="va">cell_neighbor_results_maxdist</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span><span class="va">x</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"count.df"</span>, <span class="st">"neighbor.cell.ids"</span><span class="op">)</span><span class="op">]</span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">cell_neighbor_counts_nnids</span>,</span>
-<span>     file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_cell_neighbor_counts_nnids.RData"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># save(cell_neighbor_counts_nnids,</span></span>
+<span><span class="co">#      file = paste0(data_path, dataset_name, "_cell_neighbor_counts_nnids.RData"))</span></span>
 <span><span class="co"># Extract neighborhood cell type proportion and </span></span>
 <span><span class="co"># quantiles of distance to nearest neighbors</span></span>
 <span><span class="va">cell_neighbor_props_dist.quantiles</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span>
 <span>  <span class="va">cell_neighbor_results_maxdist</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span><span class="va">x</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"prop.df"</span>, <span class="st">"dist.quantiles"</span><span class="op">)</span><span class="op">]</span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">cell_neighbor_props_dist.quantiles</span>, </span>
-<span>     file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_cell_neighbor_props_dist.quantiles.RData"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># save(cell_neighbor_props_dist.quantiles, </span></span>
+<span><span class="co">#      file = paste0(data_path, dataset_name, "_cell_neighbor_props_dist.quantiles.RData"))</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rm.html" class="external-link">rm</a></span><span class="op">(</span><span class="va">cell_neighbor_results_maxdist</span><span class="op">)</span></span></code></pre></div>
 <p>We can examine the distribution of the 99th percentile of all
@@ -270,7 +270,7 @@ values (500 and 100 respectively).</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>y <span class="op">=</span> <span class="st">"99th percentile of Dist.\nto Nearest Neighbors"</span>, x <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://wilkelab.org/cowplot/reference/theme_cowplot.html" class="external-link">theme_cowplot</a></span><span class="op">(</span>font_size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">1</span>, angle <span class="op">=</span> <span class="fl">45</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="PF_Xenium_files/figure-html/Examine%20distance%20distribution-1.png" width="50%" style="display: block; margin: auto;"></p>
+<p><img src="PF_Xenium_files/figure-html/Examine%20distance%20distribution-1.png" class="r-plt" alt="" width="50%" style="display: block; margin: auto;"></p>
 <p>We can see that the two outlier samples represent sparsely populated
 regions of the tissue.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -291,7 +291,7 @@ regions of the tissue.</p>
 <span>        aspect.ratio <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>        legend.key.spacing.y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">0.2</span>, <span class="st">"mm"</span><span class="op">)</span>,</span>
 <span>        legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="PF_Xenium_files/figure-html/Sparse%20samples-1.png" width="100%" style="display: block; margin: auto;"></p>
+<p><img src="PF_Xenium_files/figure-html/Sparse%20samples-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Combine neighborhood proportion table</span></span>
 <span><span class="va">cell_neighbor_table_maxdist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span>
@@ -330,7 +330,7 @@ subsequent niche clustering. Here we set <code>min.n.neighbors</code> to
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.key.size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">2.5</span>, <span class="st">"mm"</span><span class="op">)</span>,</span>
 <span>        aspect.ratio <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>        panel.background <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="PF_Xenium_files/figure-html/Examine%20loose%20cells-1.png" width="100%" style="display: block; margin: auto;"></p>
+<p><img src="PF_Xenium_files/figure-html/Examine%20loose%20cells-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># Cells to be removed from the samples containing TLSs</span></span>
@@ -348,7 +348,7 @@ subsequent niche clustering. Here we set <code>min.n.neighbors</code> to
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.key.size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">2.5</span>, <span class="st">"mm"</span><span class="op">)</span>,</span>
 <span>        aspect.ratio <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>        panel.background <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="PF_Xenium_files/figure-html/Examine%20loose%20cells-2.png" width="100%" style="display: block; margin: auto;"></p>
+<p><img src="PF_Xenium_files/figure-html/Examine%20loose%20cells-2.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
 <h2 id="cell-type-triad-niche-ctn-detection-using-scope">3. Cell type triad niche (CTN) detection using SCOPE<a class="anchor" aria-label="anchor" href="#cell-type-triad-niche-ctn-detection-using-scope"></a>
@@ -363,22 +363,22 @@ threshold. Proportions below this value are set to 0 (default:
 0.3).</li>
 <li>
 <code>mgcv_df</code>: The dimension of the basis used for thin-plate
-regression spline smoothing of the driver cell-type proportions
-(default: 15; see <code><a href="https://rdrr.io/pkg/mgcv/man/s.html" class="external-link">mgcv::s()</a></code> for details).</li>
+regression spline smoothing of the core cell-type proportions (default:
+15; see <code><a href="https://rdrr.io/pkg/mgcv/man/s.html" class="external-link">mgcv::s()</a></code> for details).</li>
 </ul>
 <p>We set the number of clusters <code>clusternum</code> at 3 to
 separate the B cell and T cell zones.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">driver_celltypes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B cells"</span>, <span class="st">"CD4+ T-cells"</span>, <span class="st">"CD8+ T-cells"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">core_celltypes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B cells"</span>, <span class="st">"CD4+ T-cells"</span>, <span class="st">"CD8+ T-cells"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">CTN_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_SCOPE.html">run_SCOPE</a></span><span class="op">(</span></span>
-<span>  combination_table <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">driver_celltypes</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  combination_table <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">core_celltypes</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  cell_neighbor_table <span class="op">=</span> <span class="va">cell_neighbor_table_maxdist</span>,</span>
 <span>  dat_in <span class="op">=</span> <span class="va">PF_Xenium_dat_in</span>,</span>
 <span>  save_results <span class="op">=</span> <span class="cn">FALSE</span>, </span>
 <span>  clusternum <span class="op">=</span> <span class="fl">3</span>, min.prop <span class="op">=</span> <span class="fl">0.3</span>,</span>
 <span>  linear <span class="op">=</span> <span class="cn">FALSE</span>, mgcv_df <span class="op">=</span> <span class="fl">15</span>, iter.max <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">CTN_df</span>, file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_B_CD4T_CD8T.RData"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># save(CTN_df, file = paste0(data_path, dataset_name, "_B_CD4T_CD8T.RData"))</span></span></code></pre></div>
 <p>Here we can see that the
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mtext mathvariant="normal">B cell/CD4</mtext><mo>+</mo></msup><msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell/CD8</mtext></mrow><mo>+</mo></msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell</mtext></mrow></mrow><annotation encoding="application/x-tex">\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}</annotation></semantics></math>
 CTNs closely aligns with the lymphocyte aggregates in the CRC samples,
@@ -393,7 +393,7 @@ T cell zone.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># CTN label with colored dots separating the cell types</span></span>
 <span><span class="va">CTN_label</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/color_CTN_names.html">color_CTN_names</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">driver_celltypes</span>, collapse <span class="op">=</span> <span class="st">"_"</span><span class="op">)</span>, <span class="va">PF_Xenium_celltype_palette</span><span class="op">)</span> </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">core_celltypes</span>, collapse <span class="op">=</span> <span class="st">"_"</span><span class="op">)</span>, <span class="va">PF_Xenium_celltype_palette</span><span class="op">)</span> </span>
 <span></span>
 <span><span class="co"># Visualizing B cell/CD4+ T cell/CD8+ T cell CTN</span></span>
 <span><span class="va">CTN_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -413,23 +413,23 @@ T cell zone.</p>
 <span>        panel.background <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>        aspect.ratio <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Show driver cell types only</span></span>
+<span><span class="co"># Show core cell types only</span></span>
 <span><span class="va">PF_Xenium_dat_in</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">ImageID</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">TLS_img_list</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">CellID</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">CTN_df</span><span class="op">$</span><span class="va">CellID</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="co"># dropping cells with few neighbors</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Celltype <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">Celltype</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">driver_celltypes</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">Celltype</span><span class="op">)</span>, <span class="st">"Other"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Celltype <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">Celltype</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">core_celltypes</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">Celltype</span><span class="op">)</span>, <span class="st">"Other"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">X</span>, y <span class="op">=</span> <span class="va">Y</span>, color <span class="op">=</span> <span class="va">Celltype</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">16</span>, size<span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">PF_Xenium_celltype_palette</span>, <span class="st">"Other"</span> <span class="op">=</span> <span class="st">"grey90"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guide_legend.html" class="external-link">guide_legend</a></span><span class="op">(</span>override.aes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">ImageID</span>, scales <span class="op">=</span> <span class="st">"free"</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Driver cell type triad"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"core cell type triad"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_cartesian.html" class="external-link">coord_cartesian</a></span><span class="op">(</span>expand <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.key.size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">2.5</span>, <span class="st">"mm"</span><span class="op">)</span>,</span>
 <span>        plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,</span>
 <span>        panel.background <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="PF_Xenium_files/figure-html/Visualize%20results-1.png" width="100%" style="display: block; margin: auto;"><img src="PF_Xenium_files/figure-html/Visualize%20results-2.png" width="100%" style="display: block; margin: auto;"></p>
+<p><img src="PF_Xenium_files/figure-html/Visualize%20results-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"><img src="PF_Xenium_files/figure-html/Visualize%20results-2.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">CTN_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">PF_Xenium_dat_in</span>, by <span class="op">=</span> <span class="st">"CellID"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -450,7 +450,7 @@ T cell zone.</p>
 <span>        legend.position <span class="op">=</span> <span class="st">"bottom"</span>,</span>
 <span>        legend.location <span class="op">=</span> <span class="st">"plot"</span>,</span>
 <span>        legend.justification <span class="op">=</span> <span class="st">"right"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="PF_Xenium_files/figure-html/proportion%20of%20cells-1.png" width="55%" style="display: block; margin: auto;"></p>
+<p><img src="PF_Xenium_files/figure-html/proportion%20of%20cells-1.png" class="r-plt" alt="" width="55%" style="display: block; margin: auto;"></p>
 <p>We can then compute the evaluation metrics comparing CTN1 with ground
 truth TLS annotations</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
@@ -488,7 +488,7 @@ truth TLS annotations</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.4.1 (2024-06-14)</span></span>
 <span><span class="co">#&gt; Platform: aarch64-apple-darwin20</span></span>
-<span><span class="co">#&gt; Running under: macOS 15.7.5</span></span>
+<span><span class="co">#&gt; Running under: macOS 26.5.1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Matrix products: default</span></span>
 <span><span class="co">#&gt; BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib </span></span>
@@ -504,43 +504,45 @@ truth TLS annotations</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt;  [1] caret_7.0-1        lattice_0.22-7     aricode_1.0.3      RColorBrewer_1.1-3</span></span>
-<span><span class="co">#&gt;  [5] cowplot_1.1.3      ggrepel_0.9.6      ggtext_0.1.2       lubridate_1.9.4   </span></span>
-<span><span class="co">#&gt;  [9] forcats_1.0.0      stringr_1.5.1      dplyr_1.1.4        purrr_1.0.4       </span></span>
-<span><span class="co">#&gt; [13] readr_2.1.5        tidyr_1.3.1        tibble_3.2.1       ggplot2_4.0.2.9000</span></span>
-<span><span class="co">#&gt; [17] tidyverse_2.0.0    data.table_1.17.0  SCOPE.CTN_0.0.1   </span></span>
+<span><span class="co">#&gt;  [1] caret_7.0-1         lattice_0.22-6      aricode_1.0.3      </span></span>
+<span><span class="co">#&gt;  [4] RColorBrewer_1.1-3  cowplot_1.2.0       ggrepel_0.9.8      </span></span>
+<span><span class="co">#&gt;  [7] ggtext_0.1.2        lubridate_1.9.5     forcats_1.0.1      </span></span>
+<span><span class="co">#&gt; [10] stringr_1.6.0       dplyr_1.2.0         purrr_1.2.1        </span></span>
+<span><span class="co">#&gt; [13] readr_2.2.0         tidyr_1.3.2         tibble_3.3.1       </span></span>
+<span><span class="co">#&gt; [16] ggplot2_4.0.2.9000  tidyverse_2.0.0     data.table_1.18.2.1</span></span>
+<span><span class="co">#&gt; [19] SCOPE.CTN_0.0.1    </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
-<span><span class="co">#&gt;  [1] pROC_1.19.0.1        rlang_1.1.6          magrittr_2.0.3      </span></span>
-<span><span class="co">#&gt;  [4] e1071_1.7-16         compiler_4.4.1       mgcv_1.9-3          </span></span>
-<span><span class="co">#&gt;  [7] systemfonts_1.3.1    pbmcapply_1.5.1      vctrs_0.6.5         </span></span>
-<span><span class="co">#&gt; [10] reshape2_1.4.4       pkgconfig_2.0.3      fastmap_1.2.0       </span></span>
-<span><span class="co">#&gt; [13] labeling_0.4.3       rmarkdown_2.29       prodlim_2024.06.25  </span></span>
-<span><span class="co">#&gt; [16] markdown_2.0         tzdb_0.5.0           ragg_1.4.0          </span></span>
-<span><span class="co">#&gt; [19] xfun_0.52            cachem_1.1.0         litedown_0.7        </span></span>
-<span><span class="co">#&gt; [22] jsonlite_2.0.0       recipes_1.2.1        gmp_0.7-5.1         </span></span>
-<span><span class="co">#&gt; [25] irlba_2.3.5.1        parallel_4.4.1       R6_2.6.1            </span></span>
-<span><span class="co">#&gt; [28] bslib_0.9.0          stringi_1.8.7        parallelly_1.43.0   </span></span>
-<span><span class="co">#&gt; [31] ClusterR_1.3.3       rpart_4.1.24         jquerylib_0.1.4     </span></span>
-<span><span class="co">#&gt; [34] Rcpp_1.1.1           assertthat_0.2.1     iterators_1.0.14    </span></span>
-<span><span class="co">#&gt; [37] knitr_1.50           future.apply_1.11.3  FNN_1.1.4.1         </span></span>
-<span><span class="co">#&gt; [40] Matrix_1.7-3         splines_4.4.1        nnet_7.3-20         </span></span>
-<span><span class="co">#&gt; [43] timechange_0.3.0     tidyselect_1.2.1     rstudioapi_0.17.1   </span></span>
-<span><span class="co">#&gt; [46] yaml_2.3.10          timeDate_4041.110    codetools_0.2-20    </span></span>
-<span><span class="co">#&gt; [49] listenv_0.9.1        plyr_1.8.9           withr_3.0.2         </span></span>
-<span><span class="co">#&gt; [52] S7_0.2.1             evaluate_1.0.3       future_1.40.0       </span></span>
-<span><span class="co">#&gt; [55] desc_1.4.3           survival_3.8-3       proxy_0.4-27        </span></span>
-<span><span class="co">#&gt; [58] xml2_1.3.8           pillar_1.10.2        stats4_4.4.1        </span></span>
-<span><span class="co">#&gt; [61] foreach_1.5.2        generics_0.1.3       hms_1.1.3           </span></span>
-<span><span class="co">#&gt; [64] commonmark_1.9.5     scales_1.4.0         globals_0.17.0      </span></span>
-<span><span class="co">#&gt; [67] class_7.3-23         glue_1.8.0           tools_4.4.1         </span></span>
-<span><span class="co">#&gt; [70] ModelMetrics_1.2.2.2 gower_1.0.2          fs_1.6.6            </span></span>
-<span><span class="co">#&gt; [73] grid_4.4.1           ipred_0.9-15         nlme_3.1-168        </span></span>
-<span><span class="co">#&gt; [76] cli_3.6.4            textshaping_1.0.0    lava_1.8.1          </span></span>
-<span><span class="co">#&gt; [79] gtable_0.3.6         sass_0.4.10          digest_0.6.37       </span></span>
-<span><span class="co">#&gt; [82] htmlwidgets_1.6.4    farver_2.1.2         htmltools_0.5.8.1   </span></span>
-<span><span class="co">#&gt; [85] pkgdown_2.1.1        lifecycle_1.0.4      hardhat_1.4.1       </span></span>
-<span><span class="co">#&gt; [88] gridtext_0.1.5       MASS_7.3-65</span></span></code></pre></div>
+<span><span class="co">#&gt;  [1] pROC_1.19.0.1        rlang_1.1.7          magrittr_2.0.4      </span></span>
+<span><span class="co">#&gt;  [4] otel_0.2.0           e1071_1.7-17         compiler_4.4.1      </span></span>
+<span><span class="co">#&gt;  [7] mgcv_1.9-3           systemfonts_1.3.1    pbmcapply_1.5.1     </span></span>
+<span><span class="co">#&gt; [10] vctrs_0.7.2          reshape2_1.4.5       pkgconfig_2.0.3     </span></span>
+<span><span class="co">#&gt; [13] fastmap_1.2.0        labeling_0.4.3       rmarkdown_2.30      </span></span>
+<span><span class="co">#&gt; [16] prodlim_2026.03.11   markdown_2.0         tzdb_0.5.0          </span></span>
+<span><span class="co">#&gt; [19] ragg_1.5.1           xfun_0.57            cachem_1.1.0        </span></span>
+<span><span class="co">#&gt; [22] litedown_0.9         jsonlite_2.0.0       recipes_1.3.1       </span></span>
+<span><span class="co">#&gt; [25] gmp_0.7-5.1          irlba_2.3.7          parallel_4.4.1      </span></span>
+<span><span class="co">#&gt; [28] R6_2.6.1             bslib_0.10.0         stringi_1.8.7       </span></span>
+<span><span class="co">#&gt; [31] parallelly_1.46.1    ClusterR_1.3.3       rpart_4.1.23        </span></span>
+<span><span class="co">#&gt; [34] jquerylib_0.1.4      Rcpp_1.1.1           assertthat_0.2.1    </span></span>
+<span><span class="co">#&gt; [37] iterators_1.0.14     knitr_1.51           future.apply_1.20.2 </span></span>
+<span><span class="co">#&gt; [40] FNN_1.1.4.1          Matrix_1.7-0         splines_4.4.1       </span></span>
+<span><span class="co">#&gt; [43] nnet_7.3-19          timechange_0.4.0     tidyselect_1.2.1    </span></span>
+<span><span class="co">#&gt; [46] rstudioapi_0.18.0    yaml_2.3.12          timeDate_4052.112   </span></span>
+<span><span class="co">#&gt; [49] codetools_0.2-20     listenv_0.10.1       plyr_1.8.9          </span></span>
+<span><span class="co">#&gt; [52] withr_3.0.2          S7_0.2.1             evaluate_1.0.5      </span></span>
+<span><span class="co">#&gt; [55] future_1.70.0        desc_1.4.3           survival_3.6-4      </span></span>
+<span><span class="co">#&gt; [58] proxy_0.4-29         xml2_1.5.2           pillar_1.11.1       </span></span>
+<span><span class="co">#&gt; [61] stats4_4.4.1         foreach_1.5.2        generics_0.1.4      </span></span>
+<span><span class="co">#&gt; [64] hms_1.1.4            commonmark_2.0.0     scales_1.4.0        </span></span>
+<span><span class="co">#&gt; [67] globals_0.19.1       class_7.3-22         glue_1.8.0          </span></span>
+<span><span class="co">#&gt; [70] tools_4.4.1          ModelMetrics_1.2.2.2 gower_1.0.2         </span></span>
+<span><span class="co">#&gt; [73] fs_1.6.7             grid_4.4.1           ipred_0.9-15        </span></span>
+<span><span class="co">#&gt; [76] nlme_3.1-164         cli_3.6.5            textshaping_1.0.5   </span></span>
+<span><span class="co">#&gt; [79] lava_1.8.2           gtable_0.3.6         sass_0.4.10         </span></span>
+<span><span class="co">#&gt; [82] digest_0.6.39        htmlwidgets_1.6.4    farver_2.1.2        </span></span>
+<span><span class="co">#&gt; [85] htmltools_0.5.9      pkgdown_2.2.0        lifecycle_1.0.5     </span></span>
+<span><span class="co">#&gt; [88] hardhat_1.4.2        gridtext_0.1.5       MASS_7.3-60.2</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -553,7 +555,7 @@ truth TLS annotations</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

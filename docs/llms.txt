@@ -1,0 +1,49 @@
+# SCOPE.CTN
+
+**SCOPE** (SystematiC prOfiling of disease-relevant sPatial nichEs) is a
+scalable multi-learning statistical framework that represents tissue
+architecture through Cell type-Triad Niches (CTNs), which are
+cohort-stable motifs of localized higher-order cell-type interactions.
+SCOPE integrates multiple spatial colocalization patterns within a
+multi-view learning framework to derive reusable niche vocabularies from
+spatially resolved single-cell data.
+
+![](reference/figures/SCOPE_schematic.png)
+
+## Installation
+
+Install `SCOPE.CTN` from GitHub:
+
+``` r
+
+install.packages("devtools")
+devtools::install_github("YufanWu147/SCOPE.CTN")
+```
+
+# Package index
+
+## All functions
+
+- [`Build_cell_neighbor_maxdist()`](Build_cell_neighbor_maxdist.md) :
+  Constructing neighborhood cell type count and proportion matrices
+- [`CLQ_permutation_test()`](CLQ_permutation_test.md) : Computing
+  colocation quotient (CLQ) on permutated data
+- [`color_CTN_names()`](color_CTN_names.md) : Separating cell types in
+  CTN labels with colored dots
+- [`compute_CLQ_observed()`](compute_CLQ_observed.md) : Computing
+  observed colocation quotient (CLQ)
+- [`compute_CLQ_permutated()`](compute_CLQ_permutated.md) : Computing
+  colocation quotient (CLQ) on permutated data
+- [`run_SCOPE()`](run_SCOPE.md) : Multi-view cell type triad niche
+  screening
+
+# Articles
+
+### All vignettes
+
+- [Detecting lymphocyte aggregate-like niches in CRC VisiumHD
+  data](CRC_VisiumHD.md):
+- [Systematic CTN screening in NSCLC IMC data](NSCLC_IMC.md):
+- [Detecting TLS-like CTNs in PF Xenium data](PF_Xenium.md):
+- [Prefiltering cell type triads using CLQ permutation
+  test](Triad_prefilter_CLQ.md):
