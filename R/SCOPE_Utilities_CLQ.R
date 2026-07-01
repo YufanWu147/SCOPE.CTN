@@ -109,6 +109,7 @@ compute_CLQ_observed <- function(cell_neighbor_counts, dat_in, min.ncell = 100, 
 #' @param cell_neighbor_ids Cell IDs of the nearest neighbors obtained using [Build_cell_neighbor_maxdist()].
 #' @param dat_in Input data frame with \eqn{N} rows. Columns must contain \code{CellID}, \code{ImageID} and \code{Celltype}.
 #' @param min.ncell Minimum cell number threshold. Tissue sections with fewer than \code{min.ncell} cells will be excluded from the analysis.
+#' @param num_cores The number of cores to use in [pbmcapply::pbmclapply()], i.e. at most how many child processes will be run simultaneously. Can only be set at 1 on Windows.
 #' @param iter.num Number of permutations (default: 500).
 #' @param seed Random seed passed to [base::set.seed()].
 #' @details
@@ -211,5 +212,4 @@ CLQ_permutation_test <- function(CLQ_obs, CLQ_perm) {
   CLQ_pval$p_perm.adj <- p.adjust(CLQ_pval$p_perm, method = "BH")
   return(CLQ_pval)
 }
-
 

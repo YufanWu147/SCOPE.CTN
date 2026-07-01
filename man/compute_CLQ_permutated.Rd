@@ -20,6 +20,8 @@ compute_CLQ_permutated(
 
 \item{min.ncell}{Minimum cell number threshold. Tissue sections with fewer than \code{min.ncell} cells will be excluded from the analysis.}
 
+\item{num_cores}{The number of cores to use in \code{\link[pbmcapply:pbmclapply]{pbmcapply::pbmclapply()}}, i.e. at most how many child processes will be run simultaneously. Can only be set at 1 on Windows.}
+
 \item{iter.num}{Number of permutations (default: 500).}
 
 \item{seed}{Random seed passed to \code{\link[base:Random]{base::set.seed()}}.}

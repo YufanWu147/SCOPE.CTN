@@ -30,20 +30,23 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 library(SCOPE.CTN)
 library(data.table)
 library(tidyverse)
-library(ggtext)
 library(cowplot)
+library(ggdendro)
+library(ggtext)
+library(patchwork)
+library(ComplexHeatmap)
 dataset_name <- "NSCLC_IMC"
 data_path <- paste0("vignette_data/", dataset_name, "/")   # !!! Change the directory
 source(paste0(data_path, dataset_name, "_celltype_palette.R")) # cell type color palette
 ```
 
-```{r Load results, include=FALSE}
+```{r Load input data for SCOPE, include=FALSE}
 load(paste0(data_path, dataset_name, "_dat_in.RData"))
 ncell_by_slide <- table(NSCLC_IMC_dat_in$ImageID)
 slide_list = unique(names(ncell_by_slide)[which(ncell_by_slide>500)]) # 1984 images left
 ```
 
-## 1. Preparing input data
+## 1. Prepare input data
 
 The SingleCellExperiment object and clinical data for this dataset can be downloaded from [Zenodo](https://zenodo.org/records/7961844).
 
@@ -265,24 +268,22 @@ if(length(celltype_to_exclude) > 1) {
   comb_to_run <- combination_table_filtered %>%
     mutate(combs = paste(V1, V2, V3, sep = "_")) %>%
     filter(!str_detect(combs, paste(celltype_to_exclude, collapse = "|"))) %>%
-    #  filter(!combs %in% str_replace_all(str_remove(list.files(paste0(path_ecotype, "_mgcv_K_2_min.prop.3")), ".RData$"), "\\.", "/")) %>%
     select(-combs)
 } else {
   comb_to_run <- combination_table_filtered
 }
 
 ```
-An alternative way to prioritize cell type triads is to use the index.
 
 
 ## 4. Cell type triad niche (CTN) detection using SCOPE
 
-Next, we apply SCOPE to the $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ triad using default configurations for the following parameters:
+Next, we apply SCOPE for systematic screening of CTNs using the default configurations for the following parameters:
 
 * `min.prop`: The minimum neighborhood cell-type proportion threshold. Proportions below this value are set to 0 (default: 0.3).
 * `mgcv_df`: The dimension of the basis used for thin-plate regression spline smoothing of the driver cell-type proportions (default: 15; see `mgcv::s()` for details).
 
-Here we set the number of clusters `clusternum` at 2. When setting `save_results = TRUE`, the clustering results of each CT will be saved individual into `output_dir`.
+Here we set the number of clusters `clusternum` at 2. When setting `save_results = TRUE`, the clustering results of each CT will be saved as individual `.RData` files under `output_dir`.
 
 ```{r Run SCOPE, eval = FALSE}
 # Load prefiltered CTs
@@ -304,6 +305,245 @@ run_SCOPE(
   output_dir = paste0(data_path, "CTN_K_2"),
   clusternum = 2, min.prop = 0.3,
   linear = FALSE, mgcv_df = 15, iter.max = 100)
+```
+
+We gather the outputs and save them into one data frame.
+
+```{r Collect SCOPE output, eval = FALSE}
+Full_CTN_table_mgcv <- data.frame(dir = list.files(
+  paste0(data_path, "_CTN_K_2"), ".RData", full.names = TRUE)) %>%
+  mutate(group = row_number() %/% 30) %>%
+  split(f = .$group) %>%
+  lapply(pull, dir) %>%
+  lapply(function(dirs) {
+    pbmclapply(dirs, function(dir) {
+      load(dir)
+      return(CTN_df)
+      CTN_df %>% select(CellID, CTN, label) %>%
+        mutate(CTN = str_replace_all(CTN, "_CAF", ".CAF")) %>%
+        mutate(CTN = str_replace_all(CTN, "hypoxic_tpCAF", "hypoxic.tpCAF"))
+    }, mc.cores = 10) %>%
+      do.call(rbind, .)  %>% `rownames<-`(NULL) %>%
+      pivot_wider(names_from = "comb", values_from = "label")
+})
+
+Full_CTN_table_mgcv <- lapply(Full_CTN_table_mgcv, function(df) {df %>% select(-CellID)}) %>%
+  `names<-`(NULL) %>%
+  do.call(cbind, .) %>%
+  cbind(data.frame(CellID = Full_CTN_table_mgcv[[1]]$CellID), .)
+
+Full_CTN_table_mgcv <- temp %>%
+  left_join(dat_in, by = "CellID") %>%
+  mutate(Celltype = as.character(Celltype)) %>%
+  mutate(Celltype = str_replace(as.character(Celltype), "_CAF", ".CAF")) %>%
+  mutate(Celltype = str_replace(Celltype, "hypoxic_tpCAF", "hypoxic.tpCAF")) 
+  select(all_of(colnames(NSCLC_IMC_dat_in)), everything()) %>%
+  
+save(Full_CTN_table_mgcv, file = paste0(
+  data_path, dataset_name, "_Full_CTN_table_mgcv.RData"))
+rm(temp)
+```
+
+## 5. Merging highly overlapped CTNs
+
+Sometimes CTNs driven by two different triads can be highly similar. To merge highly overlapping CTNs, we calculate Jaccard distance between every pair of CTNs and perform hierarchical clustering to reduce redundancy. 
+
+```{r Merge CTNs, eval = FALSE}
+load(paste0(data_path, dataset_name, "_Full_CTN_table_mgcv.RData"))
+
+# All cell type triads
+CTN_list <- setdiff(colnames(Full_CTN_table_mgcv), colnames(NSCLC_IMC_dat_in))
+
+CTN_jaccard_mat_hclust <- jaccard_dist_hclust(
+  Full_CTN_table = Full_CTN_table_mgcv, 
+  CTN_ls = CTN_list, num_cores = 5)
+
+save(CTN_jaccard_mat_hclust, file = paste0(
+     data_path, dataset_name, "_CTN_jaccard_mat_hclust.RData"))
+```
+
+```{r Load jaccard index results, include = FALSE}
+load(paste0(data_path, dataset_name, "_CTN_jaccard_mat_hclust.RData"))
+CTN_list <- rownames(CTN_jaccard_mat_hclust$jaccard_mat_mgcv)
+```
+
+Silhouette scores are utilized to determine the optimal number of clusters. The final cluster count is set to 77, balancing both the mean and median Silhouette scores.
+
+```{r Silouhette score, fig.width = 4, fig.height = 3, out.width='50%'}
+n_clusters = 77 # Final number of clusters
+draw_silhoutte_score(CTN_jaccard_mat_hclust$hclust_silhouette,
+                     num_clusters = n_clusters)
+```
+
+Below is a heatmap visualization of the Jaccard similarity indices (1-Jaccard index) and hierarchical clustering results. Black boxes outline final CTN groupings. Asterisks (*) and dots (.) indicate highly similar (Jaccard index > 0.95) and moderately similar (0.9 $\leq$ Jaccard index $\leq$ 0.95) CTN pairs, respectively.
+
+```{r Jaccard similarity matrix heatmap, fig.width = 14, fig.height = 13}
+htmap_jaccard_index <- draw_htmap_jaccard_index(
+  jaccard_mat = CTN_jaccard_mat_hclust$jaccard_mat_mgcv,
+  cl = CTN_jaccard_mat_hclust$cl,
+  num_clusters = n_clusters)  
+```
+
+```{r Cut tree, eval=FALSE}
+# CTN orders from the heatmap
+jaccard_mat_mgcv_ordered <- CTN_jaccard_mat_hclust$jaccard_mat_mgcv[
+  unlist(row_order(htmap_jaccard_index)), unlist(row_order(htmap_jaccard_index))]
+save(jaccard_mat_mgcv_ordered, file = paste0(data_path, dataset_name, "_jaccard_mat_mgcv_ordered.RData"))
+
+# Hierarchical clustering results
+CTN_merged_label <- as.data.frame(cutree(CTN_jaccard_mat_hclust$cl, k = n_clusters)) %>%
+  rownames_to_column("CTN") %>%
+  `colnames<-`(c("CTN", "cluster")) %>%
+  mutate(CTN = factor(CTN, rownames(jaccard_mat_mgcv_ordered))) %>%
+  arrange(CTN) %>%
+  mutate(cluster = factor(cluster, unique(.$cluster))) %>%
+  mutate(cluster = factor(as.numeric(cluster))) %>%
+  mutate(CTN = as.character(CTN))
+
+# all(CTN_merged_label$CTN == rownames(jaccard_mat_mgcv_ordered))
+save(CTN_merged_label, file= paste0(data_path, dataset_name, "_CTN_merged_label.RData"))
+```
+
+After merging highly overlapping initial CTNs using hierarchical clustering, the next step is to assign new names to these consolidated niches. The package uses the `annotate_CTN()` function to rename consolidated CTNs based on the most frequent core cell types within their original triads. If a tie occurs between cell types, the function automatically resolves it by identifying the cell type with the highest overall proportion within the consolidated CTN.
+
+First, we compute the cell type proportion within the newly consolidated CTNs, which will be used as one of the inputs to the `annotate_CTN()` function. 
+
+
+```{r CTN cell type proportion, eval = FALSE}
+CTN_merged_celltype_proportion <- CTN_merged_label %>%
+  split(f = .$cluster) %>%
+  lapply(function(CTN_merged_label_sub) {
+  Full_CTN_table_mgcv[, c("Celltype", CTN_merged_label_sub$CTN)] %>% 
+      filter(if_any(everything(), ~ .x == "CTN")) %>%
+      count(Celltype) }) %>%
+  rbindlist(idcol = "cluster") %>%
+  group_by(cluster) %>%
+  mutate(prop = n/sum(n)) %>% select(-n)
+
+save(CTN_merged_celltype_proportion, file = paste0(
+     data_path, dataset_name, "_CTN_merged_celltype_proportion.RData"))
+```
+
+Additional inputs include a data frame containing the original CTN names and their hierarchical cluster labels, and a character vector defining the levels or ordering of the cell types. The `annotate_CTN` function returns a list of two data frames:
+
+* `annotation`: A mapping data frame that matches the original CTN names and their hierarchical cluster labels to the final consolidated names
+* `core_celltypes_summ`: A summary table focusing on clusters that contain at least 2 initial CTNs. It displays how many times each core cell type appeared in the original CTN names and tracks their relative proportions within the merged CTN.
+
+```{r Load results, include=FALSE}
+load(paste0(data_path, dataset_name, "_CTN_merged_label.RData"))
+load(paste0(data_path, dataset_name, "_jaccard_mat_mgcv_ordered.RData"))
+load(paste0(data_path, dataset_name, "_CTN_merged_celltype_proportion.RData"))
+```
+
+```{r Annotate merged CTs}
+CTN_merged_label_annotated <- annotate_CTN(
+  CTN_cluster_label = CTN_merged_label, 
+  CTN_merged_celltype_prop = CTN_merged_celltype_proportion, 
+  celltype_levs = names(NSCLC_IMC_palette))
+```
+
+If the top two most frequent cell types only appear twice in the original CTN names, the function flags the consolidated CTN with an asterisk (*). We suggest double-checking the flagged CTNs and manually renaming them if necessary.
+
+Here we also manually renamed a few CTNs with high blood ("Blood"), lymphatic endothelial ("Lymphatic"), and vCAF proportions with "Vessel".
+
+```{r Manually renaming CTNs, eval = FALSE}
+head(CTN_merged_label_annotated$core_celltypes_summary, n = 15)
+
+CTN_annotation_detailed <- CTN_merged_label_annotated$annotation %>%
+  mutate(annotation_final = case_when(
+    cluster == 12 ~ "Bcell_CD4_Vessel",
+    cluster == 14 ~ "Bcell_Vessel_vCAF",
+    cluster == 18 ~ "CD8_Vessel_vCAF",
+    cluster == 33 ~ "T_Myeloid_vCAF",
+    cluster == 36 ~ "CD8_Neutrophil_Vessel",
+    cluster == 41 ~ "Neutrophil_Vessel_vCAF",
+    cluster == 52 ~ "Neutrophil_Vessel_SMA.CAF",
+    cluster == 61 ~ "Vessel_SMA.CAF_vCAF",
+    TRUE ~ annotation))
+# save(CTN_annotation_detailed, file = paste0(
+#  data_path, dataset_name, "_CTN_annotation_detailed.RData"))
+```
+
+
+```{r Create full CTN label dataframe post merging, eval = FALSE}
+Full_CTN_table_mgcv_merged <- CTN_annotation_detailed %>%
+  split(f = .$cluster) %>%
+  sapply(function(annot_df) {
+    Full_CTN_table_mgcv[, c("CellID", annot_df$CTN)] %>%
+      column_to_rownames("CellID") %>%
+      apply(1, function(x) {ifelse(any(x == "CTN"), "CTN", "Unassigned")}) %>%
+      as.data.frame() %>%
+      `colnames<-`(annot_df$annotation_final[1])
+  }, simplify = FALSE, USE.NAMES = FALSE) %>%
+  do.call(cbind, .) %>%
+  rownames_to_column("CellID")
+
+Full_CTN_table_mgcv_merged <- Full_CTN_table_mgcv_merged %>%
+  inner_join(NSCLC_IMC_dat_in, by = "CellID") %>%
+  select(all_of(colnames(NSCLC_IMC_dat_in)), everything())
+
+save(Full_CTN_table_mgcv_merged, 
+     file = paste0(data_path, dataset_name, "_Full_CTN_table_mgcv_merged.RData"))
+```
+
+We can further perform hierarchical clustering on the Jaccard distance between the consolidated CTNs and grouping them into major categories.
+
+```{r Compute jaccard index on merged CTNs, eval = FALSE}
+load(paste0(data_path, dataset_name, "_Full_CTN_table_mgcv_merged.RData"))
+CTN_list_merged <- setdiff(colnames(Full_CTN_table_mgcv_merged), colnames(NSCLC_IMC_dat_in))
+CTN_jaccard_mat_hclust_merged <- jaccard_dist_hclust(
+  Full_CTN_table = Full_CTN_table_mgcv_merged, 
+  CTN_ls = CTN_list_merged, num_cores = 5)
+save(CTN_jaccard_mat_hclust_merged, file = paste0(
+  data_path, dataset_name, "_CTN_jaccard_mat_hclust_merged.RData"))
+```
+
+```{r Load jaccard index matrix for the merged CTNs, include = FALSE}
+load(paste0(data_path, dataset_name, "_CTN_jaccard_mat_hclust_merged.RData"))
+load(paste0(data_path, dataset_name, "_CTN_annotation_detailed.RData"))
+```
+
+These categories can be annotated by examining the cell type abundance of the constituent CTNs.
+
+```{r CTN dendrogram, fig.width=8, fig.height=8.5}
+CTN_merged_dend <- draw_CTN_dendro(
+  cl = CTN_jaccard_mat_hclust_merged$cl, h = 0.6,
+  dot_fontsize = 11, y_lim = c(NA, 1),
+  x_expand = c(0.003, 0.003),
+  celltype_palette = c(NSCLC_IMC_palette, "Vessel" = "#393B79", 
+                       "CAF" = "#780116", "T" = "royalblue"),
+  rename_celltype = rename_celltype, 
+  show_text = FALSE)
+
+p_CTN_merged_celltype_prop <- draw_CTN_celltype_prop(
+  CTN_merged_celltype_prop = CTN_merged_celltype_proportion, 
+  CTN_dend = CTN_merged_dend, 
+  CTN_annotation = CTN_annotation_detailed,
+  celltype_palette = NSCLC_IMC_palette,
+  annot_col = "annotation_final", 
+  rename_celltype = rename_celltype,
+  facet_var = "clust", x_expand = c(0.05, 0.05))
+
+p_CTN_merged_celltype_prop + CTN_merged_dend$p + 
+  plot_layout(guides = "collect", widths = c(1, 0.4))
+```
+
+## 6. Identify clinically-relevant CTNs
+
+Once we obtain the final CTN labels, we will next examine their clinical relevance using the detailed patient clinical data provided by the original data source. The analysis is restricted to treatment-naive samples from patients with lung adenocarcinoma (LUAD) or lung squamous cell carcinoma (LUSC).
+
+```{r Read patient clinical info}
+clinical_data_roi_cleaned <- fread(paste0(data_path, "clinical_data_ROI.csv")) %>%
+  mutate(DX_group = case_when(
+    DX.name == "Adenocarcinoma" ~ "LUAD",
+    DX.name == "Squamous cell carcinoma" ~ "LUSC",
+    TRUE ~ "Other")) %>%
+  mutate(Ev.DFS = ifelse(OS > DFS, 1, 0)) %>%
+  rename("ImageID" = "Tma_ac") %>%
+  filter(DX_group %in% c("LUAD", "LUSC")) %>%
+  filter(NeoAdj == "NoNeoAdjuvantTherapy") 
+
+table(clinical_data_roi_cleaned$DX_group)
 ```
 
 ```{r session info}

@@ -12,7 +12,6 @@ First, we load the packages that will be used for the analysis and
 visualization.
 
 ``` r
-
 library(SCOPE.CTN)
 library(data.table)
 library(tidyverse)
@@ -36,7 +35,6 @@ We downloaded the
 and saved it under `<data_path>/`.
 
 ``` r
-
 library(Seurat)
 
 PF_Xenium_obj <- readRDS(paste0(data_path, "GSE250346_Seurat_GSE250346_CORRECTED_SEE_RDS_README_082024.rds"))
@@ -52,7 +50,6 @@ need to renamed following [the code from the original
 paper](https://github.com/Banovich-Lab/Spatial_PF/blob/828db997a122531e6b907b792f58ae1bbd997662/figures.R#L260):
 
 ``` r
-
 load(paste0(data_path, dataset_name, "_clinical_data.RData"))
 PF_Xenium_annot <- read.csv(paste0(data_path, "cells_partitioned_by_annotation.csv")) %>%
   ## keeping only the relevant columns to reduce data size
@@ -94,7 +91,6 @@ The input data frame for SCOPE should contain the following columns:
 - `Celltype`: cell type labels
 
 ``` r
-
 PF_Xenium_dat_in <- PF_Xenium_obj@meta.data %>%
   select(CellID = full_cell_id, ImageID = sample, 
          X = x_centroid, Y = y_centroid, Celltype = final_CT)
@@ -104,7 +100,6 @@ PF_Xenium_dat_in <- PF_Xenium_obj@meta.data %>%
 Below are the four samples containing TLSs:
 
 ``` r
-
 TLS_img_list <- unique(subset(PF_Xenium_annot, Annotation_Type == "TLS")$ImageID)
 
 ## Images containing TLSs, colored by cell type
@@ -161,7 +156,6 @@ range, we reset it to either the minimum (`min.radius`) or maximum
 threshold (`max.radius`).
 
 ``` r
-
 slide_list <- unique(PF_Xenium_dat_in$ImageID)
 
 cell_neighbor_results_maxdist <- pbmcapply::pbmclapply(
@@ -173,7 +167,7 @@ cell_neighbor_results_maxdist <- pbmcapply::pbmclapply(
       max.radius = 500,       # upper limit for the boundary
       min.n.neighbors = 10,   # minimum no. of neighbors,
       return.nn.ids = TRUE,   # Whether to return nearest neighbor Cell IDs
-      prob_list = seq(0, 1, 0.1))},
+      prob.list = seq(0, 1, 0.1))},
   mc.cores = 4) # set mc.cores=1 on Windows machine
 
 # Extract neighborhood cell count and ids and save it into a separate file
@@ -197,7 +191,6 @@ and max.radius accordingly. Here we set `max.radius` and `min.radius` to
 their default values (500 and 100 respectively).
 
 ``` r
-
 ## 99th percentile of the distance to nearest neighbors
 dist_99th <- sapply(cell_neighbor_props_dist.quantiles, "[[", "dist.quantiles") %>%
   `colnames<-`(slide_list) %>%
@@ -225,7 +218,6 @@ We can see that the two outlier samples represent sparsely populated
 regions of the tissue.
 
 ``` r
-
 img_outliers <- arrange(subset(dist_99th, value > 150), value)$ImageID
 PF_Xenium_dat_in %>%
   filter(ImageID %in% img_outliers) %>%
@@ -248,7 +240,6 @@ PF_Xenium_dat_in %>%
 ![](PF_Xenium_files/figure-html/Sparse%20samples-1.png)
 
 ``` r
-
 # Combine neighborhood proportion table
 cell_neighbor_table_maxdist <- lapply(
   cell_neighbor_props_dist.quantiles, "[[", "prop.df") %>%
@@ -261,7 +252,6 @@ set to `NaN` and they will be excluded from subsequent niche clustering.
 Here we set `min.n.neighbors` to 10.
 
 ``` r
-
 cells_to_exclude = apply(cell_neighbor_table_maxdist, 1, function(x) {any(is.na(x))}) %>%
   as.data.frame() %>%
   `colnames<-`("is_na") %>%
@@ -295,7 +285,6 @@ cells_to_exclude %>%
 
 ``` r
 
-
 # Cells to be removed from the samples containing TLSs
 cells_to_exclude %>%
   filter(ImageID %in% TLS_img_list) %>%
@@ -325,13 +314,12 @@ default configurations for the following parameters:
   Proportions below this value are set to 0 (default: 0.3).
 - `mgcv_df`: The dimension of the basis used for thin-plate regression
   spline smoothing of the core cell-type proportions (default: 15; see
-  [`mgcv::s()`](https://rdrr.io/pkg/mgcv/man/s.html) for details).
+  `mgcv::s()` for details).
 
 We set the number of clusters `clusternum` at 3 to separate the B cell
 and T cell zones.
 
 ``` r
-
 core_celltypes <- c("B cells", "CD4+ T-cells", "CD8+ T-cells")
 
 CTN_df <- run_SCOPE(
@@ -351,7 +339,6 @@ resembles the B cell zone and CTN2 resembles the surrounding T cell
 zone.
 
 ``` r
-
 # Number of cells per CTN
 table(CTN_df$label)
 #> 
@@ -360,7 +347,6 @@ table(CTN_df$label)
 ```
 
 ``` r
-
 # CTN label with colored dots separating the cell types
 CTN_label <- color_CTN_names(
   paste(core_celltypes, collapse = "_"), PF_Xenium_celltype_palette) 
@@ -404,7 +390,6 @@ PF_Xenium_dat_in %>%
 ![](PF_Xenium_files/figure-html/Visualize%20results-1.png)![](PF_Xenium_files/figure-html/Visualize%20results-2.png)
 
 ``` r
-
 CTN_df %>%
   left_join(PF_Xenium_dat_in, by = "CellID") %>%
   count(Celltype, label) %>%
@@ -432,7 +417,6 @@ We can then compute the evaluation metrics comparing CTN1 with ground
 truth TLS annotations
 
 ``` r
-
 library(aricode); library(caret) # for clustering evaluation
 
 cluster_eval_metrics <- CTN_df %>% 
@@ -466,7 +450,6 @@ cluster_eval_metrics
 ```
 
 ``` r
-
 sessionInfo()
 #> R version 4.4.1 (2024-06-14)
 #> Platform: aarch64-apple-darwin20
@@ -495,34 +478,40 @@ sessionInfo()
 #> [19] SCOPE.CTN_0.0.1    
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] pROC_1.19.0.1        rlang_1.1.7          magrittr_2.0.4      
-#>  [4] otel_0.2.0           e1071_1.7-17         compiler_4.4.1      
-#>  [7] mgcv_1.9-3           systemfonts_1.3.1    pbmcapply_1.5.1     
-#> [10] vctrs_0.7.2          reshape2_1.4.5       pkgconfig_2.0.3     
-#> [13] fastmap_1.2.0        labeling_0.4.3       rmarkdown_2.30      
-#> [16] prodlim_2026.03.11   markdown_2.0         tzdb_0.5.0          
-#> [19] ragg_1.5.1           xfun_0.57            cachem_1.1.0        
-#> [22] litedown_0.9         jsonlite_2.0.0       recipes_1.3.1       
-#> [25] gmp_0.7-5.1          irlba_2.3.7          parallel_4.4.1      
-#> [28] R6_2.6.1             bslib_0.10.0         stringi_1.8.7       
-#> [31] parallelly_1.46.1    ClusterR_1.3.3       rpart_4.1.23        
-#> [34] jquerylib_0.1.4      Rcpp_1.1.1           assertthat_0.2.1    
-#> [37] iterators_1.0.14     knitr_1.51           future.apply_1.20.2 
-#> [40] FNN_1.1.4.1          Matrix_1.7-0         splines_4.4.1       
-#> [43] nnet_7.3-19          timechange_0.4.0     tidyselect_1.2.1    
-#> [46] rstudioapi_0.18.0    yaml_2.3.12          timeDate_4052.112   
-#> [49] codetools_0.2-20     listenv_0.10.1       plyr_1.8.9          
-#> [52] withr_3.0.2          S7_0.2.1             evaluate_1.0.5      
-#> [55] future_1.70.0        desc_1.4.3           survival_3.6-4      
-#> [58] proxy_0.4-29         xml2_1.5.2           pillar_1.11.1       
-#> [61] stats4_4.4.1         foreach_1.5.2        generics_0.1.4      
-#> [64] hms_1.1.4            commonmark_2.0.0     scales_1.4.0        
-#> [67] globals_0.19.1       class_7.3-22         glue_1.8.0          
-#> [70] tools_4.4.1          ModelMetrics_1.2.2.2 gower_1.0.2         
-#> [73] fs_1.6.7             grid_4.4.1           ipred_0.9-15        
-#> [76] nlme_3.1-164         cli_3.6.5            textshaping_1.0.5   
-#> [79] lava_1.8.2           gtable_0.3.6         sass_0.4.10         
-#> [82] digest_0.6.39        htmlwidgets_1.6.4    farver_2.1.2        
-#> [85] htmltools_0.5.9      pkgdown_2.2.0        lifecycle_1.0.5     
-#> [88] hardhat_1.4.2        gridtext_0.1.5       MASS_7.3-60.2
+#>   [1] pROC_1.19.0.1         rlang_1.1.7           magrittr_2.0.4       
+#>   [4] clue_0.3-66           GetoptLong_1.1.0      otel_0.2.0           
+#>   [7] e1071_1.7-17          matrixStats_1.5.0     compiler_4.4.1       
+#>  [10] mgcv_1.9-3            reshape2_1.4.5        png_0.1-9            
+#>  [13] systemfonts_1.3.1     pbmcapply_1.5.1       vctrs_0.7.2          
+#>  [16] pkgconfig_2.0.3       shape_1.4.6.1         crayon_1.5.3         
+#>  [19] fastmap_1.2.0         labeling_0.4.3        rmarkdown_2.30       
+#>  [22] prodlim_2026.03.11    markdown_2.0          tzdb_0.5.0           
+#>  [25] ragg_1.5.1            xfun_0.57             cachem_1.1.0         
+#>  [28] litedown_0.9          jsonlite_2.0.0        recipes_1.3.1        
+#>  [31] gmp_0.7-5.1           irlba_2.3.7           parallel_4.4.1       
+#>  [34] cluster_2.1.6         R6_2.6.1              bslib_0.10.0         
+#>  [37] stringi_1.8.7         parallelly_1.46.1     rpart_4.1.23         
+#>  [40] ClusterR_1.3.3        jquerylib_0.1.4       Rcpp_1.1.1           
+#>  [43] assertthat_0.2.1      iterators_1.0.14      knitr_1.51           
+#>  [46] future.apply_1.20.2   IRanges_2.40.1        FNN_1.1.4.1          
+#>  [49] nnet_7.3-19           Matrix_1.7-0          splines_4.4.1        
+#>  [52] timechange_0.4.0      tidyselect_1.2.1      rstudioapi_0.18.0    
+#>  [55] yaml_2.3.12           timeDate_4052.112     doParallel_1.0.17    
+#>  [58] codetools_0.2-20      listenv_0.10.1        plyr_1.8.9           
+#>  [61] withr_3.0.2           S7_0.2.1              evaluate_1.0.5       
+#>  [64] future_1.70.0         survival_3.6-4        desc_1.4.3           
+#>  [67] proxy_0.4-29          xml2_1.5.2            circlize_0.4.17      
+#>  [70] pillar_1.11.1         foreach_1.5.2         stats4_4.4.1         
+#>  [73] generics_0.1.4        S4Vectors_0.44.0      hms_1.1.4            
+#>  [76] commonmark_2.0.0      scales_1.4.0          globals_0.19.1       
+#>  [79] class_7.3-22          glue_1.8.0            tools_4.4.1          
+#>  [82] ModelMetrics_1.2.2.2  gower_1.0.2           fs_1.6.7             
+#>  [85] grid_4.4.1            ipred_0.9-15          colorspace_2.1-2     
+#>  [88] nlme_3.1-164          cli_3.6.5             textshaping_1.0.5    
+#>  [91] lava_1.8.2            ComplexHeatmap_2.22.0 ggdendro_0.2.0       
+#>  [94] gtable_0.3.6          sass_0.4.10           digest_0.6.39        
+#>  [97] BiocGenerics_0.52.0   rjson_0.2.23          htmlwidgets_1.6.4    
+#> [100] farver_2.1.2          htmltools_0.5.9       pkgdown_2.2.0        
+#> [103] lifecycle_1.0.5       hardhat_1.4.2         GlobalOptions_0.1.3  
+#> [106] gridtext_0.1.5        MASS_7.3-60.2
 ```

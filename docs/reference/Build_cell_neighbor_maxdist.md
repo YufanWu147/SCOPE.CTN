@@ -15,7 +15,7 @@ Build_cell_neighbor_maxdist(
   max.radius = 500,
   min.n.neighbors = 10,
   return.nn.ids = FALSE,
-  prob_list = seq(0, 1, 0.25)
+  prob.list = seq(0, 1, 0.25)
 )
 ```
 
@@ -23,9 +23,9 @@ Build_cell_neighbor_maxdist(
 
 - dat_slide:
 
-  Input data frame for a single tissue section. Columns must contain
-  cell ids (`CellID`), spatial coordinates (`X`, `Y`), and cell type
-  labels (`Celltype`).
+  Input data frame for a single tissue section. Must contain columns
+  including cell ids (`CellID`), spatial coordinates (`X`, `Y`), and
+  cell type labels (`Celltype`).
 
 - knn_num:
 
@@ -55,7 +55,7 @@ Build_cell_neighbor_maxdist(
 
   Whether to return cell ids of the nearest neighbors of each cell.
 
-- prop.list:
+- prob.list:
 
   Probabilities between \\\[0, 1\]\\ to produce quantiles for
   neighborhood distance distribution

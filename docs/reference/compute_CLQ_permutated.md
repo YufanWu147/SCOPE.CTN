@@ -35,6 +35,13 @@ compute_CLQ_permutated(
   Minimum cell number threshold. Tissue sections with fewer than
   `min.ncell` cells will be excluded from the analysis.
 
+- num_cores:
+
+  The number of cores to use in
+  [`pbmcapply::pbmclapply()`](https://rdrr.io/pkg/pbmcapply/man/pbmclapply.html),
+  i.e. at most how many child processes will be run simultaneously. Can
+  only be set at 1 on Windows.
+
 - iter.num:
 
   Number of permutations (default: 500).

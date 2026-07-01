@@ -11,17 +11,21 @@ First, we load the packages that will be used for the analysis and
 visualization.
 
 ``` r
+
 library(SCOPE.CTN)
 library(data.table)
 library(tidyverse)
-library(ggtext)
 library(cowplot)
+library(ggdendro)
+library(ggtext)
+library(patchwork)
+library(ComplexHeatmap)
 dataset_name <- "NSCLC_IMC"
 data_path <- paste0("vignette_data/", dataset_name, "/")   # !!! Change the directory
 source(paste0(data_path, dataset_name, "_celltype_palette.R")) # cell type color palette
 ```
 
-## 1. Preparing input data
+## 1. Prepare input data
 
 The SingleCellExperiment object and clinical data for this dataset can
 be downloaded from [Zenodo](https://zenodo.org/records/7961844).
@@ -31,6 +35,7 @@ be downloaded from [Zenodo](https://zenodo.org/records/7961844).
 - `clinical_data_ROI.csv` can be found in `comp_csv_files.zip`.
 
 ``` r
+
 library(SingleCellExperiment)
 NSCLC_obj <- readRDS(paste0(data_path, "sce_all_annotated.rds"))
 ```
@@ -44,6 +49,7 @@ The input data frame for SCOPE should contain the following columns:
 - `Celltype`: cell type labels
 
 ``` r
+
 # Extract cell metadata
 NSCLC_IMC_dat_in = colData(NSCLC_obj)[,c("Tma_ac","CellID","cell_type","Center_X","Center_Y")]
 NSCLC_IMC_dat_in <- as.data.frame(NSCLC_IMC_dat_in)
@@ -57,6 +63,7 @@ We exclude the images with low cell counts (\< 500) from further
 analysis.
 
 ``` r
+
 ncell_by_slide <- table(NSCLC_IMC_dat_in$ImageID)
 slide_list = unique(names(ncell_by_slide)[which(ncell_by_slide>500)]) # 1984 images left
 NSCLC_IMC_dat_in <- NSCLC_IMC_dat_in %>%
@@ -78,6 +85,7 @@ range, we reset it to either the minimum (`min.radius`) or maximum
 threshold (`max.radius`).
 
 ``` r
+
 cell_neighbor_results_maxdist = pbmcapply::pbmclapply(
   1:length(slide_list), function(i) {
     Build_cell_neighbor_maxdist(
@@ -117,6 +125,7 @@ rm(cell_neighbor_results_maxdist)
 ```
 
 ``` r
+
 load(paste0(data_path, dataset_name, "_cell_neighbor_table_maxdist.RData"))
 load(paste0(data_path, dataset_name, "_dist.quantiles.RData"))
 ```
@@ -126,6 +135,7 @@ the nearest neighbors to select the threshold parameters min.radius and
 max.radius accordingly.
 
 ``` r
+
 dist.quantiles %>%
   as.data.frame() %>% 
   ggplot(aes(x = `99%`)) +
@@ -143,6 +153,7 @@ to `NaN` and will be excluded from subsequent niche clustering. Here we
 set `min.n.neighbors` to 10.
 
 ``` r
+
 cells_to_exclude = apply(cell_neighbor_table_maxdist, 1, function(x) {any(is.na(x))}) %>%
   as.data.frame() %>%
   `colnames<-`("is_na") %>%
@@ -186,6 +197,7 @@ Please refer to the [Prefiltering cell type triads using CLQ permutation
 test](Triad_prefilter_CLQ.md) vignette for details.
 
 ``` r
+
 load(paste0(data_path, dataset_name, "_cell_neighbor_counts.RData"))
 load(paste0(data_path, dataset_name, "_cell_neighbor_ids.RData"))
 
@@ -210,20 +222,22 @@ p-values to prioritize cell type triads where all constituent pairs
 exhibit significant CLQs (FDR \< 0.05) in at least 40 tissue sections.
 
 ``` r
+
 load(paste0(data_path, dataset_name, "_CLQ_perm_pval_500iter.RData"))
 head(CLQ_perm_pval, 5)
-#> [38;5;246m# A tibble: 5 × 5[39m
-#> [38;5;246m# Groups:   Celltype, Celltype_neighbor [1][39m
+#> # A tibble: 5 × 5
+#> # Groups:   Celltype, Celltype_neighbor [1]
 #>   Celltype Celltype_neighbor ImageID  p_perm p_perm.adj
-#>   [3m[38;5;246m<chr>[39m[23m    [3m[38;5;246m<chr>[39m[23m             [3m[38;5;246m<chr>[39m[23m     [3m[38;5;246m<dbl>[39m[23m      [3m[38;5;246m<dbl>[39m[23m
-#> [38;5;250m1[39m _cell    _lood             175A_1    0         0     
-#> [38;5;250m2[39m _cell    _lood             175A_10   1         1     
-#> [38;5;250m3[39m _cell    _lood             175A_100  0.002     0.028[4m1[24m
-#> [38;5;250m4[39m _cell    _lood             175A_102  0         0     
-#> [38;5;250m5[39m _cell    _lood             175A_103  0.422     1
+#>   <chr>    <chr>             <chr>     <dbl>      <dbl>
+#> 1 _cell    _lood             175A_1    0         0     
+#> 2 _cell    _lood             175A_10   1         1     
+#> 3 _cell    _lood             175A_100  0.002     0.0281
+#> 4 _cell    _lood             175A_102  0         0     
+#> 5 _cell    _lood             175A_103  0.422     1
 ```
 
 ``` r
+
 # Exclude scarce (< 500 cells in total) & uninformative cell types ("Other") 
 ncell_by_celltype <- table(NSCLC_IMC_dat_in$Celltype)
 celltype_to_exclude <- c(names(which(ncell_by_celltype < 500)), "Other")
@@ -268,6 +282,7 @@ print(paste("No of remaining CTs:", nrow(combination_table_filtered)))
 ```
 
 ``` r
+
 celltype_to_exclude <- cell_neighbor_table_maxdist[, unique(unlist(combination_table_filtered))] %>%
   apply(2, function(x) {sum(x > 0.3, na.rm = TRUE)}) %>% sort() %>%
   as.data.frame %>%
@@ -279,32 +294,29 @@ if(length(celltype_to_exclude) > 1) {
   comb_to_run <- combination_table_filtered %>%
     mutate(combs = paste(V1, V2, V3, sep = "_")) %>%
     filter(!str_detect(combs, paste(celltype_to_exclude, collapse = "|"))) %>%
-    #  filter(!combs %in% str_replace_all(str_remove(list.files(paste0(path_ecotype, "_mgcv_K_2_min.prop.3")), ".RData$"), "\\.", "/")) %>%
     select(-combs)
 } else {
   comb_to_run <- combination_table_filtered
 }
 ```
 
-An alternative way to prioritize cell type triads is to use the index.
-
 ## 4. Cell type triad niche (CTN) detection using SCOPE
 
-Next, we apply SCOPE to the
-$`\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}`$ triad using
-default configurations for the following parameters:
+Next, we apply SCOPE for systematic screening of CTNs using the default
+configurations for the following parameters:
 
 - `min.prop`: The minimum neighborhood cell-type proportion threshold.
   Proportions below this value are set to 0 (default: 0.3).
 - `mgcv_df`: The dimension of the basis used for thin-plate regression
   spline smoothing of the driver cell-type proportions (default: 15; see
-  `mgcv::s()` for details).
+  [`mgcv::s()`](https://rdrr.io/pkg/mgcv/man/s.html) for details).
 
 Here we set the number of clusters `clusternum` at 2. When setting
 `save_results = TRUE`, the clustering results of each CT will be saved
-individual into `output_dir`.
+as individual `.RData` files under `output_dir`.
 
 ``` r
+
 # Load prefiltered CTs
 load(paste0(data_path, dataset_name, "_combination_table_filtered.RData"))
 
@@ -326,7 +338,285 @@ run_SCOPE(
   linear = FALSE, mgcv_df = 15, iter.max = 100)
 ```
 
+We gather the outputs and save them into one data frame.
+
 ``` r
+
+Full_CTN_table_mgcv <- data.frame(dir = list.files(
+  paste0(data_path, "_CTN_K_2"), ".RData", full.names = TRUE)) %>%
+  mutate(group = row_number() %/% 30) %>%
+  split(f = .$group) %>%
+  lapply(pull, dir) %>%
+  lapply(function(dirs) {
+    pbmclapply(dirs, function(dir) {
+      load(dir)
+      return(CTN_df)
+      CTN_df %>% select(CellID, CTN, label) %>%
+        mutate(CTN = str_replace_all(CTN, "_CAF", ".CAF")) %>%
+        mutate(CTN = str_replace_all(CTN, "hypoxic_tpCAF", "hypoxic.tpCAF"))
+    }, mc.cores = 10) %>%
+      do.call(rbind, .)  %>% `rownames<-`(NULL) %>%
+      pivot_wider(names_from = "comb", values_from = "label")
+})
+
+Full_CTN_table_mgcv <- lapply(Full_CTN_table_mgcv, function(df) {df %>% select(-CellID)}) %>%
+  `names<-`(NULL) %>%
+  do.call(cbind, .) %>%
+  cbind(data.frame(CellID = Full_CTN_table_mgcv[[1]]$CellID), .)
+
+Full_CTN_table_mgcv <- temp %>%
+  left_join(dat_in, by = "CellID") %>%
+  mutate(Celltype = as.character(Celltype)) %>%
+  mutate(Celltype = str_replace(as.character(Celltype), "_CAF", ".CAF")) %>%
+  mutate(Celltype = str_replace(Celltype, "hypoxic_tpCAF", "hypoxic.tpCAF")) 
+  select(all_of(colnames(NSCLC_IMC_dat_in)), everything()) %>%
+  
+save(Full_CTN_table_mgcv, file = paste0(
+  data_path, dataset_name, "_Full_CTN_table_mgcv.RData"))
+rm(temp)
+```
+
+## 5. Merging highly overlapped CTNs
+
+Sometimes CTNs driven by two different triads can be highly similar. To
+merge highly overlapping CTNs, we calculate Jaccard distance between
+every pair of CTNs and perform hierarchical clustering to reduce
+redundancy.
+
+``` r
+
+load(paste0(data_path, dataset_name, "_Full_CTN_table_mgcv.RData"))
+
+# All cell type triads
+CTN_list <- setdiff(colnames(Full_CTN_table_mgcv), colnames(NSCLC_IMC_dat_in))
+
+CTN_jaccard_mat_hclust <- jaccard_dist_hclust(
+  Full_CTN_table = Full_CTN_table_mgcv, 
+  CTN_ls = CTN_list, num_cores = 5)
+
+save(CTN_jaccard_mat_hclust, file = paste0(
+     data_path, dataset_name, "_CTN_jaccard_mat_hclust.RData"))
+```
+
+Silhouette scores are utilized to determine the optimal number of
+clusters. The final cluster count is set to 77, balancing both the mean
+and median Silhouette scores.
+
+``` r
+
+n_clusters = 77 # Final number of clusters
+draw_silhoutte_score(CTN_jaccard_mat_hclust$hclust_silhouette,
+                     num_clusters = n_clusters)
+```
+
+![](NSCLC_IMC_files/figure-html/Silouhette%20score-1.png)
+
+Below is a heatmap visualization of the Jaccard similarity indices
+(1-Jaccard index) and hierarchical clustering results. Black boxes
+outline final CTN groupings. Asterisks (\*) and dots (.) indicate highly
+similar (Jaccard index \> 0.95) and moderately similar (0.9 $`\leq`$
+Jaccard index $`\leq`$ 0.95) CTN pairs, respectively.
+
+``` r
+
+htmap_jaccard_index <- draw_htmap_jaccard_index(
+  jaccard_mat = CTN_jaccard_mat_hclust$jaccard_mat_mgcv,
+  cl = CTN_jaccard_mat_hclust$cl,
+  num_clusters = n_clusters)  
+```
+
+![](NSCLC_IMC_files/figure-html/Jaccard%20similarity%20matrix%20heatmap-1.png)
+
+``` r
+
+# CTN orders from the heatmap
+jaccard_mat_mgcv_ordered <- CTN_jaccard_mat_hclust$jaccard_mat_mgcv[
+  unlist(row_order(htmap_jaccard_index)), unlist(row_order(htmap_jaccard_index))]
+save(jaccard_mat_mgcv_ordered, file = paste0(data_path, dataset_name, "_jaccard_mat_mgcv_ordered.RData"))
+
+# Hierarchical clustering results
+CTN_merged_label <- as.data.frame(cutree(CTN_jaccard_mat_hclust$cl, k = n_clusters)) %>%
+  rownames_to_column("CTN") %>%
+  `colnames<-`(c("CTN", "cluster")) %>%
+  mutate(CTN = factor(CTN, rownames(jaccard_mat_mgcv_ordered))) %>%
+  arrange(CTN) %>%
+  mutate(cluster = factor(cluster, unique(.$cluster))) %>%
+  mutate(cluster = factor(as.numeric(cluster))) %>%
+  mutate(CTN = as.character(CTN))
+
+# all(CTN_merged_label$CTN == rownames(jaccard_mat_mgcv_ordered))
+save(CTN_merged_label, file= paste0(data_path, dataset_name, "_CTN_merged_label.RData"))
+```
+
+After merging highly overlapping initial CTNs using hierarchical
+clustering, the next step is to assign new names to these consolidated
+niches. The package uses the
+[`annotate_CTN()`](../reference/annotate_CTN.md) function to rename
+consolidated CTNs based on the most frequent core cell types within
+their original triads. If a tie occurs between cell types, the function
+automatically resolves it by identifying the cell type with the highest
+overall proportion within the consolidated CTN.
+
+First, we compute the cell type proportion within the newly consolidated
+CTNs, which will be used as one of the inputs to the
+[`annotate_CTN()`](../reference/annotate_CTN.md) function.
+
+``` r
+
+CTN_merged_celltype_proportion <- CTN_merged_label %>%
+  split(f = .$cluster) %>%
+  lapply(function(CTN_merged_label_sub) {
+  Full_CTN_table_mgcv[, c("Celltype", CTN_merged_label_sub$CTN)] %>% 
+      filter(if_any(everything(), ~ .x == "CTN")) %>%
+      count(Celltype) }) %>%
+  rbindlist(idcol = "cluster") %>%
+  group_by(cluster) %>%
+  mutate(prop = n/sum(n)) %>% select(-n)
+
+save(CTN_merged_celltype_proportion, file = paste0(
+     data_path, dataset_name, "_CTN_merged_celltype_proportion.RData"))
+```
+
+Additional inputs include a data frame containing the original CTN names
+and their hierarchical cluster labels, and a character vector defining
+the levels or ordering of the cell types. The `annotate_CTN` function
+returns a list of two data frames:
+
+- `annotation`: A mapping data frame that matches the original CTN names
+  and their hierarchical cluster labels to the final consolidated names
+- `core_celltypes_summ`: A summary table focusing on clusters that
+  contain at least 2 initial CTNs. It displays how many times each core
+  cell type appeared in the original CTN names and tracks their relative
+  proportions within the merged CTN.
+
+``` r
+
+CTN_merged_label_annotated <- annotate_CTN(
+  CTN_cluster_label = CTN_merged_label, 
+  CTN_merged_celltype_prop = CTN_merged_celltype_proportion, 
+  celltype_levs = names(NSCLC_IMC_palette))
+```
+
+If the top two most frequent cell types only appear twice in the
+original CTN names, the function flags the consolidated CTN with an
+asterisk (\*). We suggest double-checking the flagged CTNs and manually
+renaming them if necessary.
+
+Here we also manually renamed a few CTNs with high blood (“Blood”),
+lymphatic endothelial (“Lymphatic”), and vCAF proportions with “Vessel”.
+
+``` r
+
+head(CTN_merged_label_annotated$core_celltypes_summary, n = 15)
+
+CTN_annotation_detailed <- CTN_merged_label_annotated$annotation %>%
+  mutate(annotation_final = case_when(
+    cluster == 12 ~ "Bcell_CD4_Vessel",
+    cluster == 14 ~ "Bcell_Vessel_vCAF",
+    cluster == 18 ~ "CD8_Vessel_vCAF",
+    cluster == 33 ~ "T_Myeloid_vCAF",
+    cluster == 36 ~ "CD8_Neutrophil_Vessel",
+    cluster == 41 ~ "Neutrophil_Vessel_vCAF",
+    cluster == 52 ~ "Neutrophil_Vessel_SMA.CAF",
+    cluster == 61 ~ "Vessel_SMA.CAF_vCAF",
+    TRUE ~ annotation))
+# save(CTN_annotation_detailed, file = paste0(
+#  data_path, dataset_name, "_CTN_annotation_detailed.RData"))
+```
+
+``` r
+
+Full_CTN_table_mgcv_merged <- CTN_annotation_detailed %>%
+  split(f = .$cluster) %>%
+  sapply(function(annot_df) {
+    Full_CTN_table_mgcv[, c("CellID", annot_df$CTN)] %>%
+      column_to_rownames("CellID") %>%
+      apply(1, function(x) {ifelse(any(x == "CTN"), "CTN", "Unassigned")}) %>%
+      as.data.frame() %>%
+      `colnames<-`(annot_df$annotation_final[1])
+  }, simplify = FALSE, USE.NAMES = FALSE) %>%
+  do.call(cbind, .) %>%
+  rownames_to_column("CellID")
+
+Full_CTN_table_mgcv_merged <- Full_CTN_table_mgcv_merged %>%
+  inner_join(NSCLC_IMC_dat_in, by = "CellID") %>%
+  select(all_of(colnames(NSCLC_IMC_dat_in)), everything())
+
+save(Full_CTN_table_mgcv_merged, 
+     file = paste0(data_path, dataset_name, "_Full_CTN_table_mgcv_merged.RData"))
+```
+
+We can further perform hierarchical clustering on the Jaccard distance
+between the consolidated CTNs and grouping them into major categories.
+
+``` r
+
+load(paste0(data_path, dataset_name, "_Full_CTN_table_mgcv_merged.RData"))
+CTN_list_merged <- setdiff(colnames(Full_CTN_table_mgcv_merged), colnames(NSCLC_IMC_dat_in))
+CTN_jaccard_mat_hclust_merged <- jaccard_dist_hclust(
+  Full_CTN_table = Full_CTN_table_mgcv_merged, 
+  CTN_ls = CTN_list_merged, num_cores = 5)
+save(CTN_jaccard_mat_hclust_merged, file = paste0(
+  data_path, dataset_name, "_CTN_jaccard_mat_hclust_merged.RData"))
+```
+
+These categories can be annotated by examining the cell type abundance
+of the constituent CTNs.
+
+``` r
+
+CTN_merged_dend <- draw_CTN_dendro(
+  cl = CTN_jaccard_mat_hclust_merged$cl, h = 0.6,
+  dot_fontsize = 11, y_lim = c(NA, 1),
+  x_expand = c(0.003, 0.003),
+  celltype_palette = c(NSCLC_IMC_palette, "Vessel" = "#393B79", 
+                       "CAF" = "#780116", "T" = "royalblue"),
+  rename_celltype = rename_celltype, 
+  show_text = FALSE)
+
+p_CTN_merged_celltype_prop <- draw_CTN_celltype_prop(
+  CTN_merged_celltype_prop = CTN_merged_celltype_proportion, 
+  CTN_dend = CTN_merged_dend, 
+  CTN_annotation = CTN_annotation_detailed,
+  celltype_palette = NSCLC_IMC_palette,
+  annot_col = "annotation_final", 
+  rename_celltype = rename_celltype,
+  facet_var = "clust", x_expand = c(0.05, 0.05))
+
+p_CTN_merged_celltype_prop + CTN_merged_dend$p + 
+  plot_layout(guides = "collect", widths = c(1, 0.4))
+```
+
+![](NSCLC_IMC_files/figure-html/CTN%20dendrogram-1.png)
+
+## 6. Identify clinically-relevant CTNs
+
+Once we obtain the final CTN labels, we will next examine their clinical
+relevance using the detailed patient clinical data provided by the
+original data source. The analysis is restricted to treatment-naive
+samples from patients with lung adenocarcinoma (LUAD) or lung squamous
+cell carcinoma (LUSC).
+
+``` r
+
+clinical_data_roi_cleaned <- fread(paste0(data_path, "clinical_data_ROI.csv")) %>%
+  mutate(DX_group = case_when(
+    DX.name == "Adenocarcinoma" ~ "LUAD",
+    DX.name == "Squamous cell carcinoma" ~ "LUSC",
+    TRUE ~ "Other")) %>%
+  mutate(Ev.DFS = ifelse(OS > DFS, 1, 0)) %>%
+  rename("ImageID" = "Tma_ac") %>%
+  filter(DX_group %in% c("LUAD", "LUSC")) %>%
+  filter(NeoAdj == "NoNeoAdjuvantTherapy") 
+
+table(clinical_data_roi_cleaned$DX_group)
+#> 
+#> LUAD LUSC 
+#> 1026  681
+```
+
+``` r
+
 sessionInfo()
 #> R version 4.4.1 (2024-06-14)
 #> Platform: aarch64-apple-darwin20
@@ -343,30 +633,45 @@ sessionInfo()
 #> tzcode source: internal
 #> 
 #> attached base packages:
-#> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> [1] grid      stats     graphics  grDevices utils     datasets  methods  
+#> [8] base     
 #> 
 #> other attached packages:
-#>  [1] cowplot_1.2.0       ggtext_0.1.2        lubridate_1.9.5    
-#>  [4] forcats_1.0.1       stringr_1.6.0       dplyr_1.2.0        
-#>  [7] purrr_1.2.1         readr_2.2.0         tidyr_1.3.2        
-#> [10] tibble_3.3.1        ggplot2_4.0.2.9000  tidyverse_2.0.0    
-#> [13] data.table_1.18.2.1 SCOPE.CTN_0.0.1    
+#>  [1] ComplexHeatmap_2.22.0 patchwork_1.3.2       ggtext_0.1.2         
+#>  [4] ggdendro_0.2.0        cowplot_1.2.0         lubridate_1.9.5      
+#>  [7] forcats_1.0.1         stringr_1.6.0         dplyr_1.2.0          
+#> [10] purrr_1.2.1           readr_2.2.0           tidyr_1.3.2          
+#> [13] tibble_3.3.1          ggplot2_4.0.2.9000    tidyverse_2.0.0      
+#> [16] data.table_1.18.2.1   SCOPE.CTN_0.0.1      
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] gtable_0.3.6       xfun_0.57          bslib_0.10.0       htmlwidgets_1.6.4 
-#>  [5] lattice_0.22-6     tzdb_0.5.0         vctrs_0.7.2        tools_4.4.1       
-#>  [9] generics_0.1.4     parallel_4.4.1     pbmcapply_1.5.1    pkgconfig_2.0.3   
-#> [13] Matrix_1.7-0       RColorBrewer_1.1-3 S7_0.2.1           desc_1.4.3        
-#> [17] assertthat_0.2.1   lifecycle_1.0.5    compiler_4.4.1     farver_2.1.2      
-#> [21] FNN_1.1.4.1        textshaping_1.0.5  htmltools_0.5.9    sass_0.4.10       
-#> [25] yaml_2.3.12        gmp_0.7-5.1        pillar_1.11.1      pkgdown_2.2.0     
-#> [29] jquerylib_0.1.4    cachem_1.1.0       nlme_3.1-164       tidyselect_1.2.1  
-#> [33] digest_0.6.39      stringi_1.8.7      labeling_0.4.3     splines_4.4.1     
-#> [37] fastmap_1.2.0      grid_4.4.1         cli_3.6.5          magrittr_2.0.4    
-#> [41] utf8_1.2.6         withr_3.0.2        scales_1.4.0       timechange_0.4.0  
-#> [45] rmarkdown_2.30     otel_0.2.0         ragg_1.5.1         hms_1.1.4         
-#> [49] evaluate_1.0.5     knitr_1.51         irlba_2.3.7        mgcv_1.9-3        
-#> [53] rlang_1.1.7        gridtext_0.1.5     Rcpp_1.1.1         glue_1.8.0        
-#> [57] xml2_1.5.2         rstudioapi_0.18.0  jsonlite_2.0.0     R6_2.6.1          
-#> [61] ClusterR_1.3.3     systemfonts_1.3.1  fs_1.6.7
+#>  [1] tidyselect_1.2.1    farver_2.1.2        S7_0.2.1           
+#>  [4] fastmap_1.2.0       digest_0.6.39       timechange_0.4.0   
+#>  [7] lifecycle_1.0.5     cluster_2.1.6       ClusterR_1.3.3     
+#> [10] magrittr_2.0.4      compiler_4.4.1      rlang_1.1.7        
+#> [13] sass_0.4.10         tools_4.4.1         utf8_1.2.6         
+#> [16] yaml_2.3.12         knitr_1.51          FNN_1.1.4.1        
+#> [19] labeling_0.4.3      htmlwidgets_1.6.4   xml2_1.5.2         
+#> [22] RColorBrewer_1.1-3  withr_3.0.2         BiocGenerics_0.52.0
+#> [25] desc_1.4.3          stats4_4.4.1        colorspace_2.1-2   
+#> [28] scales_1.4.0        iterators_1.0.14    MASS_7.3-60.2      
+#> [31] cli_3.6.5           rmarkdown_2.30      crayon_1.5.3       
+#> [34] ragg_1.5.1          generics_0.1.4      otel_0.2.0         
+#> [37] rstudioapi_0.18.0   tzdb_0.5.0          rjson_0.2.23       
+#> [40] commonmark_2.0.0    cachem_1.1.0        splines_4.4.1      
+#> [43] assertthat_0.2.1    parallel_4.4.1      matrixStats_1.5.0  
+#> [46] vctrs_0.7.2         Matrix_1.7-0        jsonlite_2.0.0     
+#> [49] litedown_0.9        IRanges_2.40.1      GetoptLong_1.1.0   
+#> [52] hms_1.1.4           S4Vectors_0.44.0    irlba_2.3.7        
+#> [55] clue_0.3-66         pbmcapply_1.5.1     systemfonts_1.3.1  
+#> [58] foreach_1.5.2       jquerylib_0.1.4     glue_1.8.0         
+#> [61] pkgdown_2.2.0       codetools_0.2-20    stringi_1.8.7      
+#> [64] shape_1.4.6.1       gtable_0.3.6        gmp_0.7-5.1        
+#> [67] pillar_1.11.1       htmltools_0.5.9     circlize_0.4.17    
+#> [70] R6_2.6.1            textshaping_1.0.5   doParallel_1.0.17  
+#> [73] evaluate_1.0.5      lattice_0.22-6      markdown_2.0       
+#> [76] png_0.1-9           gridtext_0.1.5      bslib_0.10.0       
+#> [79] Rcpp_1.1.1          nlme_3.1-164        mgcv_1.9-3         
+#> [82] xfun_0.57           fs_1.6.7            pkgconfig_2.0.3    
+#> [85] GlobalOptions_0.1.3
 ```

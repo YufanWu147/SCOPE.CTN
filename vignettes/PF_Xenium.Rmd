@@ -171,7 +171,7 @@ cell_neighbor_results_maxdist <- pbmcapply::pbmclapply(
       max.radius = 500,       # upper limit for the boundary
       min.n.neighbors = 10,   # minimum no. of neighbors,
       return.nn.ids = TRUE,   # Whether to return nearest neighbor Cell IDs
-      prob_list = seq(0, 1, 0.1))},
+      prob.list = seq(0, 1, 0.1))},
   mc.cores = 4) # set mc.cores=1 on Windows machine
 
 # Extract neighborhood cell count and ids and save it into a separate file

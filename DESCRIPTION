@@ -13,10 +13,11 @@ RoxygenNote: 7.3.3
 Depends:
     R (>= 4.4)
 Imports:
-    ClusterR, assertthat, ggtext, irlba, mgcv,
-    pbmcapply, dplyr, stringr, tidyr, tibble, ggplot2, FNN, data.table
+    ClusterR, assertthat, irlba, mgcv, pbmcapply, FNN, data.table,
+    dplyr, stringr, tidyr, tibble, ggplot2, 
+    ComplexHeatmap, grid, cluster, ggdendro, cowplot, ggtext
 Suggests: 
     knitr, rmarkdown, tidyverse, RColorBrewer, Seurat, arrow, aricode, caret,
-    cowplot, ggrepel, grDevices
+    ggrepel, ggtext, grDevices, patchwork
 LazyData: false
 License: GPL (>= 3)

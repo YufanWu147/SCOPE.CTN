@@ -130,7 +130,7 @@ cell_neighbor_results_maxdist <- pbmcapply::pbmclapply(
       min.radius = 1,       # lower limit for the boundary
       max.radius = 2,       # upper limit for the boundary
       min.n.neighbors = 15, # minimum no. of neighbors
-      prob_list = seq(0, 1, 0.1))},
+      prob.list = seq(0, 1, 0.1))},
   mc.cores = 3) # set mc.cores to 1 on Windows
 # save(cell_neighbor_results_maxdist, 
 #      file = paste0(data_path, dataset_name, "_cell_neighbor_results.RData"))

@@ -14,14 +14,22 @@
 <url><loc>/reference/LabelToBinaryMat.html</loc></url>
 <url><loc>/reference/StandardizeData.html</loc></url>
 <url><loc>/reference/WithinClusterSS_linear.html</loc></url>
+<url><loc>/reference/annotate_CTN.html</loc></url>
 <url><loc>/reference/color_CTN_names.html</loc></url>
 <url><loc>/reference/compute_CLQ.html</loc></url>
 <url><loc>/reference/compute_CLQ_observed.html</loc></url>
 <url><loc>/reference/compute_CLQ_permutated.html</loc></url>
 <url><loc>/reference/compute_H_linear.html</loc></url>
+<url><loc>/reference/draw_CTN_celltype_prop.html</loc></url>
+<url><loc>/reference/draw_CTN_dendro.html</loc></url>
+<url><loc>/reference/draw_htmap_jaccard_index.html</loc></url>
+<url><loc>/reference/draw_silhoutte_score.html</loc></url>
 <url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/jaccard.html</loc></url>
+<url><loc>/reference/jaccard_dist_hclust.html</loc></url>
 <url><loc>/reference/label_CTN.html</loc></url>
 <url><loc>/reference/mkkcEst_linear.html</loc></url>
+<url><loc>/reference/prepare_dendro_data.html</loc></url>
 <url><loc>/reference/run_SCOPE.html</loc></url>
 </urlset>
 
