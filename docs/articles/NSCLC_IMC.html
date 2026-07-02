@@ -44,6 +44,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/YufanWu147/SCOPE.CTN/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -61,7 +62,7 @@
             
             <h4 data-toc-skip class="date">Compiled: 2026-07-01</h4>
       
-
+      <small class="dont-index">Source: <a href="https://github.com/YufanWu147/SCOPE.CTN/blob/HEAD/vignettes/NSCLC_IMC.Rmd" class="external-link"><code>vignettes/NSCLC_IMC.Rmd</code></a></small>
       <div class="d-none name"><code>NSCLC_IMC.Rmd</code></div>
     </div>
 
@@ -75,7 +76,7 @@ samples from a cohort of 1,070 patients.</p>
 <p>First, we load the packages that will be used for the analysis and
 visualization.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SCOPE.CTN</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/YufanWu147/SCOPE.CTN" class="external-link">SCOPE.CTN</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://wilkelab.org/cowplot/" class="external-link">cowplot</a></span><span class="op">)</span></span>
@@ -662,7 +663,7 @@ survival and disease-free survival of NSCLC patients, respectively.</p>
 <span>  rename_celltype <span class="op">=</span> <span class="va">NSCLC_IMC_rename_celltype</span>,</span>
 <span>  line_width <span class="op">=</span> <span class="fl">0.4</span>, y_text_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  width_ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.45</span>, <span class="fl">0.55</span><span class="op">)</span><span class="op">)</span> </span></code></pre></div>
-<p><img src="NSCLC_IMC_files/figure-html/Visualize%20cox%20regression%20results%20on%20OS-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
+<p><img src="NSCLC_IMC_files/figure-html/Visualize%20cox%20regression%20results%20on%20OS-1.png" class="r-plt" alt="" width="70%" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Disease-free survival</span></span>
 <span><span class="fu"><a href="../reference/draw_CTN_coxph_logHR.html">draw_CTN_coxph_logHR</a></span><span class="op">(</span></span>
@@ -675,7 +676,7 @@ survival and disease-free survival of NSCLC patients, respectively.</p>
 <span>  rename_celltype <span class="op">=</span> <span class="va">NSCLC_IMC_rename_celltype</span>,</span>
 <span>  line_width <span class="op">=</span> <span class="fl">0.6</span>, y_text_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  width_ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.45</span>, <span class="fl">0.55</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="NSCLC_IMC_files/figure-html/Visualize%20cox%20regression%20results%20on%20DFS-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
+<p><img src="NSCLC_IMC_files/figure-html/Visualize%20cox%20regression%20results%20on%20DFS-1.png" class="r-plt" alt="" width="70%" style="display: block; margin: auto;"></p>
 <p>Below are two example CTNs associated with the disease-free survival.
 One is
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mtext mathvariant="normal">B cell/CD4</mtext><mo>+</mo></msup><msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell/CD8</mtext></mrow><mo>+</mo></msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell</mtext></mrow></mrow><annotation encoding="application/x-tex">\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}</annotation></semantics></math>,

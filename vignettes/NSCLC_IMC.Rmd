@@ -574,7 +574,7 @@ save(coxph_res_OS, coxph_res_DFS, file = paste0(
 
 The following plots display the CTNs associated with the overall survival and disease-free survival of NSCLC patients, respectively.
 
-```{r Visualize cox regression results on OS, fig.width = 6.5, fig.height = 3.5}
+```{r Visualize cox regression results on OS, fig.width = 6.5, fig.height = 3.5, out.width="70%"}
 load(paste0(data_path, dataset_name, "_CTN_merged_coxph_res.RData"))
 # Overall survival
 draw_CTN_coxph_logHR(
@@ -589,7 +589,7 @@ draw_CTN_coxph_logHR(
   width_ratio = c(0.45, 0.55)) 
 ```
 
-```{r Visualize cox regression results on DFS, fig.width = 6, fig.height = 2.2}
+```{r Visualize cox regression results on DFS, fig.width = 6, fig.height = 2.2, out.width="70%"}
 # Disease-free survival
 draw_CTN_coxph_logHR(
   coxph_res = coxph_res_DFS,
