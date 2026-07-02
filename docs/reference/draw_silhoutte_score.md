@@ -1,7 +1,6 @@
 # Visualize silhouette score
 
-Evaluating hierarchical clustering performance for selecting optimal
-cluster number
+`cowplot` package is required for the function.
 
 ## Usage
 
@@ -20,3 +19,8 @@ draw_silhoutte_score(hclust_silhouette, num_clusters)
 - num_clusters:
 
   Optimal number of clusters.
+
+## Details
+
+Evaluating hierarchical clustering performance for selecting optimal
+cluster number

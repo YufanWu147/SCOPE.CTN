@@ -4,9 +4,9 @@
 \alias{label_CTN}
 \title{Renaming CTN cluster labels}
 \usage{
-label_CTN(CTN_table, driver_celltypes = NULL, clusternum = 2)
+label_CTN(CTN_table, core_celltypes = NULL, clusternum = 2)
 }
 \description{
-Internal function for renaming CTN cluster labels based on the proportion of driver cell type triads
+Internal function for renaming CTN cluster labels based on the proportion of core cell type triads
 }
 \keyword{internal}

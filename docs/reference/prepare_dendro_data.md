@@ -1,7 +1,6 @@
 # Prepare input data CTN dendrogram
 
-Internal function for preparing input data to
-[`draw_CTN_dendro()`](draw_CTN_dendro.md) function
+`ggdendro` package is required for the function.
 
 ## Usage
 
@@ -42,6 +41,11 @@ for details):
 - labels:
 
   Label data
+
+## Details
+
+Internal function for preparing input data to
+[`draw_CTN_dendro()`](draw_CTN_dendro.md) function
 
 ## References
 

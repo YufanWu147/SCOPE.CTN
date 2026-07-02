@@ -86,10 +86,10 @@ run_SCOPE(
 
 - rename_CTN:
 
-  Whether to rename niches based on the proportion of driver cell types.
+  Whether to rename niches based on the proportion of core cell types.
   The cluster with the highest proportion will be named as `CTN` when
   `clusternum = 2` and `CTN1` otherwise. The cluster with the lowest
-  driver cell type proportion will be renamed as `Unassigned`. Other
+  core cell type proportion will be renamed as `Unassigned`. Other
   clusters will be named as `CTN2, ...` accordingly when
   `clusternum > 2`.
 

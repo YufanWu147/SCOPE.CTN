@@ -2,14 +2,11 @@
 % Please edit documentation in R/SCOPE_Utilities_figures.R
 \name{draw_CTN_celltype_prop}
 \alias{draw_CTN_celltype_prop}
-\title{CTN cell type proportion dotplot
-Dotplot visualization of cell type abundance within each cell-type triad niche (CTN).}
+\title{CTN cell type proportion dotplot}
 \usage{
 draw_CTN_celltype_prop(
   CTN_merged_celltype_prop,
   CTN_dend,
-  CTN_annotation,
-  annot_col = "annotation_final",
   celltype_palette,
   rename_celltype = waiver(),
   facet_var = "clust",
@@ -23,11 +20,6 @@ cell type proportion for each CTN with the following columns: \code{CTN} (the CT
 
 \item{CTN_dend}{Output of the \code{\link[=draw_CTN_dendro]{draw_CTN_dendro()}} function}
 
-\item{CTN_annotation}{(Optional) A data frame with the original CTN names (\code{CTN}), the corresponding cluster label (\code{cluster}), and the new name for the
-consolidated CTN (specified using \code{annot_col}) after merging.}
-
-\item{annot_col}{Column name of the newly consolidated CTN in \code{CTN_annotation}.}
-
 \item{celltype_palette}{A named vector with colors as values and cell type labels as names. Must contain all cell types.}
 
 \item{rename_celltype}{A function for renaming cell type labels.}
@@ -37,9 +29,10 @@ consolidated CTN (specified using \code{annot_col}) after merging.}
 \item{x_expand}{A numeric vector of length two of the multiplicative range expansion factors for the x axis. See \code{\link[ggplot2:expansion]{ggplot2::expansion()}} for details.}
 }
 \description{
-CTN cell type proportion dotplot
-Dotplot visualization of cell type abundance within each cell-type triad niche (CTN).
+\code{cowplot} and \code{ggtext} packages are required for the function.
 }
 \details{
+Dotplot visualization of cell type abundance within each cell-type triad niche (CTN).
+
 Dotplot visualization of the cell type abundance of cell-type triad niches (CTN). Bubbles are colored by cell type labels, and their sizes represent relative cell type proportions with each CTN.
 }

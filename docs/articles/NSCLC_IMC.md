@@ -429,10 +429,6 @@ htmap_jaccard_index <- draw_htmap_jaccard_index(
 
 ``` r
 
-# CTN orders from the heatmap
-jaccard_mat_mgcv_ordered <- CTN_jaccard_mat_hclust$jaccard_mat_mgcv[
-  unlist(row_order(htmap_jaccard_index)), unlist(row_order(htmap_jaccard_index))]
-save(jaccard_mat_mgcv_ordered, file = paste0(data_path, dataset_name, "_jaccard_mat_mgcv_ordered.RData"))
 
 # Hierarchical clustering results
 CTN_merged_label <- as.data.frame(cutree(CTN_jaccard_mat_hclust$cl, k = n_clusters)) %>%
@@ -451,7 +447,7 @@ save(CTN_merged_label, file= paste0(data_path, dataset_name, "_CTN_merged_label.
 After merging highly overlapping initial CTNs using hierarchical
 clustering, the next step is to assign new names to these consolidated
 niches. The package uses the
-[`annotate_CTN()`](../reference/annotate_CTN.md) function to rename
+[`CTN_annotate()`](../reference/CTN_annotate.md) function to rename
 consolidated CTNs based on the most frequent core cell types within
 their original triads. If a tie occurs between cell types, the function
 automatically resolves it by identifying the cell type with the highest
@@ -459,7 +455,7 @@ overall proportion within the consolidated CTN.
 
 First, we compute the cell type proportion within the newly consolidated
 CTNs, which will be used as one of the inputs to the
-[`annotate_CTN()`](../reference/annotate_CTN.md) function.
+[`CTN_annotate()`](../reference/CTN_annotate.md) function.
 
 ``` r
 
@@ -473,13 +469,14 @@ CTN_merged_celltype_proportion <- CTN_merged_label %>%
   group_by(cluster) %>%
   mutate(prop = n/sum(n)) %>% select(-n)
 
+
 save(CTN_merged_celltype_proportion, file = paste0(
      data_path, dataset_name, "_CTN_merged_celltype_proportion.RData"))
 ```
 
 Additional inputs include a data frame containing the original CTN names
 and their hierarchical cluster labels, and a character vector defining
-the levels or ordering of the cell types. The `annotate_CTN` function
+the levels or ordering of the cell types. The `CTN_annotate` function
 returns a list of two data frames:
 
 - `annotation`: A mapping data frame that matches the original CTN names
@@ -491,7 +488,7 @@ returns a list of two data frames:
 
 ``` r
 
-CTN_merged_label_annotated <- annotate_CTN(
+CTN_merged_label_annotated <- CTN_annotate(
   CTN_cluster_label = CTN_merged_label, 
   CTN_merged_celltype_prop = CTN_merged_celltype_proportion, 
   celltype_levs = names(NSCLC_IMC_palette))
@@ -552,12 +549,12 @@ between the consolidated CTNs and grouping them into major categories.
 ``` r
 
 load(paste0(data_path, dataset_name, "_Full_CTN_table_mgcv_merged.RData"))
-CTN_list_merged <- setdiff(colnames(Full_CTN_table_mgcv_merged), colnames(NSCLC_IMC_dat_in))
-CTN_jaccard_mat_hclust_merged <- jaccard_dist_hclust(
+CTN_merged_list <- setdiff(colnames(Full_CTN_table_mgcv_merged), colnames(NSCLC_IMC_dat_in))
+CTN_merged_jaccard_mat_hclust <- jaccard_dist_hclust(
   Full_CTN_table = Full_CTN_table_mgcv_merged, 
-  CTN_ls = CTN_list_merged, num_cores = 5)
-save(CTN_jaccard_mat_hclust_merged, file = paste0(
-  data_path, dataset_name, "_CTN_jaccard_mat_hclust_merged.RData"))
+  CTN_ls = CTN_merged_list, num_cores = 5)
+save(CTN_merged_jaccard_mat_hclust, file = paste0(
+  data_path, dataset_name, "_CTN_merged_jaccard_mat_hclust.RData"))
 ```
 
 These categories can be annotated by examining the cell type abundance
@@ -565,22 +562,25 @@ of the constituent CTNs.
 
 ``` r
 
+CTN_merged_celltype_proportion <- CTN_merged_celltype_proportion %>%
+  left_join(distinct(CTN_annotation_detailed, cluster, annotation_final), by = "cluster") %>%
+  rename("annotation" = "annotation_final")
+
 CTN_merged_dend <- draw_CTN_dendro(
-  cl = CTN_jaccard_mat_hclust_merged$cl, h = 0.6,
+  cl = CTN_merged_jaccard_mat_hclust$cl, h = 0.6,
   dot_fontsize = 11, y_lim = c(NA, 1),
   x_expand = c(0.003, 0.003),
   celltype_palette = c(NSCLC_IMC_palette, "Vessel" = "#393B79", 
                        "CAF" = "#780116", "T" = "royalblue"),
-  rename_celltype = rename_celltype, 
+  rename_celltype = NSCLC_IMC_rename_celltype, 
   show_text = FALSE)
+
 
 p_CTN_merged_celltype_prop <- draw_CTN_celltype_prop(
   CTN_merged_celltype_prop = CTN_merged_celltype_proportion, 
   CTN_dend = CTN_merged_dend, 
-  CTN_annotation = CTN_annotation_detailed,
   celltype_palette = NSCLC_IMC_palette,
-  annot_col = "annotation_final", 
-  rename_celltype = rename_celltype,
+  rename_celltype = NSCLC_IMC_rename_celltype,
   facet_var = "clust", x_expand = c(0.05, 0.05))
 
 p_CTN_merged_celltype_prop + CTN_merged_dend$p + 
@@ -591,15 +591,16 @@ p_CTN_merged_celltype_prop + CTN_merged_dend$p +
 
 ## 6. Identify clinically-relevant CTNs
 
-Once we obtain the final CTN labels, we will next examine their clinical
-relevance using the detailed patient clinical data provided by the
-original data source. The analysis is restricted to treatment-naive
+Once we obtain the final CTN labels, we will next examine their
+prognostic value using the detailed patient clinical data provided by
+the original data source. The analysis is restricted to treatment-naive
 samples from patients with lung adenocarcinoma (LUAD) or lung squamous
 cell carcinoma (LUSC).
 
 ``` r
 
-clinical_data_roi_cleaned <- fread(paste0(data_path, "clinical_data_ROI.csv")) %>%
+# Image-level clinical data
+clinical_data_LUAD_LUSC <- fread(paste0(data_path, "clinical_data_ROI.csv")) %>%
   mutate(DX_group = case_when(
     DX.name == "Adenocarcinoma" ~ "LUAD",
     DX.name == "Squamous cell carcinoma" ~ "LUSC",
@@ -609,11 +610,123 @@ clinical_data_roi_cleaned <- fread(paste0(data_path, "clinical_data_ROI.csv")) %
   filter(DX_group %in% c("LUAD", "LUSC")) %>%
   filter(NeoAdj == "NoNeoAdjuvantTherapy") 
 
-table(clinical_data_roi_cleaned$DX_group)
+
+table(clinical_data_LUAD_LUSC$DX_group)
 #> 
 #> LUAD LUSC 
 #> 1026  681
 ```
+
+To test whether the CTNs predict patient survival, we fit a Cox
+proportional hazards regression model using patient-level CTN presence
+as the primary predictor. For a given patient, a CTN is considered
+present if it contains 100 or more cells within a single tissue in at
+least one tissue section.
+
+While we conduct a simple univariate Cox regression here for
+demonstration purposes, users can easily extend this to a multivariate
+analysis by specifying confounding variables via the `confounder`
+argument.
+
+``` r
+
+# Overall survival
+coxph_res_OS <- CTN_presence_coxph(
+    Full_CTN_table = Full_CTN_table_mgcv_merged, 
+    CTN_ls = CTN_merged_list, 
+    clinical_df = clinical_data_LUAD_LUSC,
+    time = "OS", event = "Ev.O",
+    patient_id = "Patient_ID", confounder = NULL,
+    min.n.patients = 3, min.n.cells = 100)
+
+# Disease-free survival
+coxph_res_DFS <- CTN_presence_coxph(
+    Full_CTN_table = Full_CTN_table_mgcv_merged, 
+    CTN_ls = CTN_merged_list, 
+    clinical_df = clinical_data_LUAD_LUSC,
+    time = "DFS", event = "Ev.DFS",
+    patient_id = "Patient_ID", confounder = NULL,
+    min.n.patients = 3, min.n.cells = 100)
+
+save(coxph_res_OS, coxph_res_DFS, file = paste0(
+     data_path, dataset_name, "_CTN_merged_coxph_res.RData"))
+```
+
+The following plots display the CTNs associated with the overall
+survival and disease-free survival of NSCLC patients, respectively.
+
+``` r
+
+load(paste0(data_path, dataset_name, "_CTN_merged_coxph_res.RData"))
+# Overall survival
+draw_CTN_coxph_logHR(
+  coxph_res = coxph_res_OS,
+  CTN_merged_celltype_prop = CTN_merged_celltype_proportion,
+  alpha = 0.1, top = 10, 
+  celltype_levs = names(NSCLC_IMC_palette), dot_fontsize = 14,
+  celltype_palette = c(NSCLC_IMC_palette, "Vessel" = "#393B79", 
+                       "CAF" = "#780116", "T" = "royalblue"),
+  rename_celltype = NSCLC_IMC_rename_celltype,
+  line_width = 0.4, y_text_size = NULL,
+  width_ratio = c(0.45, 0.55)) 
+```
+
+![](NSCLC_IMC_files/figure-html/Visualize%20cox%20regression%20results%20on%20OS-1.png)
+
+``` r
+
+# Disease-free survival
+draw_CTN_coxph_logHR(
+  coxph_res = coxph_res_DFS,
+  CTN_merged_celltype_prop = CTN_merged_celltype_proportion,
+  alpha = 0.1, top = 10, 
+  celltype_levs = names(NSCLC_IMC_palette), dot_fontsize = 14,
+  celltype_palette = c(NSCLC_IMC_palette, "Vessel" = "#393B79", 
+                       "CAF" = "#780116", "T" = "royalblue"),
+  rename_celltype = NSCLC_IMC_rename_celltype,
+  line_width = 0.6, y_text_size = NULL,
+  width_ratio = c(0.45, 0.55))
+```
+
+![](NSCLC_IMC_files/figure-html/Visualize%20cox%20regression%20results%20on%20DFS-1.png)
+
+Below are two example CTNs associated with the disease-free survival.
+One is $`\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}`$, which
+resembles the lymphocyte aggregates.
+
+``` r
+
+p_CTN_celltype <- draw_CTN_celltype(
+  Full_CTN_table = Full_CTN_table_mgcv_merged,
+  CTN = "Bcell_CD4_CD8", 
+  img_list = c("175B_117", "88A_119", "176C_1", "88C_17", "87B_135", "176C_8"),
+  celltype_palette = NSCLC_IMC_palette, 
+  rename_celltype = NSCLC_IMC_rename_celltype,
+  scales = "free", aspect.ratio = 1, legend.ncol = 2)
+p_CTN_celltype$p_celltype / p_CTN_celltype$p_CTN +
+  plot_layout(guides = "collect") 
+```
+
+![](NSCLC_IMC_files/figure-html/Visualize%20Bcell_CD4_CD8-1.png) The
+other is blood endothelial
+$`\mbox{(BEC)/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}`$, which
+preferentialy co-localized with normoxic tumor cells compared to hypoxic
+tumor cells.
+
+``` r
+
+p_CTN_celltype <- draw_CTN_celltype(
+  Full_CTN_table = Full_CTN_table_mgcv_merged,
+  CTN = "CD4_CD8_Blood", 
+  img_list = c("178C_85", "88B_125", "86A_38", "175A_27", "175A_31", "87B_73"),
+  celltype_palette = NSCLC_IMC_palette, 
+  rename_celltype = NSCLC_IMC_rename_celltype,
+  scales = "free", aspect.ratio = 1, legend.ncol = 2)
+p_CTN_celltype$p_celltype / p_CTN_celltype$p_CTN +
+  plot_layout(guides = "collect") 
+```
+
+![](NSCLC_IMC_files/figure-html/Visualize%20CD4_CD8_Blood-1.png)
 
 ``` r
 
@@ -647,31 +760,31 @@ sessionInfo()
 #> loaded via a namespace (and not attached):
 #>  [1] tidyselect_1.2.1    farver_2.1.2        S7_0.2.1           
 #>  [4] fastmap_1.2.0       digest_0.6.39       timechange_0.4.0   
-#>  [7] lifecycle_1.0.5     cluster_2.1.6       ClusterR_1.3.3     
-#> [10] magrittr_2.0.4      compiler_4.4.1      rlang_1.1.7        
-#> [13] sass_0.4.10         tools_4.4.1         utf8_1.2.6         
-#> [16] yaml_2.3.12         knitr_1.51          FNN_1.1.4.1        
-#> [19] labeling_0.4.3      htmlwidgets_1.6.4   xml2_1.5.2         
-#> [22] RColorBrewer_1.1-3  withr_3.0.2         BiocGenerics_0.52.0
-#> [25] desc_1.4.3          stats4_4.4.1        colorspace_2.1-2   
-#> [28] scales_1.4.0        iterators_1.0.14    MASS_7.3-60.2      
-#> [31] cli_3.6.5           rmarkdown_2.30      crayon_1.5.3       
-#> [34] ragg_1.5.1          generics_0.1.4      otel_0.2.0         
-#> [37] rstudioapi_0.18.0   tzdb_0.5.0          rjson_0.2.23       
-#> [40] commonmark_2.0.0    cachem_1.1.0        splines_4.4.1      
-#> [43] assertthat_0.2.1    parallel_4.4.1      matrixStats_1.5.0  
-#> [46] vctrs_0.7.2         Matrix_1.7-0        jsonlite_2.0.0     
-#> [49] litedown_0.9        IRanges_2.40.1      GetoptLong_1.1.0   
-#> [52] hms_1.1.4           S4Vectors_0.44.0    irlba_2.3.7        
-#> [55] clue_0.3-66         pbmcapply_1.5.1     systemfonts_1.3.1  
-#> [58] foreach_1.5.2       jquerylib_0.1.4     glue_1.8.0         
-#> [61] pkgdown_2.2.0       codetools_0.2-20    stringi_1.8.7      
-#> [64] shape_1.4.6.1       gtable_0.3.6        gmp_0.7-5.1        
-#> [67] pillar_1.11.1       htmltools_0.5.9     circlize_0.4.17    
-#> [70] R6_2.6.1            textshaping_1.0.5   doParallel_1.0.17  
-#> [73] evaluate_1.0.5      lattice_0.22-6      markdown_2.0       
-#> [76] png_0.1-9           gridtext_0.1.5      bslib_0.10.0       
-#> [79] Rcpp_1.1.1          nlme_3.1-164        mgcv_1.9-3         
-#> [82] xfun_0.57           fs_1.6.7            pkgconfig_2.0.3    
-#> [85] GlobalOptions_0.1.3
+#>  [7] lifecycle_1.0.5     cluster_2.1.6       survival_3.6-4     
+#> [10] ClusterR_1.3.3      magrittr_2.0.4      compiler_4.4.1     
+#> [13] rlang_1.1.7         sass_0.4.10         tools_4.4.1        
+#> [16] utf8_1.2.6          yaml_2.3.12         knitr_1.51         
+#> [19] FNN_1.1.4.1         labeling_0.4.3      htmlwidgets_1.6.4  
+#> [22] xml2_1.5.2          RColorBrewer_1.1-3  withr_3.0.2        
+#> [25] BiocGenerics_0.52.0 desc_1.4.3          stats4_4.4.1       
+#> [28] colorspace_2.1-2    scales_1.4.0        iterators_1.0.14   
+#> [31] MASS_7.3-60.2       cli_3.6.5           rmarkdown_2.30     
+#> [34] crayon_1.5.3        ragg_1.5.1          generics_0.1.4     
+#> [37] otel_0.2.0          rstudioapi_0.18.0   tzdb_0.5.0         
+#> [40] rjson_0.2.23        commonmark_2.0.0    cachem_1.1.0       
+#> [43] splines_4.4.1       assertthat_0.2.1    parallel_4.4.1     
+#> [46] matrixStats_1.5.0   vctrs_0.7.2         Matrix_1.7-0       
+#> [49] jsonlite_2.0.0      litedown_0.9        S4Vectors_0.44.0   
+#> [52] IRanges_2.40.1      hms_1.1.4           GetoptLong_1.1.0   
+#> [55] clue_0.3-66         irlba_2.3.7         pbmcapply_1.5.1    
+#> [58] systemfonts_1.3.1   foreach_1.5.2       jquerylib_0.1.4    
+#> [61] glue_1.8.0          pkgdown_2.2.0       codetools_0.2-20   
+#> [64] shape_1.4.6.1       stringi_1.8.7       gtable_0.3.6       
+#> [67] gmp_0.7-5.1         pillar_1.11.1       htmltools_0.5.9    
+#> [70] circlize_0.4.17     R6_2.6.1            textshaping_1.0.5  
+#> [73] doParallel_1.0.17   evaluate_1.0.5      lattice_0.22-6     
+#> [76] markdown_2.0        png_0.1-9           gridtext_0.1.5     
+#> [79] bslib_0.10.0        Rcpp_1.1.1          nlme_3.1-164       
+#> [82] mgcv_1.9-3          xfun_0.57           fs_1.6.7           
+#> [85] pkgconfig_2.0.3     GlobalOptions_0.1.3
 ```

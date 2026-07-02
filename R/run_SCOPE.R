@@ -13,7 +13,7 @@
 #' @param iter.max The maximum number of iterations allowed. The default is 100.
 #' @param epsilon Convergence threshold. The default is \eqn{10^{-4}}.
 #' @param alpha Decay rate \eqn{\alpha} used for computing the exponential moving average of weight vector \eqn{\theta}. In interation \eqn{l}, \eqn{{\theta^{(l)}}^{EMA} = \alpha \theta^{(l)} + (1-\alpha) {\theta^{(l-1)}}^{EMA}, \alpha\in[0, 1]}. The default value is 0.5.
-#' @param rename_CTN Whether to rename niches based on the proportion of driver cell types. The cluster with the highest proportion will be named as \code{CTN} when \code{clusternum = 2} and \code{CTN1} otherwise. The cluster with the lowest driver cell type proportion will be renamed as \code{Unassigned}. Other clusters will be named as \code{CTN2, ...} accordingly when \code{clusternum > 2}.
+#' @param rename_CTN Whether to rename niches based on the proportion of core cell types. The cluster with the highest proportion will be named as \code{CTN} when \code{clusternum = 2} and \code{CTN1} otherwise. The cluster with the lowest core cell type proportion will be renamed as \code{Unassigned}. Other clusters will be named as \code{CTN2, ...} accordingly when \code{clusternum > 2}.
 #' @param save_results Whether to save the niche screening results to the output directory. If \code{TRUE} (default) then the results for each CTN will be saved into a separate file. If \code{FALSE} then will all CTN screening results will be combined into a single data frame and returned as function output.
 #' @param output_dir Output directory. Will automatically create a new directory when the target directory doesn't exist.
 #' @param suffix File name suffix.
@@ -41,7 +41,7 @@ run_SCOPE <- function(
   CTN_res <- #pbmclapply(1:nrow(combination_table), function(i) {
     lapply(1:nrow(combination_table), function(i) {
     CTN_name <- paste0(combination_table[i,], collapse="_")
-    driver_celltypes <- unname(unlist(combination_table[i, ]))
+    core_celltypes <- unname(unlist(combination_table[i, ]))
     print(sprintf("Processing %d: %s", i, CTN_name))
 
     # Prepare matrices for clustering
@@ -59,6 +59,7 @@ run_SCOPE <- function(
     X_m_list <- list(dat1, dat2, dat3, dat4)
 
     if(!linear) {
+      V1 <- V2 <- V3 <- NULL
       X_m_list <- lapply(X_m_list, function(dat) {
         dat <- as.data.frame(dat)
         colnames(dat) <- paste0("V", seq_len(ncol(dat)))
@@ -82,7 +83,7 @@ run_SCOPE <- function(
     CTN_table <- cbind(dat_in[rownames(test_mat), c("CellID", "Celltype"), drop = FALSE],
                        CTN = CTN_name, label_new = cluster_label)
     if(rename_CTN) {
-      CTN_table <- label_CTN(CTN_table, driver_celltypes = driver_celltypes,
+      CTN_table <- label_CTN(CTN_table, core_celltypes = core_celltypes,
                              clusternum = clusternum) }
 
     if(save_results) {
@@ -106,27 +107,29 @@ run_SCOPE <- function(
 
 #' Renaming CTN cluster labels
 #'
-#' Internal function for renaming CTN cluster labels based on the proportion of driver cell type triads
+#' Internal function for renaming CTN cluster labels based on the proportion of core cell type triads
 #' @keywords internal
 #' @import dplyr
-label_CTN <- function(CTN_table, driver_celltypes = NULL, clusternum = 2) {
+#' @importFrom rlang .data
+label_CTN <- function(CTN_table, core_celltypes = NULL, clusternum = 2) {
   if(clusternum == 2) {cluster_levs <- c("CTN", "Unassigned")}
   else {cluster_levs <- c(paste0("CTN", 1:(clusternum-1)), "Unassigned")}
 
   CTN_label_df <- CTN_table %>%
-    group_by(label_new) %>%
-    summarise(prop_drivercelltype = sum(Celltype %in% driver_celltypes)/n()) %>% ungroup %>%
-    arrange(desc(prop_drivercelltype)) %>%
+    group_by(.data$label_new) %>%
+    summarise(prop_corecelltype = sum(.data$Celltype %in% core_celltypes)/n()) %>%
+    ungroup %>%
+    arrange(desc(.data$prop_corecelltype)) %>%
     mutate(label = case_when(
       row_number() == clusternum ~ "Unassigned",
       clusternum == 2 ~ "CTN",
       TRUE ~ paste0("CTN", row_number()))) %>%
-    select(-prop_drivercelltype) %>%
-    mutate(label = factor(label, cluster_levs))
+    select(-.data$prop_corecelltype) %>%
+    mutate(label = factor(.data$label, cluster_levs))
 
   CTN_table_relabeled <- CTN_table %>%
     left_join(CTN_label_df, by = c("label_new")) %>%
-    select(-Celltype)
+    select(-.data$Celltype)
 
   return(CTN_table_relabeled)
 }

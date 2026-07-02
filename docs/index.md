@@ -8,7 +8,9 @@ SCOPE integrates multiple spatial colocalization patterns within a
 multi-view learning framework to derive reusable niche vocabularies from
 spatially resolved single-cell data.
 
-![](reference/figures/SCOPE_schematic.png)
+![SCOPE schematic](reference/figures/SCOPE_schematic.png)
+
+SCOPE schematic
 
 ## Installation
 

@@ -18,7 +18,7 @@ jaccard_dist_hclust(Full_CTN_table, CTN_ls, num_cores = 1)
 
 - CTN_ls:
 
-  A vector of strings containing all CTNs
+  A character vector containing the names of the CTNs.
 
 - num_cores:
 

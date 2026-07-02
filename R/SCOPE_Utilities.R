@@ -64,7 +64,8 @@ Build_cell_neighbor_maxdist <- function(
                   neighbor.cell.ids = neighbor.cell.ids))
     }
   }, simplify = FALSE)
-  count_df <- lapply(count_df_neighbor_ids, "[[", "count_table") %>% do.call(rbind, .)
+  count_df <- lapply(count_df_neighbor_ids, "[[", "count_table")
+  count_df <- do.call(rbind, count_df)
   rownames(count_df) <- dat_slide$CellID
   colnames(count_df) <- cell_types_available
   prop_df <- prop.table(count_df, margin = 1)
@@ -100,7 +101,7 @@ jaccard <- function(a, b) {
 #'
 #' Computes the Jaccard distance matrix between all pairs of cell-type triad niches (CTNs) and performs hierarchical clustering analysis on the result.
 #' @param Full_CTN_table A data frame containing clustering labels for all cell-type triads
-#' @param CTN_ls A vector of strings containing all CTNs
+#' @param CTN_ls A character vector containing the names of the CTNs.
 #' @param num_cores The number of cores to use in [pbmcapply::pbmclapply()], i.e. at most how many child processes will be run simultaneously. Can only be set at 1 on Windows.
 #' @return A list contains:
 #' \describe{
@@ -113,13 +114,16 @@ jaccard <- function(a, b) {
 #' @importFrom stats hclust
 #' @importFrom stats as.dist
 #' @importFrom utils combn
-#' @importFrom cluster silhouette
+#' @importFrom rlang .data
 #' @export
 jaccard_dist_hclust <- function(Full_CTN_table, CTN_ls, num_cores = 1) {
   cell_id_ls <- sapply(CTN_ls, function(ctn) {
     Full_CTN_table$CellID[Full_CTN_table[[ctn]] == "CTN"]
   }, simplify = FALSE, USE.NAMES = TRUE)
 
+  if (!requireNamespace("survival", quietly = TRUE)) {
+    stop(paste("Package survival is required but not installed."))
+  }
   # All pairwise combinations of CTNs
   CTN_combs <- as.data.frame(t(combn(CTN_ls, 2)))
 
@@ -136,9 +140,9 @@ jaccard_dist_hclust <- function(Full_CTN_table, CTN_ls, num_cores = 1) {
     rbind(data.frame(V1 = CTN_ls, V2 = CTN_ls, jaccard = 1), # set diagonal as 1
           data.frame(V1 = jaccard_vec_mgcv$V2, V2 = jaccard_vec_mgcv$V1,
                      jaccard = jaccard_vec_mgcv$jaccard)) %>%
-    arrange(V2) %>%
+    arrange(.data$V2) %>%
     pivot_wider(names_from = "V2", values_from = "jaccard") %>%
-    arrange(V1) %>%
+    arrange(.data$V1) %>%
     column_to_rownames("V1") %>%
     as.matrix
 
@@ -152,7 +156,7 @@ jaccard_dist_hclust <- function(Full_CTN_table, CTN_ls, num_cores = 1) {
     si = cluster::silhouette(cutree(cl, k = k), as.dist(1 - jaccard_mat_mgcv))
     data.frame(avg_si = summary(si)$avg.width,
                median_si = summary(si)$si.summary[["Median"]])}, simplify = FALSE) %>%
-    do.call(rbind, .) %>%
+    do.call(rbind, .data) %>%
     cbind(K = 2:(nrow(jaccard_mat_mgcv) - 1))
 
   return(list(jaccard_mat_mgcv = jaccard_mat_mgcv, cl = cl,
@@ -165,8 +169,7 @@ jaccard_dist_hclust <- function(Full_CTN_table, CTN_ls, num_cores = 1) {
 #' cell types within the original triads. If a tie occurs, the function resolves
 #' it by identifying the cell type with the highest overall proportion.
 #' @param CTN_cluster_label A data frame containing hierarchical clustering results for merging the highly overlapped CTNs.
-#'   It must include the following two columns: \code{CTN} (the CTN names) and
-#'   \code{cluster} (the corresponding cluster label).
+#'   It must include the following two columns: \code{CTN} (the CTN names) and \code{cluster} (the corresponding cluster label).
 #' @param CTN_merged_celltype_prop A data frame representing the
 #'   cell type proportion for each CTN with the following columns: \code{CTN} (the CTN names),
 #'   \code{Celltype} (cell type labels), and \code{prop} (cell type proportion of the CTN).
@@ -181,8 +184,9 @@ jaccard_dist_hclust <- function(Full_CTN_table, CTN_ls, num_cores = 1) {
 #' }
 #' @import dplyr
 #' @importFrom data.table rbindlist
+#' @importFrom rlang .data
 #' @export
-annotate_CTN <- function(CTN_cluster_label, CTN_merged_celltype_prop, celltype_levs) {
+CTN_annotate <- function(CTN_cluster_label, CTN_merged_celltype_prop, celltype_levs) {
   res <- CTN_cluster_label %>%
     split(f = .$cluster) %>%
     lapply(function(df_sub) {
@@ -199,11 +203,11 @@ annotate_CTN <- function(CTN_cluster_label, CTN_merged_celltype_prop, celltype_l
           `colnames<-`(c("CTN", "CoreCelltypes"))
 
         core_celltypes_count <- core_celltypes %>%
-          dplyr::count(CoreCelltypes, name = "n_appearance") %>%
+          dplyr::count(.data$CoreCelltypes, name = "n_appearance") %>%
           inner_join(subset(CTN_merged_celltype_prop, cluster == df_sub$cluster[1]),
                      by = c("CoreCelltypes" = "Celltype")) %>%
-          arrange(desc(n_appearance), desc(prop)) %>%
-          select(cluster, CoreCelltypes, n_appearance, prop) %>%
+          arrange(desc(.data$n_appearance), desc(.data$prop)) %>%
+          select(.data$cluster, .data$CoreCelltypes, .data$n_appearance, .data$prop) %>%
           distinct()
 
         # Add asterisks if the most second most frequent cell types only appeared twice
@@ -212,24 +216,119 @@ annotate_CTN <- function(CTN_cluster_label, CTN_merged_celltype_prop, celltype_l
 
         annotation <- core_celltypes_count %>%
           dplyr::slice(1:3) %>%
-          mutate(CoreCelltypes = factor(CoreCelltypes, celltype_levs)) %>%
-          arrange(CoreCelltypes) %>%
-          pull(CoreCelltypes) %>% sort() %>% paste(collapse = "_")
+          mutate(CoreCelltypes = factor(.data$CoreCelltypes, celltype_levs)) %>%
+          arrange(.data$CoreCelltypes) %>%
+          pull(.data$CoreCelltypes) %>% sort() %>%
+          paste(collapse = "_")
       }
 
       return(list(annotation = cbind(df_sub, annotation),
                   core_celltypes_summary = core_celltypes_count))
     })
 
-  core_celltypes_summary <- lapply(res, "[[", "core_celltypes_summary") %>%
-    do.call(rbind, .) %>% `rownames<-`(NULL) %>%
-    distinct()
-  annotation <- lapply(res, "[[", "annotation") %>%
-    do.call(rbind, .) %>% `rownames<-`(NULL) %>%
-    left_join(distinct(core_celltypes_summary, cluster, Note),
+  core_celltypes_summary <- do.call(rbind, lapply(res, "[[", "core_celltypes_summary")) %>%
+    `rownames<-`(NULL) %>% distinct()
+  annotation <- do.call(rbind, lapply(res, "[[", "annotation")) %>%
+    `rownames<-`(NULL) %>%
+    left_join(distinct(core_celltypes_summary, .data$cluster, .data$Note),
               by = "cluster") %>%
-    mutate(Note = ifelse(is.na(Note), "", Note))
+    mutate(Note = ifelse(is.na(.data$Note), "", .data$Note))
   return(list(annotation = annotation,
               core_celltypes_summary = core_celltypes_summary))
 }
+
+
+#' Cox regression on patient survival based on CTN presence
+#'
+#' Evaluates the prognostic ability of Celltype Triad Niches (CTNs) by fitting a
+#' Cox proportional hazards regression model using patient-level CTN presence as the main predictor.
+#' @param Full_CTN_table A data frame containing clustering labels for all cell-type triads
+#' @param CTN_ls A character vector containing the names of the CTNs to evaluate.
+#' @param clinical_df A data frame containing image-level clinical data. It must
+#'   include columns for patient ID (\code{patient_id}), survival time (\code{time}),
+#'   status event (\code{event}), and any specified confounders (\code{confounder}).
+#' @param time A character string specifying the survival time column name. See [survival::Surv()] for details.
+#' @param event A character string specifying the survival status indicator column name, normally 0=alive, 1=dead. See [survival::Surv()] for details.
+#' @param patient_id A character string specifying the patient ID column name.
+#' @param confounder A character string or vector specifying column names of
+#'   confounders to be adjusted for in the model. Defaults to \code{NULL}.
+#' @param min.n.cells An integer specifying the minimum cell count threshold
+#'   required to define a CTN as present on a tissue section. Defaults to 100.
+#' @param min.n.patients An integer specifying the minimum patient threshold.
+#'   Only CTNs that are both present present and absent in \eqn{\ge} \code{min.n.patients} will be evaluated. Defaults to 3.
+#' @returns A data frame containing the survival analysis results for each CTN:
+#' \describe{
+#'  \item{CTN}{The name of the CTN.}
+#'  \item{logHR}{Log harzard ratio.}
+#'  \item{HR}{Hazard ratio.}
+#'  \item{pval}{P-value}
+#'  \item{c_index}{Concordance-index (c-index)}
+#'  \item{FDR}{The Benjamini-Hochberg adjusted p-value}
+#' }
+#' @import survival dplyr
+#' @importFrom stats as.formula
+#' @importFrom rlang .data
+#' @export
+#' @details
+#' Patient-level presence of a CTN is defined as having \eqn{\ge} \code{min.n.cells}
+#' cells within that niche in at least one tissue section.
+CTN_presence_coxph <- function(
+    Full_CTN_table, CTN_ls, clinical_df,
+    time = "OS", event = "Ev.O",
+    patient_id = "Patient_ID", confounder = NULL,
+    min.n.patients = 3, min.n.cells = 100) {
+
+  clinical_df_by_patient <- clinical_df %>%
+    select(all_of(c(patient_id, time, event, confounder))) %>%
+    distinct()
+
+  CTN_presence_by_patient <- Full_CTN_table %>%
+    group_by(.data$ImageID) %>%
+    summarise(across(all_of(CTN_ls), ~ ifelse(
+      sum(. == "CTN") >= min.n.cells, "CTN", "Unassigned"))) %>%
+    inner_join(clinical_df, by = "ImageID") %>%
+    group_by(.data[[patient_id]]) %>%
+    summarise(across(all_of(CTN_ls), ~ ifelse(any(. == "CTN"), "CTN", "Unassigned"))) %>%
+    ungroup %>%
+    mutate(across(all_of(CTN_ls), ~ factor(., levels = c("Unassigned", "CTN")))) %>%
+    left_join(clinical_df_by_patient, by = patient_id)
+
+  surv_object = Surv(time  = CTN_presence_by_patient[[time]],
+                     event = CTN_presence_by_patient[[event]])
+
+  CTN_keep <- CTN_presence_by_patient %>%
+    select(all_of(CTN_ls)) %>%
+    apply(2, table) %>% t() %>% as.data.frame() %>%
+    filter(.data$CTN >= min.n.patients,
+           .data$Unassigned >= min.n.patients) %>%
+    rownames()
+
+  if(length(CTN_keep) == 0) {return(NULL)}
+
+  df_cox <- sapply(CTN_keep, function(col) {
+    form_confounder <- ifelse(is.null(confounder), "",
+                              paste(c("", confounder), collapse = "+"))
+    form = as.formula(paste("surv_object ~", col, form_confounder))
+    fit = coxph(form, data = CTN_presence_by_patient)
+    sfit = summary(fit)
+    c_index = sfit$concordance[1]
+    coef_mat = sfit$coefficients
+
+    res = data.frame(
+      CTN = col,
+      logHR   = coef_mat[, "coef"],
+      HR      = coef_mat[, "exp(coef)"],
+      pval    = coef_mat[, "Pr(>|z|)"],
+      c_index = c_index,
+      stringsAsFactors = FALSE
+    )[1, ]
+
+    return(res)
+  }, simplify = FALSE, USE.NAMES = TRUE)
+
+  df_cox <- do.call(rbind, df_cox)
+  df_cox$FDR <- p.adjust(df_cox$pval, method = "BH")
+  return(df_cox)
+}
+
 

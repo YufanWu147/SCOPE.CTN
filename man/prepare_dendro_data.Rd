@@ -22,6 +22,9 @@ A list with components (See \code{\link[ggdendro:dendro_data]{ggdendro::dendro_d
 }
 }
 \description{
+\code{ggdendro} package is required for the function.
+}
+\details{
 Internal function for preparing input data to \code{\link[=draw_CTN_dendro]{draw_CTN_dendro()}} function
 }
 \references{

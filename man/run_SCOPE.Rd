@@ -45,7 +45,7 @@ run_SCOPE(
 
 \item{num_cores}{The number of cores to use in \link[pbmcapply:pbmclapply]{pbmcapply::pbmclapply}, i.e. at most how many child processes will be run simultaneously. Can only be set at 1 on Windows.}
 
-\item{rename_CTN}{Whether to rename niches based on the proportion of driver cell types. The cluster with the highest proportion will be named as \code{CTN} when \code{clusternum = 2} and \code{CTN1} otherwise. The cluster with the lowest driver cell type proportion will be renamed as \code{Unassigned}. Other clusters will be named as \code{CTN2, ...} accordingly when \code{clusternum > 2}.}
+\item{rename_CTN}{Whether to rename niches based on the proportion of core cell types. The cluster with the highest proportion will be named as \code{CTN} when \code{clusternum = 2} and \code{CTN1} otherwise. The cluster with the lowest core cell type proportion will be renamed as \code{Unassigned}. Other clusters will be named as \code{CTN2, ...} accordingly when \code{clusternum > 2}.}
 
 \item{save_results}{Whether to save the niche screening results to the output directory. If \code{TRUE} (default) then the results for each CTN will be saved into a separate file. If \code{FALSE} then will all CTN screening results will be combined into a single data frame and returned as function output.}
 

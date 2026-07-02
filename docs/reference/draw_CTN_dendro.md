@@ -1,7 +1,6 @@
 # Draw CTN dendrogram Dendrogram visualization for the hierarchical clustering results on the pairwise Jaccard distance between CTNs.
 
-Draw CTN dendrogram Dendrogram visualization for the hierarchical
-clustering results on the pairwise Jaccard distance between CTNs.
+`forcats`, `ggdendro`, `ggtext` packages are required for the function.
 
 ## Usage
 
@@ -11,6 +10,7 @@ draw_CTN_dendro(
   h,
   k = NULL,
   CTN_annotation = NULL,
+  annot_var = "annotation",
   celltype_palette = NULL,
   dot_fontsize = 12,
   CTN_group_palette = NULL,
@@ -45,7 +45,11 @@ draw_CTN_dendro(
 
   (Optional) A data frame with the original CTN names (`CTN`), the
   corresponding cluster label (`cluster`), and the new name for the
-  consolidated CTN (`annotation_final`) after merging.
+  consolidated CTN (specified in `annot_var`) after merging.
+
+- annot_var:
+
+  Column name of the newly consolidated CTN in `CTN_annotation`.
 
 - celltype_palette:
 

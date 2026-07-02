@@ -47,6 +47,6 @@ CTN_colored <- color_CTN_names(
   celltype_palette = c("B" = "#fee440", "CD4T" = "#3a86ff", "CD8T" = "#8338ec"))
 
 # ggplot() +
-# labs(title = CTN_colored) +
-#  theme(plot.title = element_markdown(hjust = 0.5))
+#  labs(title = CTN_colored) +
+#  theme(plot.title = ggtext::element_markdown(hjust = 0.5))
 ```

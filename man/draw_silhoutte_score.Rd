@@ -13,5 +13,8 @@ under cluster number \code{K}. Output of the \code{\link[=jaccard_dist_hclust]{j
 \item{num_clusters}{Optimal number of clusters.}
 }
 \description{
+\code{cowplot} package is required for the function.
+}
+\details{
 Evaluating hierarchical clustering performance for selecting optimal cluster number
 }

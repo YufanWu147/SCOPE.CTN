@@ -11,6 +11,8 @@
 <url><loc>/reference/BtwClusterSS_linear.html</loc></url>
 <url><loc>/reference/Build_cell_neighbor_maxdist.html</loc></url>
 <url><loc>/reference/CLQ_permutation_test.html</loc></url>
+<url><loc>/reference/CTN_annotate.html</loc></url>
+<url><loc>/reference/CTN_presence_coxph.html</loc></url>
 <url><loc>/reference/LabelToBinaryMat.html</loc></url>
 <url><loc>/reference/StandardizeData.html</loc></url>
 <url><loc>/reference/WithinClusterSS_linear.html</loc></url>
@@ -20,7 +22,9 @@
 <url><loc>/reference/compute_CLQ_observed.html</loc></url>
 <url><loc>/reference/compute_CLQ_permutated.html</loc></url>
 <url><loc>/reference/compute_H_linear.html</loc></url>
+<url><loc>/reference/draw_CTN_celltype.html</loc></url>
 <url><loc>/reference/draw_CTN_celltype_prop.html</loc></url>
+<url><loc>/reference/draw_CTN_coxph_logHR.html</loc></url>
 <url><loc>/reference/draw_CTN_dendro.html</loc></url>
 <url><loc>/reference/draw_htmap_jaccard_index.html</loc></url>
 <url><loc>/reference/draw_silhoutte_score.html</loc></url>

@@ -160,26 +160,25 @@ sessionInfo()
 #>  [9] tibble_3.3.1       ggplot2_4.0.2.9000 tidyverse_2.0.0    SCOPE.CTN_0.0.1   
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] gtable_0.3.6        xfun_0.57           bslib_0.10.0       
-#>  [4] htmlwidgets_1.6.4   lattice_0.22-6      tzdb_0.5.0         
-#>  [7] vctrs_0.7.2         tools_4.4.1         generics_0.1.4     
-#> [10] parallel_4.4.1      pbmcapply_1.5.1     pkgconfig_2.0.3    
-#> [13] Matrix_1.7-0        data.table_1.18.2.1 RColorBrewer_1.1-3 
-#> [16] S7_0.2.1            desc_1.4.3          assertthat_0.2.1   
-#> [19] lifecycle_1.0.5     compiler_4.4.1      farver_2.1.2       
-#> [22] FNN_1.1.4.1         textshaping_1.0.5   htmltools_0.5.9    
-#> [25] sass_0.4.10         yaml_2.3.12         gmp_0.7-5.1        
-#> [28] pillar_1.11.1       pkgdown_2.2.0       jquerylib_0.1.4    
-#> [31] cachem_1.1.0        nlme_3.1-164        tidyselect_1.2.1   
-#> [34] digest_0.6.39       stringi_1.8.7       labeling_0.4.3     
-#> [37] splines_4.4.1       fastmap_1.2.0       grid_4.4.1         
-#> [40] cli_3.6.5           magrittr_2.0.4      withr_3.0.2        
-#> [43] scales_1.4.0        timechange_0.4.0    rmarkdown_2.30     
-#> [46] otel_0.2.0          ggtext_0.1.2        ragg_1.5.1         
-#> [49] hms_1.1.4           evaluate_1.0.5      knitr_1.51         
-#> [52] irlba_2.3.7         mgcv_1.9-3          rlang_1.1.7        
-#> [55] gridtext_0.1.5      Rcpp_1.1.1          glue_1.8.0         
-#> [58] xml2_1.5.2          rstudioapi_0.18.0   jsonlite_2.0.0     
-#> [61] R6_2.6.1            ClusterR_1.3.3      systemfonts_1.3.1  
-#> [64] fs_1.6.7
+#>  [1] gmp_0.7-5.1         sass_0.4.10         generics_0.1.4     
+#>  [4] stringi_1.8.7       lattice_0.22-6      hms_1.1.4          
+#>  [7] digest_0.6.39       magrittr_2.0.4      timechange_0.4.0   
+#> [10] evaluate_1.0.5      grid_4.4.1          RColorBrewer_1.1-3 
+#> [13] fastmap_1.2.0       jsonlite_2.0.0      Matrix_1.7-0       
+#> [16] survival_3.6-4      mgcv_1.9-3          scales_1.4.0       
+#> [19] ClusterR_1.3.3      textshaping_1.0.5   jquerylib_0.1.4    
+#> [22] cli_3.6.5           rlang_1.1.7         pbmcapply_1.5.1    
+#> [25] splines_4.4.1       withr_3.0.2         cachem_1.1.0       
+#> [28] yaml_2.3.12         FNN_1.1.4.1         otel_0.2.0         
+#> [31] tools_4.4.1         parallel_4.4.1      tzdb_0.5.0         
+#> [34] assertthat_0.2.1    vctrs_0.7.2         R6_2.6.1           
+#> [37] lifecycle_1.0.5     fs_1.6.7            htmlwidgets_1.6.4  
+#> [40] ragg_1.5.1          irlba_2.3.7         pkgconfig_2.0.3    
+#> [43] desc_1.4.3          pkgdown_2.2.0       pillar_1.11.1      
+#> [46] bslib_0.10.0        gtable_0.3.6        glue_1.8.0         
+#> [49] data.table_1.18.2.1 Rcpp_1.1.1          systemfonts_1.3.1  
+#> [52] xfun_0.57           tidyselect_1.2.1    rstudioapi_0.18.0  
+#> [55] knitr_1.51          farver_2.1.2        htmltools_0.5.9    
+#> [58] nlme_3.1-164        labeling_0.4.3      rmarkdown_2.30     
+#> [61] compiler_4.4.1      S7_0.2.1
 ```

@@ -17,6 +17,9 @@ draw_htmap_jaccard_index(jaccard_mat, cl, num_clusters)
 A \link[ComplexHeatmap:Heatmap-class]{ComplexHeatmap::Heatmap} object.
 }
 \description{
+\code{ComplexHeatmap} and \code{grid} packages are required for the function.
+}
+\details{
 Heatmap visualization of the Jaccard similarity indices between all pairs of cell-type triad
 Niches (CTNs) using an ordered heatmap based on hierarchical clustering.
 }

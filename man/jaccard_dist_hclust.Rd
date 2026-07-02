@@ -9,7 +9,7 @@ jaccard_dist_hclust(Full_CTN_table, CTN_ls, num_cores = 1)
 \arguments{
 \item{Full_CTN_table}{A data frame containing clustering labels for all cell-type triads}
 
-\item{CTN_ls}{A vector of strings containing all CTNs}
+\item{CTN_ls}{A character vector containing the names of the CTNs.}
 
 \item{num_cores}{The number of cores to use in \code{\link[pbmcapply:pbmclapply]{pbmcapply::pbmclapply()}}, i.e. at most how many child processes will be run simultaneously. Can only be set at 1 on Windows.}
 }

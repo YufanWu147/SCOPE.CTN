@@ -61,11 +61,13 @@ compute_CLQ <- function(interact_matrix, dat_in) {
 #' and neighboring cell types (\code{Celltype_neighbor}) in each tissue section (\code{ImageID}),
 #' where \eqn{T} is the number of available cell types and \eqn{L} is the number of tissue sections.
 #' @import dplyr tibble tidyr data.table pbmcapply
+#' @importFrom rlang .data
 #' @export
 #' @references
 #' Bouchard, G. et al. A quantitative spatial cell-cell colocalizations framework enabling comparisons between in vitro assembloids and pathological specimens.
 #' Nat Commun 16, 1392 (2025). \url{https://doi.org/10.1038/s41467-024-55129-6}
 compute_CLQ_observed <- function(cell_neighbor_counts, dat_in, min.ncell = 100, num_cores = 1) {
+  ImageID <- NULL
   rownames(dat_in) <- dat_in$CellID
   cell_neighbor_counts <- drop_na(as.data.frame(cell_neighbor_counts))
   slide_list = unique(names(table(dat_in$ImageID))[which(table(dat_in$ImageID)>min.ncell)])
@@ -78,12 +80,12 @@ compute_CLQ_observed <- function(cell_neighbor_counts, dat_in, min.ncell = 100, 
 
     interaction_mat_sub <- bind_cols(dat_in_sub[cells_sub, , drop = FALSE],
                                      cell_neighbor_counts[cells_sub, ]) %>%
-      group_by(Celltype) %>%
+      group_by(.data$Celltype) %>%
       summarise_at(celltypes_available, sum, na.rm = TRUE) %>%
-      mutate(Celltype = factor(Celltype, celltypes_available)) %>%
-      complete(Celltype) %>%
+      mutate(Celltype = factor(.data$Celltype, celltypes_available)) %>%
+      complete(.data$Celltype) %>%
       mutate_at(celltypes_available, replace_na, 0) %>%
-      arrange(Celltype) %>%
+      arrange(.data$Celltype) %>%
       column_to_rownames("Celltype")
 
     if(any(rownames(interaction_mat_sub) != colnames(interaction_mat_sub))) {
@@ -93,12 +95,12 @@ compute_CLQ_observed <- function(cell_neighbor_counts, dat_in, min.ncell = 100, 
 
     CLQ_obs_sub <- compute_CLQ(interaction_mat_sub, dat_in_sub) %>%
       rownames_to_column("Celltype") %>%
-      pivot_longer(2:ncol(.), values_to = "CLQ", names_to = "Celltype_neighbor") %>%
-      cbind(ImageID = img, .)
+      pivot_longer(2:ncol(.data), values_to = "CLQ", names_to = "Celltype_neighbor") %>%
+      cbind(ImageID = img, .data)
 
     return(CLQ_obs_sub)
-  }, mc.cores = num_cores) %>%
-    do.call(rbind, .)
+  }, mc.cores = num_cores)
+  CLQ_obs <- do.call(rbind, CLQ_obs)
   return(CLQ_obs)
 }
 
@@ -130,6 +132,7 @@ compute_CLQ_observed <- function(cell_neighbor_counts, dat_in, min.ncell = 100, 
 #' and neighboring cell types (\code{Celltype_neighbor}) in each tissue section (\code{ImageID}),
 #' where \eqn{T} is the number of available cell types and \eqn{L} is the number of tissue sections.
 #' @import dplyr tibble tidyr data.table
+#' @importFrom rlang .data
 #' @export
 #' @references
 #' Bouchard, G. et al. A quantitative spatial cell-cell colocalizations framework enabling comparisons between in vitro assembloids and pathological specimens.
@@ -137,6 +140,7 @@ compute_CLQ_observed <- function(cell_neighbor_counts, dat_in, min.ncell = 100, 
 compute_CLQ_permutated <- function(cell_neighbor_ids, dat_in, min.ncell = 100, num_cores = 5,
                                    iter.num = 500, seed = 42) {
   set.seed(seed)
+  ImageID <- CellID <- Celltype <- N <- Celltype_neighbor <- NULL
   dat_in_temp <- data.table(dat_in[, c("CellID", "ImageID", "Celltype")], key = "CellID")
 
   slide_list = unique(names(table(dat_in$ImageID))[which(table(dat_in$ImageID)>min.ncell)])
@@ -155,25 +159,28 @@ compute_CLQ_permutated <- function(cell_neighbor_ids, dat_in, min.ncell = 100, n
       interact_matrix_temp = interact_matrix_temp[, .N, by = list(CellID, Celltype)]
       setkey(interact_matrix_temp, "CellID")
       interact_matrix_temp = merge(interact_matrix_temp, dat_in_sub, by = "CellID", sort = FALSE, suffixes = c("_neighbor", ""))
-      interact_matrix_temp = interact_matrix_temp[, sum(N, na.rm = TRUE), by = list(Celltype, Celltype_neighbor)]
+      interact_matrix_temp = interact_matrix_temp[, sum(N, na.rm = TRUE),
+                                                  by = list(Celltype, Celltype_neighbor)]
       interact_matrix_temp = interact_matrix_temp %>%
-        full_join(expand.grid(Celltype = levels(dat_in$Celltype), Celltype_neighbor = levels(dat_in$Celltype)),
+        full_join(expand.grid(Celltype = levels(dat_in$Celltype),
+                              Celltype_neighbor = levels(dat_in$Celltype)),
                   by = c("Celltype", "Celltype_neighbor")) %>%
-        mutate(V1 = ifelse(is.na(V1), 0, V1)) %>%
-        arrange(Celltype_neighbor) %>%
+        mutate(V1 = ifelse(is.na(.data$V1), 0, .data$V1)) %>%
+        arrange(.data$Celltype_neighbor) %>%
         pivot_wider(names_from = "Celltype_neighbor", values_from = "V1", values_fill = 0) %>%
-        arrange(Celltype) %>%
+        arrange(.data$Celltype) %>%
         column_to_rownames("Celltype")
 
       CLQ_df <- compute_CLQ(interact_matrix_temp, dat_in_sub) %>%
         rownames_to_column("Celltype") %>%
-        pivot_longer(2:ncol(.), values_to = "CLQ", names_to = "Celltype_neighbor") %>%
+        pivot_longer(2:ncol(.data), values_to = "CLQ",
+                     names_to = "Celltype_neighbor") %>%
         cbind(iter = i)
-      return(CLQ_df)
-    }, simplify = FALSE, USE.NAMES = TRUE) %>%
-      data.table::rbindlist(idcol = "ImageID") }, mc.cores = num_cores
-  ) %>%
-    do.call(rbind, .)
+      return(CLQ_df) }, simplify = FALSE, USE.NAMES = TRUE) %>%
+      data.table::rbindlist(idcol = "ImageID")
+    }, mc.cores = num_cores
+  )
+  CLQ_perm <- do.call(rbind, CLQ_perm)
 
   return(CLQ_perm)
 }
@@ -196,6 +203,7 @@ compute_CLQ_permutated <- function(cell_neighbor_ids, dat_in, min.ncell = 100, n
 #' @return A data frame containing the nominal and Benjamini-Hochberg-adjusted CLQ permutation test p-values.
 #' @import dplyr tibble tidyr data.table
 #' @importFrom stats p.adjust
+#' @importFrom rlang .data
 #' @export
 #' @references
 #' Bouchard, G. et al. A quantitative spatial cell-cell colocalizations framework enabling comparisons between in vitro assembloids and pathological specimens.
@@ -204,10 +212,10 @@ CLQ_permutation_test <- function(CLQ_obs, CLQ_perm) {
   CLQ_pval <- CLQ_perm %>%
     left_join(CLQ_obs, by = c("Celltype", "Celltype_neighbor", "ImageID"),
               suffix = c("", ".obs"))  %>%
-    filter(Celltype != Celltype_neighbor) %>%
-    group_by(Celltype, Celltype_neighbor, ImageID) %>%
+    filter(.data$Celltype != .data$Celltype_neighbor) %>%
+    group_by(.data$Celltype, .data$Celltype_neighbor, .data$ImageID) %>%
     # right-tailed test p-value
-    summarise(p_perm = sum(CLQ >= CLQ.obs)/n())
+    summarise(p_perm = sum(.data$CLQ >= .data$CLQ.obs)/n())
 
   CLQ_pval$p_perm.adj <- p.adjust(CLQ_pval$p_perm, method = "BH")
   return(CLQ_pval)

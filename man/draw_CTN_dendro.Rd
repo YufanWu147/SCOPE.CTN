@@ -10,6 +10,7 @@ draw_CTN_dendro(
   h,
   k = NULL,
   CTN_annotation = NULL,
+  annot_var = "annotation",
   celltype_palette = NULL,
   dot_fontsize = 12,
   CTN_group_palette = NULL,
@@ -26,7 +27,9 @@ draw_CTN_dendro(
 
 \item{k}{An integer scalar or vector with the desired number of groups. See \code{\link[stats:cutree]{stats::cutree()}} for details.}
 
-\item{CTN_annotation}{(Optional) A data frame with the original CTN names (\code{CTN}), the corresponding cluster label (\code{cluster}), and the new name for the consolidated CTN (\code{annotation_final}) after merging.}
+\item{CTN_annotation}{(Optional) A data frame with the original CTN names (\code{CTN}), the corresponding cluster label (\code{cluster}), and the new name for the consolidated CTN (specified in \code{annot_var}) after merging.}
+
+\item{annot_var}{Column name of the newly consolidated CTN in \code{CTN_annotation}.}
 
 \item{celltype_palette}{Input of the \code{\link[=color_CTN_names]{color_CTN_names()}} function. A named vector with colors as values and cell type labels as names. Must contain all cell types.}
 
@@ -50,6 +53,5 @@ A list with components:
 }
 }
 \description{
-Draw CTN dendrogram
-Dendrogram visualization for the hierarchical clustering results on the pairwise Jaccard distance between CTNs.
+\code{forcats}, \code{ggdendro}, \code{ggtext} packages are required for the function.
 }
