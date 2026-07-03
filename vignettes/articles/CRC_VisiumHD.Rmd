@@ -1,12 +1,5 @@
 ---
 title: "Detecting lymphocyte aggregate-like niches in CRC VisiumHD data"
-output: 
-  rmarkdown::html_vignette:
-    code_folding: "show"
-vignette: >
-  %\VignetteIndexEntry{CRC_VisiumHD}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
 date: 'Compiled: `r Sys.Date()`'
 ---
 

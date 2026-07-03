@@ -7,9 +7,10 @@
 draw_CTN_celltype_prop(
   CTN_merged_celltype_prop,
   CTN_dend,
-  celltype_palette,
-  rename_celltype = waiver(),
   facet_var = "clust",
+  celltype_palette,
+  radius_range = c(0.5, 8),
+  rename_celltype = waiver(),
   x_expand = c(0.05, 0.05)
 )
 }
@@ -20,11 +21,13 @@ cell type proportion for each CTN with the following columns: \code{CTN} (the CT
 
 \item{CTN_dend}{Output of the \code{\link[=draw_CTN_dendro]{draw_CTN_dendro()}} function}
 
+\item{facet_var}{Faceting variables, usually CTN category. Default to \code{"clust"} from \code{CTN_dend$label_df}}
+
 \item{celltype_palette}{A named vector with colors as values and cell type labels as names. Must contain all cell types.}
 
-\item{rename_celltype}{A function for renaming cell type labels.}
+\item{radius_range}{A numeric vector of length two that specifies the minimum and maximum size of the bubbles. See \code{\link[ggplot2:scale_size]{ggplot2::scale_radius()}} for details.}
 
-\item{facet_var}{Faceting variables. Default to \code{"clust"} from \code{CTN_dend$label_df}}
+\item{rename_celltype}{A function for renaming cell type labels.}
 
 \item{x_expand}{A numeric vector of length two of the multiplicative range expansion factors for the x axis. See \code{\link[ggplot2:expansion]{ggplot2::expansion()}} for details.}
 }

@@ -176,9 +176,10 @@ prepare_dendro_data <- function(cl, h, k = NULL) {
 
   idx                    <-  which(segclust == 0L)
   segclust[idx]          <-  segclust[idx + 1L]
-  dend_data$segments$clust  <-  segclust
-  dend_data$segments$line   <-  as.integer(segclust < 1L)
-  dend_data$labels$clust    <-  labclust
+  dend_data$segments$clust    <- factor(segclust, unique(segclust))
+  dend_data$segments$line   <- as.integer(segclust < 1L)
+  dend_data$labels$clust    <- factor(labclust, unique(labclust))
+  dend_data$labels$order    <- 1:nrow(dend_data$labels)
 
   return(dend_data)
 }
@@ -189,10 +190,11 @@ prepare_dendro_data <- function(cl, h, k = NULL) {
 #' @param k An integer scalar or vector with the desired number of groups. See [stats::cutree()] for details.
 #' @param h Numeric scalar or vector with heights where the tree should be cut. [stats::cutree()] for details. At least one of \code{k} or \code{h} must be specified, \code{k} overrides \code{h} if both are given.
 #' @param CTN_annotation (Optional) A data frame with the original CTN names (\code{CTN}), the corresponding cluster label (\code{cluster}), and the new name for the consolidated CTN (specified in \code{annot_var}) after merging.
+#' @param CTN_group_var Faceting variables (CTN category). Default to \code{"clust"}. Only used when \code{CTN_annotation} is provided.
+#' @param CTN_group_palette (Optional) A named vector with colors as values and CTN categories as names. Only used when \code{CTN_annotation} is provided.
 #' @param annot_var Column name of the newly consolidated CTN in \code{CTN_annotation}.
 #' @param celltype_palette Input of the [color_CTN_names()] function. A named vector with colors as values and cell type labels as names. Must contain all cell types.
 #' @param dot_fontsize Input of the [color_CTN_names()] function. Size of the dots. Default is 16pt.
-#' @param CTN_group_palette (Optional) A named vector with colors as values and CTN categories as names. Only used when \code{CTN_annotation} is provided.
 #' @param show_text Whether to display CTN names alongside the dendrogram (default: \code{TRUE}).
 #' @param y_lim A numeric vector of length two providing limits of the scale. Use NA to refer to the existing minimum or maximum.
 #' @param x_expand A numeric vector of length two of the multiplicative range expansion factors for the x axis. See [ggplot2::expansion()] for details.
@@ -208,9 +210,9 @@ prepare_dendro_data <- function(cl, h, k = NULL) {
 #' \code{forcats}, \code{ggdendro}, \code{ggtext} packages are required for the function.
 #' @export
 draw_CTN_dendro <- function(cl, h, k = NULL, CTN_annotation = NULL,
-                            annot_var = "annotation",
-                            celltype_palette = NULL, dot_fontsize = 12,
-                            CTN_group_palette = NULL, show_text = TRUE,
+                            CTN_group_var = "clust", annot_var = "annotation",
+                            CTN_group_palette = NULL,
+                            celltype_palette = NULL, dot_fontsize = 12, show_text = TRUE,
                             x_expand = c(0.001, 0.001), y_lim = c(-2, 1),
                             rename_celltype = NULL) {
   packages <- c("forcats", "ggdendro", "ggtext")
@@ -221,42 +223,39 @@ draw_CTN_dendro <- function(cl, h, k = NULL, CTN_annotation = NULL,
   }
 
   dend_data <- prepare_dendro_data(cl = cl, h = h, k = k)
-  label_df <- dend_data$labels %>%
-    mutate(order = row_number()) %>%
+  label_df <- dend_data$labels
+  segment_df <- dend_data$segments
+  if(!is.null(CTN_annotation)) {
+    label_df <- dend_data$labels %>%
+      left_join(distinct(CTN_annotation, .data$cluster, .data[[annot_var]], .data[[CTN_group_var]]),
+                by = c("label" = annot_var)) %>%
+      mutate(CTN_group = forcats::fct_reorder(.data[[CTN_group_var]], .data$order)) %>%
+      mutate(CTN_group_label = str_replace(.data[[CTN_group_var]], "\\/", "/<br/>")) %>%
+      mutate(CTN_group_label = forcats::fct_reorder(.data$CTN_group_label, .data$order))
+    label_df_CTN_group <- label_df %>%
+      group_by(.data$CTN_group, .data$CTN_group_label) %>%
+      summarise(x = mean(.data$x)) %>%
+      drop_na()
+    segment_df <- segment_df %>%
+      left_join(distinct(label_df, .data$clust, .data$CTN_group),
+                by = "clust", relationship = "many-to-many")
+  }
+
+  label_df <- label_df %>%
     mutate(CTN_colored = color_CTN_names(
       .data$label, celltype_palette = celltype_palette,
-      sep = "_", dot_fontsize = dot_fontsize)) %>%
-    mutate(clust = factor(.data$clust, unique(.data$clust)))
+      sep = "_", dot_fontsize = dot_fontsize))
+
   if(!is.null(rename_celltype)) {
     label_df$CTN_colored <- rename_celltype(label_df$CTN_colored)
   }
   label_df$CTN_colored <- factor(label_df$CTN_colored, unique(label_df$CTN_colored))
-  segment_df <- dend_data$segments %>%
-    mutate(clust = as.factor(.data$clust))
 
-  if(is.null(CTN_annotation)) {
-    segment_color_var <- 'clust'
-  }
-  else {
-    segment_color_var <- "CTN_group"
-    label_df <- label_df %>%
-      left_join(distinct(CTN_annotation, .data$cluster, .data$CTN_group, .data[[annot_var]]),
-                by = c("label" = annot_var)) %>%
-      mutate(CTN_group_label = str_replace(.data$CTN_group, "\\/", "/<br/>")) %>%
-      mutate(CTN_group = forcats::fct_reorder(.data$CTN_group, .data$clust, .fun = unique)) %>%
-      mutate(CTN_group_label = forcats::fct_reorder(.data$CTN_group_label, .data$CTN_group, .fun = unique))
-    label_df_CTN_group <- label_df %>%
-      group_by(.data$clust, .data$CTN_group, .data$CTN_group_label) %>%
-      summarise(x = mean(.data$x))
-    segment_df <- segment_df %>%
-      left_join(distinct(label_df_CTN_group, .data$clust, .data$CTN_group),
-                by = "clust", relationship = "many-to-many")
-  }
 
   p <- segment_df %>%
     ggplot() +
     geom_segment(aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend,
-                     color = .data[[segment_color_var]]))+
+                     color = .data[[CTN_group_var]]))+
     scale_x_reverse(expand = expansion(mult = x_expand)) +
     geom_hline(yintercept = 0.6, linetype = 2) +
     coord_flip(ylim = y_lim, clip = FALSE) +
@@ -286,10 +285,11 @@ draw_CTN_dendro <- function(cl, h, k = NULL, CTN_annotation = NULL,
 #'   cell type proportion for each CTN with the following columns: \code{CTN} (the CTN names),
 #'   \code{Celltype} (cell type labels), and \code{prop} (cell type proportion of the CTN).
 #' @param CTN_dend Output of the [draw_CTN_dendro()] function
+#' @param facet_var Faceting variables, usually CTN category. Default to \code{"clust"} from \code{CTN_dend$label_df}
 #' @param celltype_palette A named vector with colors as values and cell type labels as names. Must contain all cell types.
-#' @param facet_var Faceting variables. Default to \code{"clust"} from \code{CTN_dend$label_df}
-#' @param x_expand A numeric vector of length two of the multiplicative range expansion factors for the x axis. See [ggplot2::expansion()] for details.
 #' @param rename_celltype A function for renaming cell type labels.
+#' @param x_expand A numeric vector of length two of the multiplicative range expansion factors for the x axis. See [ggplot2::expansion()] for details.
+#' @param radius_range A numeric vector of length two that specifies the minimum and maximum size of the bubbles. See [ggplot2::scale_radius()] for details.
 #' @details
 #' Dotplot visualization of the cell type abundance of cell-type triad niches (CTN). Bubbles are colored by cell type labels, and their sizes represent relative cell type proportions with each CTN.
 #' @description
@@ -298,9 +298,9 @@ draw_CTN_dendro <- function(cl, h, k = NULL, CTN_annotation = NULL,
 #' @importFrom rlang .data
 #' @export
 draw_CTN_celltype_prop <- function(CTN_merged_celltype_prop, CTN_dend,
-                                   celltype_palette,
-                                   rename_celltype = waiver(),
                                    facet_var = "clust",
+                                   celltype_palette, radius_range = c(0.5, 8),
+                                   rename_celltype = waiver(),
                                    x_expand = c(0.05, 0.05)) {
   packages <- c("ggtext", "cowplot")
   for (pkg in packages) {
@@ -317,8 +317,8 @@ draw_CTN_celltype_prop <- function(CTN_merged_celltype_prop, CTN_dend,
                       breaks = names(celltype_palette),
                       labels = rename_celltype) +
     scale_x_discrete(expand = expansion(mult = x_expand)) +
-    scale_y_discrete(limits = rev, position = "right") +
-    scale_radius(range = c(0.5, 8), name = "Proportion\nof Cells") +
+    scale_y_discrete(limits = rev) +
+    scale_radius(range = radius_range, name = "Proportion\nof Cells") +
     labs(x = NULL, y = NULL) +
     cowplot::theme_cowplot(font_size = 10) +
     coord_cartesian(clip = "off") +
@@ -328,7 +328,7 @@ draw_CTN_celltype_prop <- function(CTN_merged_celltype_prop, CTN_dend,
           panel.background = element_rect(fill = NA, color = "grey90"),
           plot.title = element_text(hjust = 0.5),
           axis.text.x = ggtext::element_markdown(angle = 45, hjust = 1),
-          axis.text.y.right = ggtext::element_markdown(),
+          axis.text.y.left = ggtext::element_markdown(),
           strip.text.y.left = ggtext::element_markdown(angle = 0, face = 2),
           strip.background.y = element_rect(fill = NA, color = "grey"),
           strip.clip = "off",
@@ -421,7 +421,8 @@ draw_CTN_coxph_logHR <- function(
   # Cell type proportion barplot of top CTNs
     p_celltype_prop <- df_tmp[, c("CTN", "CTN_colored", "logHR")] %>%
       inner_join(CTN_merged_celltype_prop, by = c("CTN" = "annotation")) %>%
-      mutate(color = ifelse(str_detect(.data$CTN, .data$Celltype), "black", "#FFFFFF00")) %>%
+      mutate(color = ifelse(str_detect(.data$CTN, as.character(.data$Celltype)),
+                            "black", "#FFFFFF00")) %>%
       arrange(.data$color) %>%
       ggplot(aes(x = .data$prop, y = .data$CTN_colored,
                  fill = forcats::fct_rev(.data$Celltype))) +
@@ -491,6 +492,7 @@ draw_CTN_celltype <- function(Full_CTN_table, CTN = "Bcell_CD4T_CD8T", img_list,
   }
   p_celltype <- Full_CTN_table %>%
     filter(.data$ImageID %in% img_list) %>%
+    mutate(ImageID = factor(.data$ImageID, img_list)) %>%
     ggplot(aes(x = .data$X, y = .data$Y)) +
     geom_point(aes(color = .data$Celltype), size = 0.1, shape = 16) +
     scale_color_manual(values = celltype_palette, name = "Cell Type",
@@ -500,10 +502,12 @@ draw_CTN_celltype <- function(Full_CTN_table, CTN = "Bcell_CD4T_CD8T", img_list,
     guides(color = guide_legend(ncol = legend.ncol, override.aes = list(size = 3))) +
     theme_void() +
     theme(legend.key.size = unit(3, "mm"),
+          legend.text = ggtext::element_markdown(),
           plot.title = element_text(size = 12, face = 2))
 
   p_CTN <- Full_CTN_table %>%
     filter(.data$ImageID %in% img_list) %>%
+    mutate(ImageID = factor(.data$ImageID, img_list)) %>%
     ggplot(aes(x = .data$X, y = .data$Y)) +
     geom_point(aes(color = .data[[CTN]]), size = 0.1, shape = 16) +
     scale_color_manual(values = CTN_palette, name = "CTN label") +
@@ -513,6 +517,7 @@ draw_CTN_celltype <- function(Full_CTN_table, CTN = "Bcell_CD4T_CD8T", img_list,
     labs(title = rename_celltype(color_CTN_names(
       CTN, celltype_palette = celltype_palette))) +
     theme(legend.key.size = unit(3, "mm"),
+          legend.text = ggtext::element_markdown(),
           plot.title = ggtext::element_markdown(size = 12, face = 2))
 
   if(is.null(aspect.ratio)) {

@@ -34,6 +34,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/CRC_VisiumHD.html">Detecting lymphocyte aggregate-like niches in CRC VisiumHD data</a></li>
+    <li><a class="dropdown-item" href="../articles/HGSOC_CosMx.html">Systematic CTN screening in HGSOC CosMx data</a></li>
     <li><a class="dropdown-item" href="../articles/NSCLC_IMC.html">Systematic CTN screening in NSCLC IMC data</a></li>
     <li><a class="dropdown-item" href="../articles/PF_Xenium.html">Detecting TLS-like CTNs in PF Xenium data</a></li>
     <li><a class="dropdown-item" href="../articles/Triad_prefilter_CLQ.html">Prefiltering cell type triads using CLQ permutation test</a></li>
@@ -60,9 +61,9 @@
 
       <h1>Systematic CTN screening in NSCLC IMC data</h1>
             
-            <h4 data-toc-skip class="date">Compiled: 2026-07-01</h4>
+            <h4 data-toc-skip class="date">Compiled: 2026-07-02</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/YufanWu147/SCOPE.CTN/blob/HEAD/vignettes/NSCLC_IMC.Rmd" class="external-link"><code>vignettes/NSCLC_IMC.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/YufanWu147/SCOPE.CTN/blob/HEAD/vignettes/articles/NSCLC_IMC.Rmd" class="external-link"><code>vignettes/articles/NSCLC_IMC.Rmd</code></a></small>
       <div class="d-none name"><code>NSCLC_IMC.Rmd</code></div>
     </div>
 
@@ -152,9 +153,9 @@ maximum threshold (<code>max.radius</code>).</p>
 <code class="sourceCode R"><span><span class="va">cell_neighbor_results_maxdist</span> <span class="op">=</span> <span class="fu">pbmcapply</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pbmcapply/man/pbmclapply.html" class="external-link">pbmclapply</a></span><span class="op">(</span></span>
 <span>  <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">slide_list</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="fu"><a href="../reference/Build_cell_neighbor_maxdist.html">Build_cell_neighbor_maxdist</a></span><span class="op">(</span></span>
-<span>      dat_slide<span class="op">=</span><span class="va">dat_in</span><span class="op">[</span><span class="va">dat_in</span><span class="op">$</span><span class="va">ImageID</span><span class="op">==</span><span class="va">slide_list</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="op">]</span>, knn_num <span class="op">=</span> <span class="fl">20</span>, </span>
+<span>      dat_slide<span class="op">=</span><span class="va">NSCLC_IMC_dat_in</span><span class="op">[</span><span class="va">NSCLC_IMC_dat_in</span><span class="op">$</span><span class="va">ImageID</span><span class="op">==</span><span class="va">slide_list</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="op">]</span>, knn_num <span class="op">=</span> <span class="fl">20</span>, </span>
 <span>      min.radius <span class="op">=</span> <span class="fl">100</span>, max.radius <span class="op">=</span> <span class="fl">120</span>, min.n.neighbors <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>      cell_types_available <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="va">dat_in</span><span class="op">$</span><span class="va">Celltype</span><span class="op">)</span>,</span>
+<span>      cell_types_available <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="va">NSCLC_IMC_dat_in</span><span class="op">$</span><span class="va">Celltype</span><span class="op">)</span>,</span>
 <span>      return.nn.ids <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">}</span>,</span>
 <span>  mc.cores <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span></span>
@@ -185,13 +186,10 @@ maximum threshold (<code>max.radius</code>).</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">dist.quantiles</span>, </span>
 <span>     file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_dist.quantiles.RData"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rm.html" class="external-link">rm</a></span><span class="op">(</span><span class="va">cell_neighbor_results_maxdist</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_cell_neighbor_table_maxdist.RData"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_dist.quantiles.RData"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>We can examine the distribution of 99th percentile of all distance to
 the nearest neighbors to select the threshold parameters min.radius and
 max.radius accordingly.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dist.quantiles</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">`99%`</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -204,7 +202,7 @@ max.radius accordingly.</p>
 within the distance boundary will have their neighborhood cell-type
 proportions set to <code>NaN</code> and will be excluded from subsequent
 niche clustering. Here we set <code>min.n.neighbors</code> to 10.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cells_to_exclude</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">cell_neighbor_table_maxdist</span>, <span class="fl">1</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/base/any.html" class="external-link">any</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">}</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu">`colnames&lt;-`</span><span class="op">(</span><span class="st">"is_na"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -239,13 +237,17 @@ niche clustering. Here we set <code>min.n.neighbors</code> to 10.</p>
 </h2>
 <p>SCOPE identifies niches characterized by cell-type triads. However,
 as the number of cell types grows, the combinations of three cell types
-can increase exponentially. Therefore, we utilize a colocation quotient
-(CLQ) permutation test to prioritize cell-type triads (CTs) that exhibit
+can increase exponentially. The NSCLC IMC dataset has Collagen_CAF,
+hypoxic_CAF, mCAF, SMA_CAF, tpCAF, iCAF, vCAF, dCAF, hypoxic_tpCAF,
+IDO_CAF, PDPN_CAF, HEV, Blood, Lymphatic, Myeloid, Neutrophil, Bcell,
+CD8, CD4, normal, hypoxic, Other available cell types, which can form
+1540 triads. Therefore, we utilize a colocation quotient (CLQ)
+permutation test to prioritize cell-type triads (CTs) that exhibit
 significant spatial proximity.</p>
 <p>Please refer to the <a href="Triad_prefilter_CLQ.html">Prefiltering
 cell type triads using CLQ permutation test</a> vignette for
 details.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_cell_neighbor_counts.RData"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_cell_neighbor_ids.RData"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -267,7 +269,7 @@ load the precomputed results and use the Benjamini-Hochberg (BH)
 adjusted p-values to prioritize cell type triads where all constituent
 pairs exhibit significant CLQs (FDR &lt; 0.05) in at least 40 tissue
 sections.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_CLQ_perm_pval_500iter.RData"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">CLQ_perm_pval</span>, <span class="fl">5</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 5</span></span></span>
@@ -279,7 +281,7 @@ sections.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> _cell    _lood             175A_100  0.002     0.028<span style="text-decoration: underline;">1</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> _cell    _lood             175A_102  0         0     </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> _cell    _lood             175A_103  0.422     1</span></span></code></pre></div>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Exclude scarce (&lt; 500 cells in total) &amp; uninformative cell types ("Other") </span></span>
 <span><span class="va">ncell_by_celltype</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">NSCLC_IMC_dat_in</span><span class="op">$</span><span class="va">Celltype</span><span class="op">)</span></span>
 <span><span class="va">celltype_to_exclude</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">ncell_by_celltype</span> <span class="op">&lt;</span> <span class="fl">500</span><span class="op">)</span><span class="op">)</span>, <span class="st">"Other"</span><span class="op">)</span></span>
@@ -321,28 +323,12 @@ sections.</p>
 <span></span>
 <span><span class="co"># save(combination_table_filtered, </span></span>
 <span><span class="co">#     file = paste0(data_path, dataset_name, "_combination_table_filtered.RData"))</span></span></code></pre></div>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">celltype_to_exclude</span> <span class="op">&lt;-</span> <span class="va">cell_neighbor_table_maxdist</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">combination_table_filtered</span><span class="op">)</span><span class="op">)</span><span class="op">]</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">x</span> <span class="op">&gt;</span> <span class="fl">0.3</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">}</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="va">as.data.frame</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu">`colnames&lt;-`</span><span class="op">(</span><span class="st">"n"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">n</span> <span class="op">&lt;=</span> <span class="fl">50</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">celltype_to_exclude</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">1</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">comb_to_run</span> <span class="op">&lt;-</span> <span class="va">combination_table_filtered</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>combs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">V1</span>, <span class="va">V2</span>, <span class="va">V3</span>, sep <span class="op">=</span> <span class="st">"_"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_detect.html" class="external-link">str_detect</a></span><span class="op">(</span><span class="va">combs</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">celltype_to_exclude</span>, collapse <span class="op">=</span> <span class="st">"|"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">combs</span><span class="op">)</span></span>
-<span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>  <span class="va">comb_to_run</span> <span class="op">&lt;-</span> <span class="va">combination_table_filtered</span></span>
-<span><span class="op">}</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="cell-type-triad-niche-ctn-detection-using-scope">4. Cell type triad niche (CTN) detection using SCOPE<a class="anchor" aria-label="anchor" href="#cell-type-triad-niche-ctn-detection-using-scope"></a>
 </h2>
-<p>Next, we apply SCOPE for systematic screening of CTNs using the
-default configurations for the following parameters:</p>
+<p>Next, we apply SCOPE for the systematic screening of CTNs. We utilize
+the default configurations for most parameters, including:</p>
 <ul>
 <li>
 <code>min.prop</code>: The minimum neighborhood cell-type proportion
@@ -357,17 +343,9 @@ regression spline smoothing of the driver cell-type proportions
 setting <code>save_results = TRUE</code>, the clustering results of each
 CT will be saved as individual <code>.RData</code> files under
 <code>output_dir</code>.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Load prefiltered CTs</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_combination_table_filtered.RData"</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">celltype_to_exclude</span> <span class="op">&lt;-</span> <span class="va">cell_neighbor_table_maxdist</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">combination_table_filtered</span><span class="op">)</span><span class="op">)</span><span class="op">]</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">x</span> <span class="op">&gt;</span> <span class="fl">0.3</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">}</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="va">as.data.frame</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu">`colnames&lt;-`</span><span class="op">(</span><span class="st">"n"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">n</span> <span class="op">&lt;=</span> <span class="fl">50</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/run_SCOPE.html">run_SCOPE</a></span><span class="op">(</span></span>
 <span>  combination_table <span class="op">=</span> <span class="va">combination_table_filtered</span>,</span>
@@ -377,8 +355,10 @@ CT will be saved as individual <code>.RData</code> files under
 <span>  output_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="st">"CTN_K_2"</span><span class="op">)</span>,</span>
 <span>  clusternum <span class="op">=</span> <span class="fl">2</span>, min.prop <span class="op">=</span> <span class="fl">0.3</span>,</span>
 <span>  linear <span class="op">=</span> <span class="cn">FALSE</span>, mgcv_df <span class="op">=</span> <span class="fl">15</span>, iter.max <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></code></pre></div>
-<p>We gather the outputs and save them into one data frame.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<p>We compile the individual outputs and merge them into a single data
+frame. The first five columns match the original input data, and the
+subsequent columns contain the assigned CTN labels.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Full_CTN_table_mgcv</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="st">"_CTN_K_2"</span><span class="op">)</span>, <span class="st">".RData"</span>, full.names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>group <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/row_number.html" class="external-link">row_number</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%/%</a></span> <span class="fl">30</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -387,8 +367,7 @@ CT will be saved as individual <code>.RData</code> files under
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">dirs</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="fu">pbmclapply</span><span class="op">(</span><span class="va">dirs</span>, <span class="kw">function</span><span class="op">(</span><span class="va">dir</span><span class="op">)</span> <span class="op">{</span></span>
 <span>      <span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="va">dir</span><span class="op">)</span></span>
-<span>      <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">CTN_df</span><span class="op">)</span></span>
-<span>      <span class="va">CTN_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">CellID</span>, <span class="va">CTN</span>, <span class="va">label</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>      <span class="va">CTN_table</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">CellID</span>, <span class="va">CTN</span>, <span class="va">label</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>        <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>CTN <span class="op">=</span> <span class="fu"><a href="https://stringr.tidyverse.org/reference/str_replace.html" class="external-link">str_replace_all</a></span><span class="op">(</span><span class="va">CTN</span>, <span class="st">"_CAF"</span>, <span class="st">".CAF"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>        <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>CTN <span class="op">=</span> <span class="fu"><a href="https://stringr.tidyverse.org/reference/str_replace.html" class="external-link">str_replace_all</a></span><span class="op">(</span><span class="va">CTN</span>, <span class="st">"hypoxic_tpCAF"</span>, <span class="st">"hypoxic.tpCAF"</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="op">}</span>, mc.cores <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -402,7 +381,7 @@ CT will be saved as individual <code>.RData</code> files under
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>CellID <span class="op">=</span> <span class="va">Full_CTN_table_mgcv</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">CellID</span><span class="op">)</span>, <span class="va">.</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">Full_CTN_table_mgcv</span> <span class="op">&lt;-</span> <span class="va">temp</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">dat_in</span>, by <span class="op">=</span> <span class="st">"CellID"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">NSCLC_IMC_dat_in</span>, by <span class="op">=</span> <span class="st">"CellID"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Celltype <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">Celltype</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Celltype <span class="op">=</span> <span class="fu"><a href="https://stringr.tidyverse.org/reference/str_replace.html" class="external-link">str_replace</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">Celltype</span><span class="op">)</span>, <span class="st">"_CAF"</span>, <span class="st">".CAF"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Celltype <span class="op">=</span> <span class="fu"><a href="https://stringr.tidyverse.org/reference/str_replace.html" class="external-link">str_replace</a></span><span class="op">(</span><span class="va">Celltype</span>, <span class="st">"hypoxic_tpCAF"</span>, <span class="st">"hypoxic.tpCAF"</span><span class="op">)</span><span class="op">)</span> </span>
@@ -419,7 +398,7 @@ CT will be saved as individual <code>.RData</code> files under
 To merge highly overlapping CTNs, we calculate Jaccard distance between
 every pair of CTNs and perform hierarchical clustering to reduce
 redundancy.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_Full_CTN_table_mgcv.RData"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># All cell type triads</span></span>
@@ -434,8 +413,8 @@ redundancy.</p>
 <p>Silhouette scores are utilized to determine the optimal number of
 clusters. The final cluster count is set to 77, balancing both the mean
 and median Silhouette scores.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">n_clusters</span> <span class="op">=</span> <span class="fl">77</span> <span class="co"># Final number of clusters</span></span>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">n_clusters</span> <span class="op">=</span> <span class="fl">77</span> <span class="co"># Final number of hierarchical clusters</span></span>
 <span><span class="fu"><a href="../reference/draw_silhoutte_score.html">draw_silhoutte_score</a></span><span class="op">(</span><span class="va">CTN_jaccard_mat_hclust</span><span class="op">$</span><span class="va">hclust_silhouette</span>,</span>
 <span>                     num_clusters <span class="op">=</span> <span class="va">n_clusters</span><span class="op">)</span></span></code></pre></div>
 <p><img src="NSCLC_IMC_files/figure-html/Silouhette%20score-1.png" class="r-plt" alt="" width="50%" style="display: block; margin: auto;"></p>
@@ -447,25 +426,25 @@ similar (Jaccard index &gt; 0.95) and moderately similar (0.9
 Jaccard index
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>≤</mo><annotation encoding="application/x-tex">\leq</annotation></semantics></math>
 0.95) CTN pairs, respectively.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">htmap_jaccard_index</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/draw_htmap_jaccard_index.html">draw_htmap_jaccard_index</a></span><span class="op">(</span></span>
 <span>  jaccard_mat <span class="op">=</span> <span class="va">CTN_jaccard_mat_hclust</span><span class="op">$</span><span class="va">jaccard_mat_mgcv</span>,</span>
 <span>  cl <span class="op">=</span> <span class="va">CTN_jaccard_mat_hclust</span><span class="op">$</span><span class="va">cl</span>,</span>
 <span>  num_clusters <span class="op">=</span> <span class="va">n_clusters</span><span class="op">)</span>  </span></code></pre></div>
 <p><img src="NSCLC_IMC_files/figure-html/Jaccard%20similarity%20matrix%20heatmap-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="co"># Hierarchical clustering results</span></span>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Hierarchical clustering results</span></span>
+<span><span class="va">htmap_row_order</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/ComplexHeatmap/man/row_order-dispatch.html" class="external-link">row_order</a></span><span class="op">(</span><span class="va">htmap_jaccard_index</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">CTN_merged_label</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cutree.html" class="external-link">cutree</a></span><span class="op">(</span><span class="va">CTN_jaccard_mat_hclust</span><span class="op">$</span><span class="va">cl</span>, k <span class="op">=</span> <span class="va">n_clusters</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://tibble.tidyverse.org/reference/rownames.html" class="external-link">rownames_to_column</a></span><span class="op">(</span><span class="st">"CTN"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu">`colnames&lt;-`</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CTN"</span>, <span class="st">"cluster"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>CTN <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">CTN</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">jaccard_mat_mgcv_ordered</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>CTN <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">CTN</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span></span>
+<span>    <span class="va">CTN_jaccard_mat_hclust</span><span class="op">$</span><span class="va">jaccard_mat_mgcv</span><span class="op">)</span><span class="op">[</span><span class="va">htmap_row_order</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">CTN</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cluster <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">cluster</span>, <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">.</span><span class="op">$</span><span class="va">cluster</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>cluster <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">cluster</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>CTN <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">CTN</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># all(CTN_merged_label$CTN == rownames(jaccard_mat_mgcv_ordered))</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">CTN_merged_label</span>, file<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_CTN_merged_label.RData"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>After merging highly overlapping initial CTNs using hierarchical
 clustering, the next step is to assign new names to these consolidated
@@ -477,7 +456,7 @@ highest overall proportion within the consolidated CTN.</p>
 <p>First, we compute the cell type proportion within the newly
 consolidated CTNs, which will be used as one of the inputs to the
 <code><a href="../reference/CTN_annotate.html">CTN_annotate()</a></code> function.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">CTN_merged_celltype_proportion</span> <span class="op">&lt;-</span> <span class="va">CTN_merged_label</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span>f <span class="op">=</span> <span class="va">.</span><span class="op">$</span><span class="va">cluster</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">CTN_merged_label_sub</span><span class="op">)</span> <span class="op">{</span></span>
@@ -507,7 +486,7 @@ clusters that contain at least 2 initial CTNs. It displays how many
 times each core cell type appeared in the original CTN names and tracks
 their relative proportions within the merged CTN.</li>
 </ul>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">CTN_merged_label_annotated</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CTN_annotate.html">CTN_annotate</a></span><span class="op">(</span></span>
 <span>  CTN_cluster_label <span class="op">=</span> <span class="va">CTN_merged_label</span>, </span>
 <span>  CTN_merged_celltype_prop <span class="op">=</span> <span class="va">CTN_merged_celltype_proportion</span>, </span>
@@ -516,10 +495,10 @@ their relative proportions within the merged CTN.</li>
 original CTN names, the function flags the consolidated CTN with an
 asterisk (*). We suggest double-checking the flagged CTNs and manually
 renaming them if necessary.</p>
-<p>Here we also manually renamed a few CTNs with high blood (“Blood”),
+<p>Here we also manually rename a few CTNs with high blood (“Blood”),
 lymphatic endothelial (“Lymphatic”), and vCAF proportions with
 “Vessel”.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">CTN_merged_label_annotated</span><span class="op">$</span><span class="va">core_celltypes_summary</span>, n <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">CTN_annotation_detailed</span> <span class="op">&lt;-</span> <span class="va">CTN_merged_label_annotated</span><span class="op">$</span><span class="va">annotation</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -535,7 +514,7 @@ lymphatic endothelial (“Lymphatic”), and vCAF proportions with
 <span>    <span class="cn">TRUE</span> <span class="op">~</span> <span class="va">annotation</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co"># save(CTN_annotation_detailed, file = paste0(</span></span>
 <span><span class="co">#  data_path, dataset_name, "_CTN_annotation_detailed.RData"))</span></span></code></pre></div>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Full_CTN_table_mgcv_merged</span> <span class="op">&lt;-</span> <span class="va">CTN_annotation_detailed</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span>f <span class="op">=</span> <span class="va">.</span><span class="op">$</span><span class="va">cluster</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">annot_df</span><span class="op">)</span> <span class="op">{</span></span>
@@ -557,7 +536,7 @@ lymphatic endothelial (“Lymphatic”), and vCAF proportions with
 <p>We can further perform hierarchical clustering on the Jaccard
 distance between the consolidated CTNs and grouping them into major
 categories.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_Full_CTN_table_mgcv_merged.RData"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">CTN_merged_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/setops.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">Full_CTN_table_mgcv_merged</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">NSCLC_IMC_dat_in</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">CTN_merged_jaccard_mat_hclust</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/jaccard_dist_hclust.html">jaccard_dist_hclust</a></span><span class="op">(</span></span>
@@ -567,7 +546,7 @@ categories.</p>
 <span>  <span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_CTN_merged_jaccard_mat_hclust.RData"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>These categories can be annotated by examining the cell type
 abundance of the constituent CTNs.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">CTN_merged_celltype_proportion</span> <span class="op">&lt;-</span> <span class="va">CTN_merged_celltype_proportion</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="va">CTN_annotation_detailed</span>, <span class="va">cluster</span>, <span class="va">annotation_final</span><span class="op">)</span>, by <span class="op">=</span> <span class="st">"cluster"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span><span class="st">"annotation"</span> <span class="op">=</span> <span class="st">"annotation_final"</span><span class="op">)</span></span>
@@ -596,12 +575,12 @@ abundance of the constituent CTNs.</p>
 <div class="section level2">
 <h2 id="identify-clinically-relevant-ctns">6. Identify clinically-relevant CTNs<a class="anchor" aria-label="anchor" href="#identify-clinically-relevant-ctns"></a>
 </h2>
-<p>Once we obtain the final CTN labels, we will next examine their
+<p>After obtaining the final CTN labels, we will next examine their
 prognostic value using the detailed patient clinical data provided by
 the original data source. The analysis is restricted to treatment-naive
 samples from patients with lung adenocarcinoma (LUAD) or lung squamous
 cell carcinoma (LUSC).</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Image-level clinical data</span></span>
 <span><span class="va">clinical_data_LUAD_LUSC</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fread.html" class="external-link">fread</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="st">"clinical_data_ROI.csv"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>DX_group <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case-and-replace-when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
@@ -627,7 +606,7 @@ least one tissue section.</p>
 demonstration purposes, users can easily extend this to a multivariate
 analysis by specifying confounding variables via the
 <code>confounder</code> argument.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Overall survival</span></span>
 <span><span class="va">coxph_res_OS</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CTN_presence_coxph.html">CTN_presence_coxph</a></span><span class="op">(</span></span>
 <span>    Full_CTN_table <span class="op">=</span> <span class="va">Full_CTN_table_mgcv_merged</span>, </span>
@@ -650,7 +629,7 @@ analysis by specifying confounding variables via the
 <span>     <span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_CTN_merged_coxph_res.RData"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The following plots display the CTNs associated with the overall
 survival and disease-free survival of NSCLC patients, respectively.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path</span>, <span class="va">dataset_name</span>, <span class="st">"_CTN_merged_coxph_res.RData"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co"># Overall survival</span></span>
 <span><span class="fu"><a href="../reference/draw_CTN_coxph_logHR.html">draw_CTN_coxph_logHR</a></span><span class="op">(</span></span>
@@ -664,7 +643,7 @@ survival and disease-free survival of NSCLC patients, respectively.</p>
 <span>  line_width <span class="op">=</span> <span class="fl">0.4</span>, y_text_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  width_ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.45</span>, <span class="fl">0.55</span><span class="op">)</span><span class="op">)</span> </span></code></pre></div>
 <p><img src="NSCLC_IMC_files/figure-html/Visualize%20cox%20regression%20results%20on%20OS-1.png" class="r-plt" alt="" width="70%" style="display: block; margin: auto;"></p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Disease-free survival</span></span>
 <span><span class="fu"><a href="../reference/draw_CTN_coxph_logHR.html">draw_CTN_coxph_logHR</a></span><span class="op">(</span></span>
 <span>  coxph_res <span class="op">=</span> <span class="va">coxph_res_DFS</span>,</span>
@@ -681,7 +660,7 @@ survival and disease-free survival of NSCLC patients, respectively.</p>
 One is
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mtext mathvariant="normal">B cell/CD4</mtext><mo>+</mo></msup><msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell/CD8</mtext></mrow><mo>+</mo></msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell</mtext></mrow></mrow><annotation encoding="application/x-tex">\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}</annotation></semantics></math>,
 which resembles the lymphocyte aggregates.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p_CTN_celltype</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/draw_CTN_celltype.html">draw_CTN_celltype</a></span><span class="op">(</span></span>
 <span>  Full_CTN_table <span class="op">=</span> <span class="va">Full_CTN_table_mgcv_merged</span>,</span>
 <span>  CTN <span class="op">=</span> <span class="st">"Bcell_CD4_CD8"</span>, </span>
@@ -696,7 +675,7 @@ The other is blood endothelial
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mtext mathvariant="normal">(BEC)/CD4</mtext><mo>+</mo></msup><msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell/CD8</mtext></mrow><mo>+</mo></msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell</mtext></mrow></mrow><annotation encoding="application/x-tex">\mbox{(BEC)/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}</annotation></semantics></math>,
 which preferentialy co-localized with normoxic tumor cells compared to
 hypoxic tumor cells.</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p_CTN_celltype</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/draw_CTN_celltype.html">draw_CTN_celltype</a></span><span class="op">(</span></span>
 <span>  Full_CTN_table <span class="op">=</span> <span class="va">Full_CTN_table_mgcv_merged</span>,</span>
 <span>  CTN <span class="op">=</span> <span class="st">"CD4_CD8_Blood"</span>, </span>
@@ -707,7 +686,7 @@ hypoxic tumor cells.</p>
 <span><span class="va">p_CTN_celltype</span><span class="op">$</span><span class="va">p_celltype</span> <span class="op">/</span> <span class="va">p_CTN_celltype</span><span class="op">$</span><span class="va">p_CTN</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>guides <span class="op">=</span> <span class="st">"collect"</span><span class="op">)</span> </span></code></pre></div>
 <p><img src="NSCLC_IMC_files/figure-html/Visualize%20CD4_CD8_Blood-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.4.1 (2024-06-14)</span></span>
 <span><span class="co">#&gt; Platform: aarch64-apple-darwin20</span></span>

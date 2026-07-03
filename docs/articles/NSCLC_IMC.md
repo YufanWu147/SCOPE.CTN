@@ -89,9 +89,9 @@ threshold (`max.radius`).
 cell_neighbor_results_maxdist = pbmcapply::pbmclapply(
   1:length(slide_list), function(i) {
     Build_cell_neighbor_maxdist(
-      dat_slide=dat_in[dat_in$ImageID==slide_list[i], ], knn_num = 20, 
+      dat_slide=NSCLC_IMC_dat_in[NSCLC_IMC_dat_in$ImageID==slide_list[i], ], knn_num = 20, 
       min.radius = 100, max.radius = 120, min.n.neighbors = 10,
-      cell_types_available = levels(dat_in$Celltype),
+      cell_types_available = levels(NSCLC_IMC_dat_in$Celltype),
       return.nn.ids = TRUE)},
   mc.cores = 5)
 
@@ -122,12 +122,6 @@ save(cell_neighbor_ids,
 save(dist.quantiles, 
      file = paste0(data_path, dataset_name, "_dist.quantiles.RData"))
 rm(cell_neighbor_results_maxdist)
-```
-
-``` r
-
-load(paste0(data_path, dataset_name, "_cell_neighbor_table_maxdist.RData"))
-load(paste0(data_path, dataset_name, "_dist.quantiles.RData"))
 ```
 
 We can examine the distribution of 99th percentile of all distance to
@@ -189,8 +183,12 @@ cells_to_exclude %>%
 
 SCOPE identifies niches characterized by cell-type triads. However, as
 the number of cell types grows, the combinations of three cell types can
-increase exponentially. Therefore, we utilize a colocation quotient
-(CLQ) permutation test to prioritize cell-type triads (CTs) that exhibit
+increase exponentially. The NSCLC IMC dataset has Collagen_CAF,
+hypoxic_CAF, mCAF, SMA_CAF, tpCAF, iCAF, vCAF, dCAF, hypoxic_tpCAF,
+IDO_CAF, PDPN_CAF, HEV, Blood, Lymphatic, Myeloid, Neutrophil, Bcell,
+CD8, CD4, normal, hypoxic, Other available cell types, which can form
+1540 triads. Therefore, we utilize a colocation quotient (CLQ)
+permutation test to prioritize cell-type triads (CTs) that exhibit
 significant spatial proximity.
 
 Please refer to the [Prefiltering cell type triads using CLQ permutation
@@ -281,29 +279,10 @@ print(paste("No of remaining CTs:", nrow(combination_table_filtered)))
 #     file = paste0(data_path, dataset_name, "_combination_table_filtered.RData"))
 ```
 
-``` r
-
-celltype_to_exclude <- cell_neighbor_table_maxdist[, unique(unlist(combination_table_filtered))] %>%
-  apply(2, function(x) {sum(x > 0.3, na.rm = TRUE)}) %>% sort() %>%
-  as.data.frame %>%
-  `colnames<-`("n") %>%
-  filter(n <= 50) %>%
-  rownames()
-
-if(length(celltype_to_exclude) > 1) {
-  comb_to_run <- combination_table_filtered %>%
-    mutate(combs = paste(V1, V2, V3, sep = "_")) %>%
-    filter(!str_detect(combs, paste(celltype_to_exclude, collapse = "|"))) %>%
-    select(-combs)
-} else {
-  comb_to_run <- combination_table_filtered
-}
-```
-
 ## 4. Cell type triad niche (CTN) detection using SCOPE
 
-Next, we apply SCOPE for systematic screening of CTNs using the default
-configurations for the following parameters:
+Next, we apply SCOPE for the systematic screening of CTNs. We utilize
+the default configurations for most parameters, including:
 
 - `min.prop`: The minimum neighborhood cell-type proportion threshold.
   Proportions below this value are set to 0 (default: 0.3).
@@ -320,14 +299,6 @@ as individual `.RData` files under `output_dir`.
 # Load prefiltered CTs
 load(paste0(data_path, dataset_name, "_combination_table_filtered.RData"))
 
-celltype_to_exclude <- cell_neighbor_table_maxdist[, unique(unlist(combination_table_filtered))] %>%
-  apply(2, function(x) {sum(x > 0.3, na.rm = TRUE)}) %>% sort() %>%
-  as.data.frame %>%
-  `colnames<-`("n") %>%
-  filter(n <= 50) %>%
-  rownames()
-
-
 run_SCOPE(
   combination_table = combination_table_filtered,
   cell_neighbor_table = cell_neighbor_table_maxdist,
@@ -338,7 +309,9 @@ run_SCOPE(
   linear = FALSE, mgcv_df = 15, iter.max = 100)
 ```
 
-We gather the outputs and save them into one data frame.
+We compile the individual outputs and merge them into a single data
+frame. The first five columns match the original input data, and the
+subsequent columns contain the assigned CTN labels.
 
 ``` r
 
@@ -350,8 +323,7 @@ Full_CTN_table_mgcv <- data.frame(dir = list.files(
   lapply(function(dirs) {
     pbmclapply(dirs, function(dir) {
       load(dir)
-      return(CTN_df)
-      CTN_df %>% select(CellID, CTN, label) %>%
+      CTN_table %>% select(CellID, CTN, label) %>%
         mutate(CTN = str_replace_all(CTN, "_CAF", ".CAF")) %>%
         mutate(CTN = str_replace_all(CTN, "hypoxic_tpCAF", "hypoxic.tpCAF"))
     }, mc.cores = 10) %>%
@@ -365,7 +337,7 @@ Full_CTN_table_mgcv <- lapply(Full_CTN_table_mgcv, function(df) {df %>% select(-
   cbind(data.frame(CellID = Full_CTN_table_mgcv[[1]]$CellID), .)
 
 Full_CTN_table_mgcv <- temp %>%
-  left_join(dat_in, by = "CellID") %>%
+  left_join(NSCLC_IMC_dat_in, by = "CellID") %>%
   mutate(Celltype = as.character(Celltype)) %>%
   mutate(Celltype = str_replace(as.character(Celltype), "_CAF", ".CAF")) %>%
   mutate(Celltype = str_replace(Celltype, "hypoxic_tpCAF", "hypoxic.tpCAF")) 
@@ -404,7 +376,7 @@ and median Silhouette scores.
 
 ``` r
 
-n_clusters = 77 # Final number of clusters
+n_clusters = 77 # Final number of hierarchical clusters
 draw_silhoutte_score(CTN_jaccard_mat_hclust$hclust_silhouette,
                      num_clusters = n_clusters)
 ```
@@ -429,18 +401,18 @@ htmap_jaccard_index <- draw_htmap_jaccard_index(
 
 ``` r
 
-
 # Hierarchical clustering results
+htmap_row_order <- unlist(row_order(htmap_jaccard_index))
 CTN_merged_label <- as.data.frame(cutree(CTN_jaccard_mat_hclust$cl, k = n_clusters)) %>%
   rownames_to_column("CTN") %>%
   `colnames<-`(c("CTN", "cluster")) %>%
-  mutate(CTN = factor(CTN, rownames(jaccard_mat_mgcv_ordered))) %>%
+  mutate(CTN = factor(CTN, rownames(
+    CTN_jaccard_mat_hclust$jaccard_mat_mgcv)[htmap_row_order])) %>% 
   arrange(CTN) %>%
   mutate(cluster = factor(cluster, unique(.$cluster))) %>%
   mutate(cluster = factor(as.numeric(cluster))) %>%
   mutate(CTN = as.character(CTN))
 
-# all(CTN_merged_label$CTN == rownames(jaccard_mat_mgcv_ordered))
 save(CTN_merged_label, file= paste0(data_path, dataset_name, "_CTN_merged_label.RData"))
 ```
 
@@ -499,7 +471,7 @@ original CTN names, the function flags the consolidated CTN with an
 asterisk (\*). We suggest double-checking the flagged CTNs and manually
 renaming them if necessary.
 
-Here we also manually renamed a few CTNs with high blood (“Blood”),
+Here we also manually rename a few CTNs with high blood (“Blood”),
 lymphatic endothelial (“Lymphatic”), and vCAF proportions with “Vessel”.
 
 ``` r
@@ -591,7 +563,7 @@ p_CTN_merged_celltype_prop + CTN_merged_dend$p +
 
 ## 6. Identify clinically-relevant CTNs
 
-Once we obtain the final CTN labels, we will next examine their
+After obtaining the final CTN labels, we will next examine their
 prognostic value using the detailed patient clinical data provided by
 the original data source. The analysis is restricted to treatment-naive
 samples from patients with lung adenocarcinoma (LUAD) or lung squamous

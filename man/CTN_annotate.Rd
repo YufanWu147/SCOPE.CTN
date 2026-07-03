@@ -31,3 +31,8 @@ Renaming the consolidated Cell-type Triads Niches (CTNs) using the most frequent
 cell types within the original triads. If a tie occurs, the function resolves
 it by identifying the cell type with the highest overall proportion.
 }
+\details{
+If the top two most frequent cell types only appear twice in the original CTN names, the function flags the consolidated CTN with an asterisk (*).
+Duplicated new CTN names are flagged with an plus sign ("+").
+We suggest double-checking the flagged CTNs and manually renaming them if necessary.
+}

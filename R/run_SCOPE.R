@@ -124,12 +124,12 @@ label_CTN <- function(CTN_table, core_celltypes = NULL, clusternum = 2) {
       row_number() == clusternum ~ "Unassigned",
       clusternum == 2 ~ "CTN",
       TRUE ~ paste0("CTN", row_number()))) %>%
-    select(-.data$prop_corecelltype) %>%
+    select(-all_of("prop_corecelltype")) %>%
     mutate(label = factor(.data$label, cluster_levs))
 
   CTN_table_relabeled <- CTN_table %>%
     left_join(CTN_label_df, by = c("label_new")) %>%
-    select(-.data$Celltype)
+    select(-all_of("Celltype"))
 
   return(CTN_table_relabeled)
 }

@@ -19,12 +19,14 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/CRC_VisiumHD.html">Detecting lymphocyte aggregate-like niches in CRC VisiumHD data</a></li>
+    <li><a class="dropdown-item" href="../articles/HGSOC_CosMx.html">Systematic CTN screening in HGSOC CosMx data</a></li>
     <li><a class="dropdown-item" href="../articles/NSCLC_IMC.html">Systematic CTN screening in NSCLC IMC data</a></li>
     <li><a class="dropdown-item" href="../articles/PF_Xenium.html">Detecting TLS-like CTNs in PF Xenium data</a></li>
     <li><a class="dropdown-item" href="../articles/Triad_prefilter_CLQ.html">Prefiltering cell type triads using CLQ permutation test</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/YufanWu147/SCOPE.CTN/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -34,7 +36,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>CTN cell type proportion dotplot</h1>
-
+      <small class="dont-index">Source: <a href="https://github.com/YufanWu147/SCOPE.CTN/blob/HEAD/R/SCOPE_Utilities_figures.R" class="external-link"><code>R/SCOPE_Utilities_figures.R</code></a></small>
       <div class="d-none name"><code>draw_CTN_celltype_prop.Rd</code></div>
     </div>
 
@@ -47,9 +49,10 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">draw_CTN_celltype_prop</span><span class="op">(</span></span>
 <span>  <span class="va">CTN_merged_celltype_prop</span>,</span>
 <span>  <span class="va">CTN_dend</span>,</span>
-<span>  <span class="va">celltype_palette</span>,</span>
-<span>  rename_celltype <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/waiver.html" class="external-link">waiver</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  facet_var <span class="op">=</span> <span class="st">"clust"</span>,</span>
+<span>  <span class="va">celltype_palette</span>,</span>
+<span>  radius_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">8</span><span class="op">)</span>,</span>
+<span>  rename_celltype <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/waiver.html" class="external-link">waiver</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  x_expand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.05</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -68,16 +71,20 @@ cell type proportion for each CTN with the following columns: <code>CTN</code> (
 <dd><p>Output of the <code><a href="draw_CTN_dendro.html">draw_CTN_dendro()</a></code> function</p></dd>
 
 
+<dt id="arg-facet-var">facet_var<a class="anchor" aria-label="anchor" href="#arg-facet-var"></a></dt>
+<dd><p>Faceting variables, usually CTN category. Default to <code>"clust"</code> from <code>CTN_dend$label_df</code></p></dd>
+
+
 <dt id="arg-celltype-palette">celltype_palette<a class="anchor" aria-label="anchor" href="#arg-celltype-palette"></a></dt>
 <dd><p>A named vector with colors as values and cell type labels as names. Must contain all cell types.</p></dd>
 
 
+<dt id="arg-radius-range">radius_range<a class="anchor" aria-label="anchor" href="#arg-radius-range"></a></dt>
+<dd><p>A numeric vector of length two that specifies the minimum and maximum size of the bubbles. See <code><a href="https://ggplot2.tidyverse.org/reference/scale_size.html" class="external-link">ggplot2::scale_radius()</a></code> for details.</p></dd>
+
+
 <dt id="arg-rename-celltype">rename_celltype<a class="anchor" aria-label="anchor" href="#arg-rename-celltype"></a></dt>
 <dd><p>A function for renaming cell type labels.</p></dd>
-
-
-<dt id="arg-facet-var">facet_var<a class="anchor" aria-label="anchor" href="#arg-facet-var"></a></dt>
-<dd><p>Faceting variables. Default to <code>"clust"</code> from <code>CTN_dend$label_df</code></p></dd>
 
 
 <dt id="arg-x-expand">x_expand<a class="anchor" aria-label="anchor" href="#arg-x-expand"></a></dt>

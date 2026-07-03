@@ -155,8 +155,8 @@ jaccard_dist_hclust <- function(Full_CTN_table, CTN_ls, num_cores = 1) {
   hclust_silhouette <- sapply(2:(nrow(jaccard_mat_mgcv) - 1), function(k) {
     si = cluster::silhouette(cutree(cl, k = k), as.dist(1 - jaccard_mat_mgcv))
     data.frame(avg_si = summary(si)$avg.width,
-               median_si = summary(si)$si.summary[["Median"]])}, simplify = FALSE) %>%
-    do.call(rbind, .data) %>%
+               median_si = summary(si)$si.summary[["Median"]])}, simplify = FALSE)
+  hclust_silhouette <- do.call(rbind, hclust_silhouette) %>%
     cbind(K = 2:(nrow(jaccard_mat_mgcv) - 1))
 
   return(list(jaccard_mat_mgcv = jaccard_mat_mgcv, cl = cl,
@@ -182,6 +182,10 @@ jaccard_dist_hclust <- function(Full_CTN_table, CTN_ls, num_cores = 1) {
 #'   It includes the number of appearances of each core cell type in the original CTN names (\code{n_appearance}) and their relative proportion within the
 #'   consolidated CTNs (\code{prop}).}
 #' }
+#' @details
+#' If the top two most frequent cell types only appear twice in the original CTN names, the function flags the consolidated CTN with an asterisk (*).
+#' Duplicated new CTN names are flagged with an plus sign ("+").
+#' We suggest double-checking the flagged CTNs and manually renaming them if necessary.
 #' @import dplyr
 #' @importFrom data.table rbindlist
 #' @importFrom rlang .data
@@ -207,10 +211,10 @@ CTN_annotate <- function(CTN_cluster_label, CTN_merged_celltype_prop, celltype_l
           inner_join(subset(CTN_merged_celltype_prop, cluster == df_sub$cluster[1]),
                      by = c("CoreCelltypes" = "Celltype")) %>%
           arrange(desc(.data$n_appearance), desc(.data$prop)) %>%
-          select(.data$cluster, .data$CoreCelltypes, .data$n_appearance, .data$prop) %>%
+          select(all_of(c("cluster", "CoreCelltypes", "n_appearance", "prop"))) %>%
           distinct()
 
-        # Add asterisks if the most second most frequent cell types only appeared twice
+        # Flag new CTN name with * if the most second most frequent cell types only appeared twice
         core_celltypes_count$Note <- ifelse(
            any(core_celltypes_count$n_appearance[1:2] == 2), "*", "")
 
@@ -224,7 +228,7 @@ CTN_annotate <- function(CTN_cluster_label, CTN_merged_celltype_prop, celltype_l
 
       return(list(annotation = cbind(df_sub, annotation),
                   core_celltypes_summary = core_celltypes_count))
-    })
+      })
 
   core_celltypes_summary <- do.call(rbind, lapply(res, "[[", "core_celltypes_summary")) %>%
     `rownames<-`(NULL) %>% distinct()
@@ -232,7 +236,13 @@ CTN_annotate <- function(CTN_cluster_label, CTN_merged_celltype_prop, celltype_l
     `rownames<-`(NULL) %>%
     left_join(distinct(core_celltypes_summary, .data$cluster, .data$Note),
               by = "cluster") %>%
-    mutate(Note = ifelse(is.na(.data$Note), "", .data$Note))
+    mutate(Note = ifelse(is.na(.data$Note), "", .data$Note)) %>%
+    # Flag new CTN name with '+' if duplicated
+    group_by(annotation) %>%
+    mutate(Note = paste(c(.data$Note,
+      ifelse(length(unique(.data$cluster)) > 1, "+", NULL)),
+      sep = ";"))
+
   return(list(annotation = annotation,
               core_celltypes_summary = core_celltypes_summary))
 }
@@ -298,7 +308,8 @@ CTN_presence_coxph <- function(
 
   CTN_keep <- CTN_presence_by_patient %>%
     select(all_of(CTN_ls)) %>%
-    apply(2, table) %>% t() %>% as.data.frame() %>%
+    apply(2, table)
+  CTN_keep <- as.data.frame(do.call(rbind, CTN_keep)) %>%
     filter(.data$CTN >= min.n.patients,
            .data$Unassigned >= min.n.patients) %>%
     rownames()

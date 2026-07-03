@@ -4,6 +4,8 @@
 inst/doc
 *.DS_Store
 *.RData
+*.csv
+*.xlsx
 
 # knitr and R markdown default cache directories
 *_cache/

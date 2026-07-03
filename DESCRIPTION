@@ -7,7 +7,6 @@ Authors@R: c(
     person(given = "Lulu", family = "Shang", email = "lshang@mdanderson.org", role = "aut"))
 Description: A scalable multi-learning statistical framework that represents tissue architecture through Cell type-Triad Niches (CTNs), which are cohort-stable motifs of localized higher-order cell-type interactions. SCOPE integrates multiple spatial colocalization patterns within a multi-view learning framework to derive reusable niche vocabularies from spatially resolved single-cell data. In simulations, SCOPE accurately recovered known niche structures, remained stable under cohort perturbation, and scaled to atlas-level datasets with millions of cells.
 Encoding: UTF-8
-VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Depends:
@@ -19,6 +18,7 @@ Imports:
 Suggests: 
     knitr, rmarkdown, tidyverse, RColorBrewer, Seurat, SingleCellExperiment, cluster,
     arrow, aricode, caret, ggrepel, grDevices, ComplexHeatmap, grid, ggdendro,
-    cowplot, ggtext, forcats, patchwork
+    cowplot, ggtext, forcats, patchwork, readxl
 LazyData: false
 License: GPL (>= 3)
+Config/Needs/website: rmarkdown

@@ -1,10 +1,5 @@
 ---
 title: "Prefiltering cell type triads using CLQ permutation test"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Triad_prefilter_CLQ}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
 date: 'Compiled: `r Sys.Date()`'
 ---
 

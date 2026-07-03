@@ -8,9 +8,10 @@
 draw_CTN_celltype_prop(
   CTN_merged_celltype_prop,
   CTN_dend,
-  celltype_palette,
-  rename_celltype = waiver(),
   facet_var = "clust",
+  celltype_palette,
+  radius_range = c(0.5, 8),
+  rename_celltype = waiver(),
   x_expand = c(0.05, 0.05)
 )
 ```
@@ -27,18 +28,26 @@ draw_CTN_celltype_prop(
 
   Output of the [`draw_CTN_dendro()`](draw_CTN_dendro.md) function
 
+- facet_var:
+
+  Faceting variables, usually CTN category. Default to `"clust"` from
+  `CTN_dend$label_df`
+
 - celltype_palette:
 
   A named vector with colors as values and cell type labels as names.
   Must contain all cell types.
 
+- radius_range:
+
+  A numeric vector of length two that specifies the minimum and maximum
+  size of the bubbles. See
+  [`ggplot2::scale_radius()`](https://ggplot2.tidyverse.org/reference/scale_size.html)
+  for details.
+
 - rename_celltype:
 
   A function for renaming cell type labels.
-
-- facet_var:
-
-  Faceting variables. Default to `"clust"` from `CTN_dend$label_df`
 
 - x_expand:
 

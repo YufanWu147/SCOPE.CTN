@@ -1,10 +1,5 @@
 ---
 title: "Detecting TLS-like CTNs in PF Xenium data"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{PF_Xenium}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
 date: 'Compiled: `r Sys.Date()`'
 ---
 

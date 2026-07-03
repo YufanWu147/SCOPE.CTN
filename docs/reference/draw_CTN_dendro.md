@@ -10,10 +10,11 @@ draw_CTN_dendro(
   h,
   k = NULL,
   CTN_annotation = NULL,
+  CTN_group_var = "clust",
   annot_var = "annotation",
+  CTN_group_palette = NULL,
   celltype_palette = NULL,
   dot_fontsize = 12,
-  CTN_group_palette = NULL,
   show_text = TRUE,
   x_expand = c(0.001, 0.001),
   y_lim = c(-2, 1),
@@ -47,9 +48,19 @@ draw_CTN_dendro(
   corresponding cluster label (`cluster`), and the new name for the
   consolidated CTN (specified in `annot_var`) after merging.
 
+- CTN_group_var:
+
+  Faceting variables (CTN category). Default to `"clust"`. Only used
+  when `CTN_annotation` is provided.
+
 - annot_var:
 
   Column name of the newly consolidated CTN in `CTN_annotation`.
+
+- CTN_group_palette:
+
+  (Optional) A named vector with colors as values and CTN categories as
+  names. Only used when `CTN_annotation` is provided.
 
 - celltype_palette:
 
@@ -61,11 +72,6 @@ draw_CTN_dendro(
 
   Input of the [`color_CTN_names()`](color_CTN_names.md) function. Size
   of the dots. Default is 16pt.
-
-- CTN_group_palette:
-
-  (Optional) A named vector with colors as values and CTN categories as
-  names. Only used when `CTN_annotation` is provided.
 
 - show_text:
 

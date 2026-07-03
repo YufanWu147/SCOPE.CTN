@@ -10,10 +10,11 @@ draw_CTN_dendro(
   h,
   k = NULL,
   CTN_annotation = NULL,
+  CTN_group_var = "clust",
   annot_var = "annotation",
+  CTN_group_palette = NULL,
   celltype_palette = NULL,
   dot_fontsize = 12,
-  CTN_group_palette = NULL,
   show_text = TRUE,
   x_expand = c(0.001, 0.001),
   y_lim = c(-2, 1),
@@ -29,13 +30,15 @@ draw_CTN_dendro(
 
 \item{CTN_annotation}{(Optional) A data frame with the original CTN names (\code{CTN}), the corresponding cluster label (\code{cluster}), and the new name for the consolidated CTN (specified in \code{annot_var}) after merging.}
 
+\item{CTN_group_var}{Faceting variables (CTN category). Default to \code{"clust"}. Only used when \code{CTN_annotation} is provided.}
+
 \item{annot_var}{Column name of the newly consolidated CTN in \code{CTN_annotation}.}
+
+\item{CTN_group_palette}{(Optional) A named vector with colors as values and CTN categories as names. Only used when \code{CTN_annotation} is provided.}
 
 \item{celltype_palette}{Input of the \code{\link[=color_CTN_names]{color_CTN_names()}} function. A named vector with colors as values and cell type labels as names. Must contain all cell types.}
 
 \item{dot_fontsize}{Input of the \code{\link[=color_CTN_names]{color_CTN_names()}} function. Size of the dots. Default is 16pt.}
-
-\item{CTN_group_palette}{(Optional) A named vector with colors as values and CTN categories as names. Only used when \code{CTN_annotation} is provided.}
 
 \item{show_text}{Whether to display CTN names alongside the dendrogram (default: \code{TRUE}).}
 
