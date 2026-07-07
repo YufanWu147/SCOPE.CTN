@@ -75,7 +75,7 @@ save(NSCLC_IMC_dat_in, file = paste0(data_path, dataset_name, "_dat_in.RData"))
 
 Next, we define the spatial neighborhood using use the k-nearest
 neighbors and compute the neighborhood cell type composition matrix.
-Here the number of nearest neighbors $`k`$ is set at default value 20.
+Here the number of nearest neighbors \\k\\ is set at default value 20.
 
 In addition, we enforce a distance boundary for the nearest neighbors
 and exclude the cells falling outside this radius. The boundary is
@@ -386,8 +386,8 @@ draw_silhoutte_score(CTN_jaccard_mat_hclust$hclust_silhouette,
 Below is a heatmap visualization of the Jaccard similarity indices
 (1-Jaccard index) and hierarchical clustering results. Black boxes
 outline final CTN groupings. Asterisks (\*) and dots (.) indicate highly
-similar (Jaccard index \> 0.95) and moderately similar (0.9 $`\leq`$
-Jaccard index $`\leq`$ 0.95) CTN pairs, respectively.
+similar (Jaccard index \> 0.95) and moderately similar (0.9 \\\leq\\
+Jaccard index \\\leq\\ 0.95) CTN pairs, respectively.
 
 ``` r
 
@@ -439,7 +439,8 @@ CTN_merged_celltype_proportion <- CTN_merged_label %>%
       count(Celltype) }) %>%
   rbindlist(idcol = "cluster") %>%
   group_by(cluster) %>%
-  mutate(prop = n/sum(n)) %>% select(-n)
+  mutate(prop = n/sum(n)) %>% select(-n) %>%
+  ungroup
 
 
 save(CTN_merged_celltype_proportion, file = paste0(
@@ -488,7 +489,8 @@ CTN_annotation_detailed <- CTN_merged_label_annotated$annotation %>%
     cluster == 41 ~ "Neutrophil_Vessel_vCAF",
     cluster == 52 ~ "Neutrophil_Vessel_SMA.CAF",
     cluster == 61 ~ "Vessel_SMA.CAF_vCAF",
-    TRUE ~ annotation))
+    TRUE ~ annotation)) 
+
 # save(CTN_annotation_detailed, file = paste0(
 #  data_path, dataset_name, "_CTN_annotation_detailed.RData"))
 ```
@@ -534,32 +536,81 @@ of the constituent CTNs.
 
 ``` r
 
-CTN_merged_celltype_proportion <- CTN_merged_celltype_proportion %>%
-  left_join(distinct(CTN_annotation_detailed, cluster, annotation_final), by = "cluster") %>%
+CTN_annotation_merged <- CTN_annotation_detailed %>%
+    # Grouping CTNs based on cell type composition  
+    mutate(CTN_group = case_when(cluster %in% 1:3 ~ "iCAF-rich",
+    cluster %in% 4:6 ~ "vCAF-rich",
+    cluster %in% 7:8 ~ "CD4.T-rich",
+    cluster %in% 9:10 ~ "Bcell/Neutrophil",
+    cluster %in% 11:14 ~ "Bcell-rich",
+    cluster %in% 15:16 ~ "Tcell-rich",
+    cluster %in% 17:20 ~ "CD8.T-rich",
+    cluster %in% 21:23 ~ "Myeloid/mCAF",
+    cluster %in% 24    ~ "Bcell/Myeloid", 
+    cluster %in% 25:33 ~ "Myeloid-rich",
+    cluster %in% 34:41 ~ "Neutrophil-rich",
+    cluster %in% 42:43 ~ "Bcell/SMA.CAF",
+    cluster %in% 44:46 ~ "Myeloid/SMA.CAF",
+    cluster %in% 47:50 ~ "SMA.CAF/mCAF",
+    cluster %in% 51:55 ~ "Neutrophil/SMA.CAF",
+    cluster %in% 56:62 ~ "SMA.CAF-rich",
+    cluster %in% 63:66 ~ "Bcell/mCAF",
+    cluster %in% 67:70 ~ "Neutrophil/mCAF",
+    cluster %in% 71:77 ~ "mCAF-rich",
+    TRUE ~ "Mixed"))  %>%
+  distinct(cluster, annotation_final, CTN_group)%>%
   rename("annotation" = "annotation_final")
+
+
+CTN_merged_celltype_proportion_w_annot <- CTN_merged_celltype_proportion %>%
+  left_join(CTN_annotation_merged[, 1:2], by = "cluster") 
 
 CTN_merged_dend <- draw_CTN_dendro(
   cl = CTN_merged_jaccard_mat_hclust$cl, h = 0.6,
   dot_fontsize = 11, y_lim = c(NA, 1),
-  x_expand = c(0.003, 0.003),
+  x_expand = c(0.007, 0.007),
   celltype_palette = c(NSCLC_IMC_palette, "Vessel" = "#393B79", 
                        "CAF" = "#780116", "T" = "royalblue"),
+  CTN_annotation = CTN_annotation_merged,
+  CTN_group_var = "CTN_group",
+  CTN_group_palette = NSCLC_IMC_CTN_group_palette, 
   rename_celltype = NSCLC_IMC_rename_celltype, 
   show_text = FALSE)
 
 
 p_CTN_merged_celltype_prop <- draw_CTN_celltype_prop(
-  CTN_merged_celltype_prop = CTN_merged_celltype_proportion, 
+  CTN_merged_celltype_prop = CTN_merged_celltype_proportion_w_annot, 
   CTN_dend = CTN_merged_dend, 
   celltype_palette = NSCLC_IMC_palette,
   rename_celltype = NSCLC_IMC_rename_celltype,
-  facet_var = "clust", x_expand = c(0.05, 0.05))
+  facet_var = "CTN_group_label", x_expand = c(0.05, 0.05))
 
 p_CTN_merged_celltype_prop + CTN_merged_dend$p + 
   plot_layout(guides = "collect", widths = c(1, 0.4))
 ```
 
 ![](NSCLC_IMC_files/figure-html/CTN%20dendrogram-1.png)
+
+We can also visualize similarities in the cell type compositions of the
+CTNs using Uniform Manifold Approximation and Projection (UMAP).
+
+``` r
+
+draw_CTN_umap(Full_CTN_table = Full_CTN_table_mgcv_merged,
+              CTN_merged_celltype_prop = CTN_merged_celltype_proportion,
+              CTN_ls = CTN_merged_list, CTN_group_var = "CTN_group",
+              CTN_annotation = CTN_annotation_merged,
+              CTN_group_palette = NSCLC_IMC_CTN_group_palette,
+              umap_n_neighbors = 10, umap_seed = 42) +
+  guides(fill = guide_legend(ncol = 2, override.aes = list(size = 3)),
+         radius = guide_legend(ncol = 1)) +
+  theme(legend.position = "bottom",
+        legend.key.spacing.y = unit(0.2, "mm"),
+        legend.direction = "vertical",
+        legend.title.position = "top")
+```
+
+![](NSCLC_IMC_files/figure-html/CTN%20cell%20type%20composition%20umap-1.png)
 
 ## 6. Identify clinically-relevant CTNs
 
@@ -633,7 +684,7 @@ load(paste0(data_path, dataset_name, "_CTN_merged_coxph_res.RData"))
 # Overall survival
 draw_CTN_coxph_logHR(
   coxph_res = coxph_res_OS,
-  CTN_merged_celltype_prop = CTN_merged_celltype_proportion,
+  CTN_merged_celltype_prop = CTN_merged_celltype_proportion_w_annot,
   alpha = 0.1, top = 10, 
   celltype_levs = names(NSCLC_IMC_palette), dot_fontsize = 14,
   celltype_palette = c(NSCLC_IMC_palette, "Vessel" = "#393B79", 
@@ -650,7 +701,7 @@ draw_CTN_coxph_logHR(
 # Disease-free survival
 draw_CTN_coxph_logHR(
   coxph_res = coxph_res_DFS,
-  CTN_merged_celltype_prop = CTN_merged_celltype_proportion,
+  CTN_merged_celltype_prop = CTN_merged_celltype_proportion_w_annot,
   alpha = 0.1, top = 10, 
   celltype_levs = names(NSCLC_IMC_palette), dot_fontsize = 14,
   celltype_palette = c(NSCLC_IMC_palette, "Vessel" = "#393B79", 
@@ -663,7 +714,7 @@ draw_CTN_coxph_logHR(
 ![](NSCLC_IMC_files/figure-html/Visualize%20cox%20regression%20results%20on%20DFS-1.png)
 
 Below are two example CTNs associated with the disease-free survival.
-One is $`\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}`$, which
+One is \\\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}\\, which
 resembles the lymphocyte aggregates.
 
 ``` r
@@ -680,10 +731,9 @@ p_CTN_celltype$p_celltype / p_CTN_celltype$p_CTN +
 ```
 
 ![](NSCLC_IMC_files/figure-html/Visualize%20Bcell_CD4_CD8-1.png) The
-other is blood endothelial
-$`\mbox{(BEC)/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}`$, which
-preferentialy co-localized with normoxic tumor cells compared to hypoxic
-tumor cells.
+other is blood endothelial \\\mbox{(BEC)/CD4}^+\mbox{ T
+cell/CD8}^+\mbox{ T cell}\\, which preferentialy co-localized with
+normoxic tumor cells compared to hypoxic tumor cells.
 
 ``` r
 
@@ -742,21 +792,22 @@ sessionInfo()
 #> [28] colorspace_2.1-2    scales_1.4.0        iterators_1.0.14   
 #> [31] MASS_7.3-60.2       cli_3.6.5           rmarkdown_2.30     
 #> [34] crayon_1.5.3        ragg_1.5.1          generics_0.1.4     
-#> [37] otel_0.2.0          rstudioapi_0.18.0   tzdb_0.5.0         
-#> [40] rjson_0.2.23        commonmark_2.0.0    cachem_1.1.0       
-#> [43] splines_4.4.1       assertthat_0.2.1    parallel_4.4.1     
-#> [46] matrixStats_1.5.0   vctrs_0.7.2         Matrix_1.7-0       
-#> [49] jsonlite_2.0.0      litedown_0.9        S4Vectors_0.44.0   
-#> [52] IRanges_2.40.1      hms_1.1.4           GetoptLong_1.1.0   
-#> [55] clue_0.3-66         irlba_2.3.7         pbmcapply_1.5.1    
-#> [58] systemfonts_1.3.1   foreach_1.5.2       jquerylib_0.1.4    
-#> [61] glue_1.8.0          pkgdown_2.2.0       codetools_0.2-20   
-#> [64] shape_1.4.6.1       stringi_1.8.7       gtable_0.3.6       
-#> [67] gmp_0.7-5.1         pillar_1.11.1       htmltools_0.5.9    
-#> [70] circlize_0.4.17     R6_2.6.1            textshaping_1.0.5  
-#> [73] doParallel_1.0.17   evaluate_1.0.5      lattice_0.22-6     
-#> [76] markdown_2.0        png_0.1-9           gridtext_0.1.5     
-#> [79] bslib_0.10.0        Rcpp_1.1.1          nlme_3.1-164       
-#> [82] mgcv_1.9-3          xfun_0.57           fs_1.6.7           
-#> [85] pkgconfig_2.0.3     GlobalOptions_0.1.3
+#> [37] otel_0.2.0          RSpectra_0.16-2     rstudioapi_0.18.0  
+#> [40] tzdb_0.5.0          rjson_0.2.23        commonmark_2.0.0   
+#> [43] cachem_1.1.0        splines_4.4.1       assertthat_0.2.1   
+#> [46] parallel_4.4.1      matrixStats_1.5.0   vctrs_0.7.2        
+#> [49] Matrix_1.7-0        jsonlite_2.0.0      litedown_0.9       
+#> [52] S4Vectors_0.44.0    IRanges_2.40.1      hms_1.1.4          
+#> [55] GetoptLong_1.1.0    ggrepel_0.9.8       clue_0.3-66        
+#> [58] irlba_2.3.7         pbmcapply_1.5.1     systemfonts_1.3.1  
+#> [61] foreach_1.5.2       jquerylib_0.1.4     glue_1.8.0         
+#> [64] pkgdown_2.2.0       codetools_0.2-20    uwot_0.2.4         
+#> [67] shape_1.4.6.1       stringi_1.8.7       gtable_0.3.6       
+#> [70] gmp_0.7-5.1         pillar_1.11.1       htmltools_0.5.9    
+#> [73] circlize_0.4.17     R6_2.6.1            textshaping_1.0.5  
+#> [76] doParallel_1.0.17   evaluate_1.0.5      lattice_0.22-6     
+#> [79] markdown_2.0        png_0.1-9           gridtext_0.1.5     
+#> [82] bslib_0.10.0        Rcpp_1.1.1          nlme_3.1-164       
+#> [85] mgcv_1.9-3          xfun_0.57           fs_1.6.7           
+#> [88] pkgconfig_2.0.3     GlobalOptions_0.1.3
 ```

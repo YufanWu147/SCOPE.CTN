@@ -1,5 +1,7 @@
 #' Interal function for standardizing each data matrix X_m
 #' @keywords internal
+#' @importFrom assertthat assert_that
+#' @importFrom assertthat noNA
 StandardizeData <- function(X, center = TRUE, scale = TRUE) {
   assert_that(all(is.finite(X)), msg="X contains Inf/-Inf")
   assert_that(all(is.numeric(X)), msg="X must be numeric")
@@ -122,7 +124,8 @@ make_orthonormal_basis <- function(H) {
 #' }
 #'
 #' @keywords internal
-#' @import assertthat ClusterR irlba
+#' @import ClusterR irlba
+#' @importFrom assertthat assert_that
 
 mkkcEst_linear <- function(X_m_list, centers, iter.max = 100, epsilon = 1e-04, theta = rep(1/length(X_m_list), length(X_m_list)), alpha = 0.5) {
   # alpha: parameter for smoothing

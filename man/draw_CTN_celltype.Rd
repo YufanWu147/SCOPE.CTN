@@ -47,8 +47,7 @@ A list of \link[ggplot2:ggplot]{ggplot2::ggplot} objects:
 }
 }
 \description{
-\code{ggtext} package are required for the function.
-}
-\details{
 Generates plots to visualize the spatial distribution of Celltype Triad Niches (CTNs) and individual cell types across tissue sections.
+
+\link[ggtext:ggtext]{ggtext} package is required for the function.
 }

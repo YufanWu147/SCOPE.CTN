@@ -38,15 +38,16 @@ color_CTN_names <- function(CTN, celltype_palette = c("B" =  "#fee440", "CD4T" =
 
 #' Visualize silhouette score
 #'
-#' Evaluating hierarchical clustering performance for selecting optimal cluster number
+#' @description
+#' Evaluating hierarchical clustering performance for selecting optimal cluster number.
+#'
+#' [cowplot::cowplot-package] package is required for the function.
 #' @param hclust_silhouette A data frame containing the average (\code{avg_si}) and median Silhouette score (\code{median_si})
 #' under cluster number \code{K}. Output of the [jaccard_dist_hclust()] function.
 #' @param num_clusters Optimal number of clusters.
 #' @import ggplot2
 #' @importFrom rlang .data
 #' @export
-#' @description
-#' \code{cowplot} package is required for the function.
 draw_silhoutte_score <- function(hclust_silhouette, num_clusters) {
   if (!requireNamespace("cowplot", quietly = TRUE)) {
     stop(paste("Package cowplot is required but not installed."))
@@ -71,14 +72,14 @@ draw_silhoutte_score <- function(hclust_silhouette, num_clusters) {
 
 #' Jaccard similarity index heatmap
 #'
-#' Heatmap visualization of the Jaccard similarity indices between all pairs of cell-type triad
-#' Niches (CTNs) using an ordered heatmap based on hierarchical clustering.
+#' @description
+#' Heatmap visualization of the Jaccard similarity indices between all pairs of cell-type triad niches (CTNs) using an ordered heatmap based on hierarchical clustering.
+#'
+#' [ComplexHeatmap][ComplexHeatmap::ComplexHeatmap-package] and [grid][grid::grid-package] packages are required for the function.
 #' @param jaccard_mat A numeric matrix containing the Jaccard similarity indices between all pairs of CTNs. Output of the [jaccard_dist_hclust()] function.
 #' @param cl An object of class "hclust" which describes the tree produced by the clustering process. Output of the [jaccard_dist_hclust()] function.
 #' @param num_clusters An integer specifying the target number of clusters to slice or highlight on the heatmap.
 #' @return A [ComplexHeatmap::Heatmap-class] object.
-#' @description
-#' \code{ComplexHeatmap} and \code{grid} packages are required for the function.
 #' @export
 draw_htmap_jaccard_index <- function(jaccard_mat, cl, num_clusters) {
   packages <- c("ComplexHeatmap", "grid")
@@ -130,7 +131,10 @@ draw_htmap_jaccard_index <- function(jaccard_mat, cl, num_clusters) {
 
 #' Prepare input data CTN dendrogram
 #'
+#' @description
 #' Internal function for preparing input data to [draw_CTN_dendro()] function
+#'
+#' [ggdendro][ggdendro::ggdendro-package] package is required for the function.
 #' @param cl An object of class "hclust" which describes the tree produced by the clustering process. Output of the [jaccard_dist_hclust()] function.
 #' @param k An integer scalar or vector with the desired number of groups. See [stats::cutree()] for details.
 #' @param h Numeric scalar or vector with heights where the tree should be cut. [stats::cutree()] for details.
@@ -142,8 +146,6 @@ draw_htmap_jaccard_index <- function(jaccard_mat, cl, num_clusters) {
 #'   }
 #' @importFrom stats cutree
 #' @keywords internal
-#' @description
-#' \code{ggdendro} package is required for the function.
 #' @references
 #' Atrebas. Dendrograms in R, a lightweight approach. \url{https://atrebas.github.io/post/2019-06-08-lightweight-dendrograms/}
 prepare_dendro_data <- function(cl, h, k = NULL) {
@@ -185,7 +187,10 @@ prepare_dendro_data <- function(cl, h, k = NULL) {
 }
 
 #' Draw CTN dendrogram
+#' @description
 #' Dendrogram visualization for the hierarchical clustering results on the pairwise Jaccard distance between CTNs.
+#'
+#' [forcats][forcats::forcats-package], [ggdendro][ggdendro::ggdendro-package], [ggtext][ggtext::ggtext] packages are required for the function.
 #' @param cl An object of class "hclust" which describes the tree produced by the clustering process. Output of the [jaccard_dist_hclust()] function.
 #' @param k An integer scalar or vector with the desired number of groups. See [stats::cutree()] for details.
 #' @param h Numeric scalar or vector with heights where the tree should be cut. [stats::cutree()] for details. At least one of \code{k} or \code{h} must be specified, \code{k} overrides \code{h} if both are given.
@@ -206,8 +211,6 @@ prepare_dendro_data <- function(cl, h, k = NULL) {
 #'   }
 #' @import stringr dplyr ggplot2
 #' @importFrom rlang .data
-#' @description
-#' \code{forcats}, \code{ggdendro}, \code{ggtext} packages are required for the function.
 #' @export
 draw_CTN_dendro <- function(cl, h, k = NULL, CTN_annotation = NULL,
                             CTN_group_var = "clust", annot_var = "annotation",
@@ -280,7 +283,10 @@ draw_CTN_dendro <- function(cl, h, k = NULL, CTN_annotation = NULL,
 
 #' CTN cell type proportion dotplot
 #'
+#' @description
 #' Dotplot visualization of cell type abundance within each cell-type triad niche (CTN).
+#'
+#' [cowplot][cowplot::cowplot-package] and [ggtext][ggtext::ggtext] packages are required for the function.
 #' @param CTN_merged_celltype_prop A data frame representing the
 #'   cell type proportion for each CTN with the following columns: \code{CTN} (the CTN names),
 #'   \code{Celltype} (cell type labels), and \code{prop} (cell type proportion of the CTN).
@@ -292,8 +298,6 @@ draw_CTN_dendro <- function(cl, h, k = NULL, CTN_annotation = NULL,
 #' @param radius_range A numeric vector of length two that specifies the minimum and maximum size of the bubbles. See [ggplot2::scale_radius()] for details.
 #' @details
 #' Dotplot visualization of the cell type abundance of cell-type triad niches (CTN). Bubbles are colored by cell type labels, and their sizes represent relative cell type proportions with each CTN.
-#' @description
-#' \code{cowplot} and \code{ggtext} packages are required for the function.
 #' @import ggplot2
 #' @importFrom rlang .data
 #' @export
@@ -338,11 +342,17 @@ draw_CTN_celltype_prop <- function(CTN_merged_celltype_prop, CTN_dend,
 
 #' Plot Cox regression results on patient-level CTN presence
 #'
+#' @description
 #' Visualizes the prognostic value and cellular composition of Cell-type Triad Niches (CTNs).
+#'
 #' The left panel features a lollipop plot where the x-axis represents the log hazard ratio (HR) from Cox regression models,
-#' with lines colored by P-values adjusted via the Benjamini-Hochberg method (red: FDR < 0.05; black: 0.05 \eqn{\le} FDR < 0.1).
+#' with lines colored by Benjamini-Hochberg adjusted P-values (red: FDR < 0.05; black: 0.05 \eqn{\le} FDR < 0.1).
+#'
 #' The right panel features an aligned bar plot illustrating the cell type composition for each CTN,
 #' with core cell types are highlighted with black boxes.
+#'
+#' [ggtext][ggtext::ggtext], [forcats][forcats::forcats-package], [cowplot][cowplot::cowplot-package],
+#' and [patchwork][patchwork::patchwork-package] packages are required for the function.
 #' @param coxph_res A data frame representing the Cox proportional hazards regression results
 #' on patient-level CTN presence. Output of the [CTN_presence_coxph()] function
 #' @param CTN_merged_celltype_prop A data frame representing the
@@ -360,8 +370,6 @@ draw_CTN_celltype_prop <- function(CTN_merged_celltype_prop, CTN_dend,
 #' @return A combined [ggplot2::ggplot] object containing both the survival lollipop plot and the cell type composition bar plot.
 #' @import dplyr ggplot2
 #' @importFrom rlang .data
-#' @description
-#' \code{ggtext}, \code{forcats}, \code{cowplot}, and \code{patchwork} packages are required for the function.
 #' @export
 draw_CTN_coxph_logHR <- function(
     coxph_res, CTN_merged_celltype_prop,
@@ -460,7 +468,10 @@ draw_CTN_coxph_logHR <- function(
 
 #' Spatial Visualization of CTNs and Cell Types
 #'
+#' @description
 #' Generates plots to visualize the spatial distribution of Celltype Triad Niches (CTNs) and individual cell types across tissue sections.
+#'
+#' [ggtext][ggtext::ggtext] package is required for the function.
 #' @param Full_CTN_table A data frame containing spatial coordinates (\code{X}, \code{Y}), image IDs (\code{ImageID}), cell type
 #'   labels (\code{Celltype}), and niche labels for all cell-type triads
 #' @param CTN CTN label; e.g. B_CD4T_CD8T.
@@ -479,8 +490,6 @@ draw_CTN_coxph_logHR <- function(
 #'   }
 #' @import ggplot2
 #' @importFrom rlang .data
-#' @description
-#' \code{ggtext} package are required for the function.
 #' @export
 draw_CTN_celltype <- function(Full_CTN_table, CTN = "Bcell_CD4T_CD8T", img_list,
                               celltype_palette, CTN_palette = c("CTN" = "#E69F00", "Unassigned" = "grey90"),
@@ -534,3 +543,84 @@ draw_CTN_celltype <- function(Full_CTN_table, CTN = "Bcell_CD4T_CD8T", img_list,
   return(list(p_celltype = p_celltype, p_CTN = p_CTN))
 }
 
+#' Visualize CTN cell type composition similarity using UMAP
+#'
+#' @description
+#' Conduct dimensionality reduction on cell-type triad niche (CTN) cell type composition using the Uniform Manifold Approximation and Projection (UMAP) method (McInnes et al., 2018).
+#'
+#' The first two UMAP embeddings are visualized using a bubble plot, where the sizes reflect the total cell count within each CTN, and the colors denote their CTN category.
+#'
+#' [ggrepel][ggrepel::GeomLabelRepel], [cowplot][cowplot::cowplot-package], and [uwot][uwot::umap()] packages are required for the function.
+#' @param Full_CTN_table A data frame containing clustering labels for all cell-type triads
+#' @param CTN_ls A character vector containing the names of the CTNs.
+#' @param CTN_merged_celltype_prop A data frame representing the
+#'   cell type proportion for each CTN with the following columns: \code{CTN} (the CTN names),
+#'   \code{Celltype} (cell type labels), and \code{prop} (cell type proportion of the CTN).
+#' @param CTN_annotation A data frame with the original CTN names (\code{CTN}), the corresponding cluster label (\code{cluster}), and the new name for the consolidated CTN (specified in \code{annot_var}) after merging.
+#' @param CTN_group_var A character string specifying the column in \code{CTN_annotation} on CTN grouping. Will be used to color the dots.
+#' @param CTN_group_palette A named vector with colors as values and CTN categories as names.
+#' @param radius_range A numeric vector of length two that specifies the minimum and maximum size of the bubbles. See [ggplot2::scale_radius()] for details.
+#' @param umap_n_neighbors \code{n_neighbors} parameter [uwot::umap()]. The size of local neighborhood (in terms of number of neighboring sample points) used for manifold approximation.
+#' @param umap_seed \code{seed} parameter [uwot::umap()]. Integer seed to use to initialize the random number generator state.
+#' @param ... Other parameters to pass on to [uwot::umap()]
+#' @returns A [ggplot2::ggplot] object.
+#' @import dplyr ggplot2
+#' @importFrom rlang .data
+#' @importFrom tibble rownames_to_column
+#' @importFrom tibble column_to_rownames
+#' @importFrom stats median
+#' @export
+draw_CTN_umap <- function(Full_CTN_table, CTN_merged_celltype_prop,
+                          CTN_ls, CTN_annotation = NULL,
+                          CTN_group_var = "cluster", CTN_group_palette = NULL,
+                          radius_range = c(1, 8),
+                          umap_n_neighbors = 10, umap_seed = 42, ...) {
+  packages <- c("cowplot", "uwot", "ggrepel")
+  for (pkg in packages) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      stop(paste("Package", pkg, "is required but not installed."))
+    }
+  }
+  CTN_cell_count <- colSums(Full_CTN_table[, CTN_ls] == "CTN") %>%
+    as.data.frame() %>%
+    `colnames<-`("ncell") %>%
+    rownames_to_column("annotation")
+
+  CTN_merged_celltype_prop_wide <- CTN_merged_celltype_prop %>%
+    pivot_wider(names_from = "Celltype", values_from = "prop") %>%
+    column_to_rownames("cluster")
+
+  umap_out <- uwot::umap(CTN_merged_celltype_prop_wide,
+                         n_neighbors = umap_n_neighbors,
+                         seed = umap_seed, ...)
+
+  umap_emb <- as.data.frame(umap_out) %>%
+    `colnames<-`(c("UMAP1", "UMAP2")) %>%
+    rownames_to_column("cluster") %>%
+    left_join(CTN_annotation, by = "cluster") %>%
+    left_join(CTN_cell_count, by = "annotation")
+
+  umap_label <- umap_emb %>%
+    mutate(cluster = as.numeric(.data$cluster)) %>%
+    group_by(.data[[CTN_group_var]]) %>%
+    summarise(UMAP1 = median(.data$UMAP1), UMAP2 = median(.data$UMAP2),
+              label = ifelse(n() == 1, as.character(.data$cluster),
+                             paste(min(.data$cluster), max(.data$cluster), sep = "-"))) %>%
+    ungroup()
+
+  umap_emb %>%
+    ggplot(aes(x = .data$UMAP1, y = .data$UMAP2, fill = .data[[CTN_group_var]])) +
+    geom_point(aes(size = .data$ncell), color = "grey30",
+               shape = 21, alpha = 0.8, stroke = 0.7) +
+    ggrepel::geom_text_repel(data = umap_label, aes(label = .data$label),
+                             seed = 1, max.overlaps = Inf)+
+    labs(x = "UMAP1", y = "UMAP2") +
+    scale_radius(range = radius_range, name = "No. of Cells") +
+    scale_fill_manual(values = CTN_group_palette, name = "CTN group") +
+    guides(fill = guide_legend(override.aes = list(size = 3))) +
+    cowplot::theme_cowplot() +
+    coord_fixed(clip = "off") +
+    theme(legend.key.size = unit(3, "mm"),
+          legend.box.spacing = unit(0, "mm"))
+
+}

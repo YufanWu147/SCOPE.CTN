@@ -14,10 +14,10 @@ Depends:
 URL: https://github.com/YufanWu147/SCOPE.CTN
 Imports:
     ClusterR, assertthat, irlba, mgcv, pbmcapply, FNN, data.table,
-    dplyr, stringr, tidyr, tibble, ggplot2, rlang, survival
+    dplyr, stringr, tidyr, tibble, ggplot2, rlang, survival, uwot
 Suggests: 
     knitr, rmarkdown, tidyverse, RColorBrewer, Seurat, SingleCellExperiment, cluster,
-    arrow, aricode, caret, ggrepel, grDevices, ComplexHeatmap, grid, ggdendro,
+    arrow, aricode, caret, ggrepel, grDevices, ComplexHeatmap, grid, ggdendro, 
     cowplot, ggtext, forcats, patchwork, readxl
 LazyData: false
 License: GPL (>= 3)

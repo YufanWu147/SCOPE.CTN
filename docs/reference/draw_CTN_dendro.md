@@ -1,6 +1,12 @@
-# Draw CTN dendrogram Dendrogram visualization for the hierarchical clustering results on the pairwise Jaccard distance between CTNs.
+# Draw CTN dendrogram
 
-`forcats`, `ggdendro`, `ggtext` packages are required for the function.
+Dendrogram visualization for the hierarchical clustering results on the
+pairwise Jaccard distance between CTNs.
+
+[forcats](https://forcats.tidyverse.org/reference/forcats-package.html),
+[ggdendro](https://andrie.github.io/ggdendro/reference/ggdendro-package.html),
+[ggtext](https://wilkelab.org/ggtext/reference/ggtext.html) packages are
+required for the function.
 
 ## Usage
 

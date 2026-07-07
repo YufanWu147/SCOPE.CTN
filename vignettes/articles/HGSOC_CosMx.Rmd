@@ -3,7 +3,7 @@ title: "Systematic CTN screening in HGSOC CosMx data"
 date: 'Compiled: `r Sys.Date()`'
 ---
 
-This tutorial demonstrates how to conduct a systematically screening of Celltype Triad Niches (CTNs) in a High-Grade Serous Tubo-Ovarian Cancer (HGSOC) CosMx Spatial Molecular Imaging (SMI) dataset using SCOPE. The dataset is from the Discovery cohort of [Yeh et al. *Nature Immunology* 2024](https://www.nature.com/articles/s41590-024-01943-5) and consists of 100 tissue samples from 58 patients. 
+This tutorial demonstrates how to conduct a systematically screening of Celltype Triad Niches (CTNs) in a high-grade serous tubo-ovarian Cancer (HGSOC) CosMx Spatial Molecular Imaging (SMI) dataset using SCOPE. The dataset is from the Discovery cohort of [Yeh et al. *Nature Immunology* 2024](https://www.nature.com/articles/s41590-024-01943-5) and consists of 100 tissue samples from 58 patients. 
 
 First, we load the packages that will be used for the analysis and visualization.
 
@@ -413,6 +413,23 @@ p_CTN_merged_celltype_prop <- draw_CTN_celltype_prop(
 
 p_CTN_merged_celltype_prop + CTN_merged_dend$p + 
   plot_layout(guides = "collect", widths = c(1, 0.4))
+```
+
+We can also visualize similarities in the cell type compositions of the CTNs using Uniform Manifold Approximation and Projection (UMAP).
+
+```{r CTN cell type composition umap, fig.width = 5.5, fig.height = 5, out.width="70%"}
+draw_CTN_umap(Full_CTN_table = Full_CTN_table_mgcv_merged,
+              CTN_merged_celltype_prop = CTN_merged_celltype_proportion,
+              CTN_ls = CTN_merged_list, CTN_group_var = "CTN_group",
+              CTN_annotation = CTN_annotation_merged,
+              CTN_group_palette = HGSOC_CosMx_CTN_group_palette,
+              umap_n_neighbors = 10, umap_seed = 42) +
+  guides(fill = guide_legend(ncol = 2, override.aes = list(size = 3)),
+         radius = guide_legend(ncol = 1)) +
+  theme(legend.position = "bottom",
+        legend.key.spacing.y = unit(0.2, "mm"),
+        legend.direction = "vertical",
+        legend.title.position = "top")
 ```
 
 ## 5. Identify clinically-relevant CTNs

@@ -191,8 +191,7 @@ jaccard_dist_hclust <- function(Full_CTN_table, CTN_ls, num_cores = 1) {
 #' @importFrom rlang .data
 #' @export
 CTN_annotate <- function(CTN_cluster_label, CTN_merged_celltype_prop, celltype_levs) {
-  res <- CTN_cluster_label %>%
-    split(f = .$cluster) %>%
+  res <- split(CTN_cluster_label, f = CTN_cluster_label$cluster) %>%
     lapply(function(df_sub) {
       if(nrow(df_sub) == 1) {
         annotation = str_split(df_sub$CTN[1], "_")[[1]] %>%

@@ -60,7 +60,10 @@ compute_CLQ <- function(interact_matrix, dat_in) {
 #' @return A data frame of \eqn{T\times T\times L} rows containing observed CLQs between focal (\code{Celltype})
 #' and neighboring cell types (\code{Celltype_neighbor}) in each tissue section (\code{ImageID}),
 #' where \eqn{T} is the number of available cell types and \eqn{L} is the number of tissue sections.
-#' @import dplyr tibble tidyr data.table pbmcapply
+#' @import dplyr tidyr
+#' @importFrom tibble column_to_rownames
+#' @importFrom tibble rownames_to_column
+#' @importFrom pbmcapply pbmclapply
 #' @importFrom rlang .data
 #' @export
 #' @references
@@ -73,7 +76,7 @@ compute_CLQ_observed <- function(cell_neighbor_counts, dat_in, min.ncell = 100, 
   slide_list = unique(names(table(dat_in$ImageID))[which(table(dat_in$ImageID)>min.ncell)])
   celltypes_available <- colnames(cell_neighbor_counts)
 
-  CLQ_obs <- pbmcapply::pbmclapply(slide_list, function(img) {
+  CLQ_obs <- pbmclapply(slide_list, function(img) {
     dat_in_sub <- subset(dat_in, ImageID == img)[, "Celltype", drop = FALSE]
     cells_sub <- intersect(rownames(dat_in_sub), rownames(cell_neighbor_counts))
     if(length(cells_sub) < 5) {return(NULL)}
@@ -131,8 +134,14 @@ compute_CLQ_observed <- function(cell_neighbor_counts, dat_in, min.ncell = 100, 
 #' @return A data frame of \eqn{T\times T\times L\times \mbox{iter.num}} rows containing the permutated CLQs between focal (\code{Celltype})
 #' and neighboring cell types (\code{Celltype_neighbor}) in each tissue section (\code{ImageID}),
 #' where \eqn{T} is the number of available cell types and \eqn{L} is the number of tissue sections.
-#' @import dplyr tibble tidyr data.table
+#' @import dplyr tibble tidyr
+#' @importFrom data.table data.table
+#' @importFrom data.table setkey
+#' @importFrom data.table .N
+#' @importFrom data.table merge.data.table
+#' @importFrom data.table rbindlist
 #' @importFrom rlang .data
+#' @importFrom pbmcapply pbmclapply
 #' @export
 #' @references
 #' Bouchard, G. et al. A quantitative spatial cell-cell colocalizations framework enabling comparisons between in vitro assembloids and pathological specimens.
@@ -149,16 +158,16 @@ compute_CLQ_permutated <- function(cell_neighbor_ids, dat_in, min.ncell = 100, n
   cell_neighbor_ids_dt <- data.table(cell_neighbor_ids, key = "CellID_neighbor")
 
   # Shuffling cell type labels to generate a null distribution of CLQ
-  CLQ_perm <- pbmcapply::pbmclapply(1:iter.num, function(i) {
+  CLQ_perm <- pbmclapply(1:iter.num, function(i) {
 
     sapply(slide_list, function(img) {
       dat_in_sub <- subset(dat_in_temp, ImageID == img)
       cell_neighbor_ids_dt_sub <- subset(cell_neighbor_ids_dt, CellID %in% dat_in_sub$CellID)
       dat_in_sub$Celltype <- sample(dat_in_sub$Celltype, size = nrow(dat_in_sub), replace = FALSE)
-      interact_matrix_temp = merge(cell_neighbor_ids_dt_sub, dat_in_temp, by.x = "CellID_neighbor", by.y = "CellID", sort = FALSE)
+      interact_matrix_temp = merge.data.table(cell_neighbor_ids_dt_sub, dat_in_temp, by.x = "CellID_neighbor", by.y = "CellID", sort = FALSE)
       interact_matrix_temp = interact_matrix_temp[, .N, by = list(CellID, Celltype)]
       setkey(interact_matrix_temp, "CellID")
-      interact_matrix_temp = merge(interact_matrix_temp, dat_in_sub, by = "CellID", sort = FALSE, suffixes = c("_neighbor", ""))
+      interact_matrix_temp = merge.data.table(interact_matrix_temp, dat_in_sub, by = "CellID", sort = FALSE, suffixes = c("_neighbor", ""))
       interact_matrix_temp = interact_matrix_temp[, sum(N, na.rm = TRUE),
                                                   by = list(Celltype, Celltype_neighbor)]
       interact_matrix_temp = interact_matrix_temp %>%
@@ -177,7 +186,7 @@ compute_CLQ_permutated <- function(cell_neighbor_ids, dat_in, min.ncell = 100, n
                      names_to = "Celltype_neighbor") %>%
         cbind(iter = i)
       return(CLQ_df) }, simplify = FALSE, USE.NAMES = TRUE) %>%
-      data.table::rbindlist(idcol = "ImageID")
+      rbindlist(idcol = "ImageID")
     }, mc.cores = num_cores
   )
   CLQ_perm <- do.call(rbind, CLQ_perm)
@@ -201,7 +210,7 @@ compute_CLQ_permutated <- function(cell_neighbor_ids, dat_in, min.ncell = 100, n
 #'
 #'
 #' @return A data frame containing the nominal and Benjamini-Hochberg-adjusted CLQ permutation test p-values.
-#' @import dplyr tibble tidyr data.table
+#' @import dplyr tibble tidyr
 #' @importFrom stats p.adjust
 #' @importFrom rlang .data
 #' @export

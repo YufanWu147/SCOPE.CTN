@@ -23,8 +23,8 @@
 - [`draw_CTN_coxph_logHR()`](draw_CTN_coxph_logHR.md) : Plot Cox
   regression results on patient-level CTN presence
 - [`draw_CTN_dendro()`](draw_CTN_dendro.md) : Draw CTN dendrogram
-  Dendrogram visualization for the hierarchical clustering results on
-  the pairwise Jaccard distance between CTNs.
+- [`draw_CTN_umap()`](draw_CTN_umap.md) : Visualize CTN cell type
+  composition similarity using UMAP
 - [`draw_htmap_jaccard_index()`](draw_htmap_jaccard_index.md) : Jaccard
   similarity index heatmap
 - [`draw_silhoutte_score()`](draw_silhoutte_score.md) : Visualize

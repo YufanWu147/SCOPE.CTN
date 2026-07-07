@@ -1,6 +1,11 @@
 # CTN cell type proportion dotplot
 
-`cowplot` and `ggtext` packages are required for the function.
+Dotplot visualization of cell type abundance within each cell-type triad
+niche (CTN).
+
+[cowplot](https://wilkelab.org/cowplot/reference/cowplot-package.html)
+and [ggtext](https://wilkelab.org/ggtext/reference/ggtext.html) packages
+are required for the function.
 
 ## Usage
 
@@ -57,9 +62,6 @@ draw_CTN_celltype_prop(
   for details.
 
 ## Details
-
-Dotplot visualization of cell type abundance within each cell-type triad
-niche (CTN).
 
 Dotplot visualization of the cell type abundance of cell-type triad
 niches (CTN). Bubbles are colored by cell type labels, and their sizes

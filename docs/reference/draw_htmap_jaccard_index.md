@@ -1,6 +1,12 @@
 # Jaccard similarity index heatmap
 
-`ComplexHeatmap` and `grid` packages are required for the function.
+Heatmap visualization of the Jaccard similarity indices between all
+pairs of cell-type triad niches (CTNs) using an ordered heatmap based on
+hierarchical clustering.
+
+[ComplexHeatmap](https://rdrr.io/pkg/ComplexHeatmap/man/ComplexHeatmap-package.html)
+and [grid](https://rdrr.io/r/grid/grid-package.html) packages are
+required for the function.
 
 ## Usage
 
@@ -32,9 +38,3 @@ draw_htmap_jaccard_index(jaccard_mat, cl, num_clusters)
 A
 [ComplexHeatmap::Heatmap](https://rdrr.io/pkg/ComplexHeatmap/man/Heatmap-class.html)
 object.
-
-## Details
-
-Heatmap visualization of the Jaccard similarity indices between all
-pairs of cell-type triad Niches (CTNs) using an ordered heatmap based on
-hierarchical clustering.

@@ -1,11 +1,10 @@
 # Detecting lymphocyte aggregate-like niches in CRC VisiumHD data
 
 This tutorial shows an example of detecting the **lymphocyte aggregate
-(LA)-like niches** characterized by the
-$`\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}`$ triad in the
-colorectal cancer (CRC) VisiumHD data using SCOPE. The dataset comes
-from [Oliveira et al. *Nat Genet*
-2025](https://www.nature.com/articles/s41588-025-02193-3) and is
+(LA)-like niches** characterized by the \\\mbox{B cell/CD4}^+\mbox{ T
+cell/CD8}^+\mbox{ T cell}\\ triad in the colorectal cancer (CRC)
+VisiumHD data using SCOPE. The dataset comes from [Oliveira et al. *Nat
+Genet* 2025](https://www.nature.com/articles/s41588-025-02193-3) and is
 composed of 3 CRC and 2 normal adjacent tissue samples. For this
 tutorial, we will focus on the 3 CRC samples collected from different
 patients (P1, P2, P5).
@@ -31,7 +30,7 @@ The metadata parquet files for this dataset can be downloaded from
 [Zenodo](https://zenodo.org/records/15042463) or
 [GitHub](https://github.com/10XGenomics/HumanColonCancer_VisiumHD). We
 will simplify the `DeconvolutionLabel1` column and use them as the input
-cell type labels. It contains the cell types of the 8-$`\mu`$m binned
+cell type labels. It contains the cell types of the 8-\\\mu\\m binned
 data predicted by deconvolution using the single-cell RNA-seq reference.
 
 ``` r
@@ -115,8 +114,8 @@ CRC_VisiumHD_dat_in %>%
 
 Next, we use the k-nearest neighbors algorithm to define the spatial
 neighborhood and compute the neighborhood cell type composition matrix.
-The default number of nearest neighbors $`k`$ is 20, however we can
-increase $`k`$ for larger tissue slices. Here we set $`k`$=50.
+The default number of nearest neighbors \\k\\ is 20, however we can
+increase \\k\\ for larger tissue slices. Here we set \\k\\=50.
 
 In addition, we enforce a distance boundary for the nearest neighbors
 and exclude the cells falling outside this radius. The boundary is
@@ -213,9 +212,9 @@ cells_to_exclude %>%
 
 ## 3. Cell type triad niche (CTN) detection using SCOPE
 
-Next, we apply SCOPE to the
-$`\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}`$ triad using
-default configurations for the following parameters:
+Next, we apply SCOPE to the \\\mbox{B cell/CD4}^+\mbox{ T
+cell/CD8}^+\mbox{ T cell}\\ triad using default configurations for the
+following parameters:
 
 - `min.prop`: The minimum neighborhood cell-type proportion threshold.
   Proportions below this value are set to 0 (default: 0.3).
@@ -240,11 +239,10 @@ CTN_df <- run_SCOPE(
 # save(CTN_df, file = paste0(data_path, dataset_name, "_B_CD4T_CD8T.RData"))
 ```
 
-Here we can see that the
-$`\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}`$ CTNs closely
-aligns with the lymphocyte aggregates in the CRC samples, where CTN1
-resembles the B cell zone and CTN2 resembles the surrounding T cell
-zone.
+Here we can see that the \\\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{
+T cell}\\ CTNs closely aligns with the lymphocyte aggregates in the CRC
+samples, where CTN1 resembles the B cell zone and CTN2 resembles the
+surrounding T cell zone.
 
 ``` r
 

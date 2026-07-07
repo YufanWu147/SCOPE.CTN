@@ -2,8 +2,7 @@
 % Please edit documentation in R/SCOPE_Utilities_figures.R
 \name{draw_CTN_dendro}
 \alias{draw_CTN_dendro}
-\title{Draw CTN dendrogram
-Dendrogram visualization for the hierarchical clustering results on the pairwise Jaccard distance between CTNs.}
+\title{Draw CTN dendrogram}
 \usage{
 draw_CTN_dendro(
   cl,
@@ -56,5 +55,7 @@ A list with components:
 }
 }
 \description{
-\code{forcats}, \code{ggdendro}, \code{ggtext} packages are required for the function.
+Dendrogram visualization for the hierarchical clustering results on the pairwise Jaccard distance between CTNs.
+
+\link[forcats:forcats-package]{forcats}, \link[ggdendro:ggdendro-package]{ggdendro}, \link[ggtext:ggtext]{ggtext} packages are required for the function.
 }

@@ -38,8 +38,7 @@ run_SCOPE <- function(
   dat_in <- as.data.frame(dat_in)
   rownames(dat_in) <- dat_in$CellID
 
-  CTN_res <- #pbmclapply(1:nrow(combination_table), function(i) {
-    lapply(1:nrow(combination_table), function(i) {
+  CTN_res <- pbmclapply(1:nrow(combination_table), function(i) {
     CTN_name <- paste0(combination_table[i,], collapse="_")
     core_celltypes <- unname(unlist(combination_table[i, ]))
     print(sprintf("Processing %d: %s", i, CTN_name))
@@ -54,7 +53,7 @@ run_SCOPE <- function(
     dat3 <- test_mat[,CTN_index[c(2,3)]]
     dat4 <- test_mat[,CTN_index[c(1,3)]]
 
-    if(any(colSums(dat1) == 0)) {next}
+    if(any(colSums(dat1) == 0)) {return(NULL)}
 
     X_m_list <- list(dat1, dat2, dat3, dat4)
 
@@ -94,8 +93,7 @@ run_SCOPE <- function(
       return(CTN_table)
     }
 
-   })
-   #, mc.cores = num_cores)
+   }, mc.cores = num_cores)
 
   if(!save_results) {
     CTN_res <- do.call(rbind, CTN_res)

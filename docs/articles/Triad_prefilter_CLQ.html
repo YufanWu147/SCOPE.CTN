@@ -6,7 +6,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Prefiltering cell type triads using CLQ permutation test • SCOPE.CTN</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
+  window.MathJax = {
+    chtml: {
+      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
+    }
+  };
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -61,7 +67,7 @@
 
       <h1>Prefiltering cell type triads using CLQ permutation test</h1>
             
-            <h4 data-toc-skip class="date">Compiled: 2026-07-02</h4>
+            <h4 data-toc-skip class="date">Compiled: 2026-07-07</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/YufanWu147/SCOPE.CTN/blob/HEAD/vignettes/articles/Triad_prefilter_CLQ.Rmd" class="external-link"><code>vignettes/articles/Triad_prefilter_CLQ.Rmd</code></a></small>
       <div class="d-none name"><code>Triad_prefilter_CLQ.Rmd</code></div>
@@ -86,40 +92,25 @@ triads that exhibit significant spatial proximity.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Number of Cell Types"</span>, y <span class="op">=</span> <span class="st">"Number of triads"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Triad_prefilter_CLQ_files/figure-html/load%20packages-1.png" class="r-plt" alt="" width="50%" style="display: block; margin: auto;"></p>
 <p>Following <a href="https://doi.org/10.1038/s41467-024-55129-6" class="external-link">Bouchard et al.</a>,
-the colocalization of a pair of cell types
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>
-in tissue section
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>l</mi><annotation encoding="application/x-tex">l</annotation></semantics></math>
-can be evaluated with metric</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mi>L</mi><msubsup><mi>Q</mi><mrow><mi>b</mi><mo>→</mo><mi>a</mi></mrow><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mfrac><mrow><msubsup><mi>C</mi><mrow><mi>b</mi><mo>→</mo><mi>a</mi></mrow><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mi>/</mi><msubsup><mi>N</mi><mi>a</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup></mrow><mrow><msubsup><mi>N</mi><mi>b</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mi>/</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>N</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left"><msubsup><mi>N</mi><mi>a</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>&gt;</mo><mn>5</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> and</mtext></mrow><mspace width="0.222em"></mspace><msubsup><mi>N</mi><mi>b</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>&gt;</mo><mn>5</mn></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mn>0</mn><mo>,</mo></mtd><mtd columnalign="left" style="text-align: left"><mtext mathvariant="normal">otherwise</mtext></mtd></mtr></mtable></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">CLQ_{b\rightarrow a}^{(l)} = \begin{cases}
-\frac{C_{b\rightarrow a}^{(l)} / N_a^{(l)}}{N_b^{(l)} / (N^{(l)} - 1)} &amp;
+the colocalization of a pair of cell types <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> in tissue section <span class="math inline">\(l\)</span> can be evaluated with metric</p>
+<p><span class="math display">\[CLQ_{b\rightarrow a}^{(l)} =
+\begin{cases}
+\frac{C_{b\rightarrow a}^{(l)} / N_a^{(l)}}{N_b^{(l)} / (N^{(l)} - 1)}
+&amp;
 N_a^{(l)} &gt; 5 \mbox{ and} \ N_b^{(l)} &gt; 5 \\
-0, &amp; \text{otherwise}\end{cases},</annotation></semantics></math></p>
-<p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mi>L</mi><msubsup><mi>Q</mi><mrow><mi>b</mi><mo>→</mo><mi>a</mi></mrow><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup></mrow><annotation encoding="application/x-tex">CLQ_{b\rightarrow a}^{(l)}</annotation></semantics></math>
-is the number of cells of cell type
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>
-within the neighborhood of cell type
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>;
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>N</mi><mi>a</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><annotation encoding="application/x-tex">N_a^{(l)}</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>N</mi><mi>b</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><annotation encoding="application/x-tex">N_b^{(l)}</annotation></semantics></math>,
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>N</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><annotation encoding="application/x-tex">N^{(l)}</annotation></semantics></math>
-are the number of cells for cell type
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>
-and the total number of cells in tissue section
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>l</mi><annotation encoding="application/x-tex">l</annotation></semantics></math>,
-respectively.</p>
+0, &amp; \text{otherwise}\end{cases},\]</span></p>
+<p>where <span class="math inline">\(CLQ_{b\rightarrow a}^{(l)}\)</span>
+is the number of cells of cell type <span class="math inline">\(b\)</span> within the neighborhood of cell type
+<span class="math inline">\(a\)</span>; <span class="math inline">\(N_a^{(l)}\)</span>, <span class="math inline">\(N_b^{(l)}\)</span>, and <span class="math inline">\(N^{(l)}\)</span> are the number of cells for cell
+type <span class="math inline">\(a\)</span>, <span class="math inline">\(b\)</span> and the total number of cells in tissue
+section <span class="math inline">\(l\)</span>, respectively.</p>
 <p>Here we use the 45-sample pulmonary fibrosis (PF) Xenium dataset from
 <a href="https://www.nature.com/articles/s41588-025-02080-x" class="external-link">Vannan et
 al. <em>Nat Genet</em> 2025</a> to demonstrate how to perform CLQ
 permutation test. This dataset contains 47 cell types, which can form
 16,215 potential triads.</p>
 <p>For each tissue section, we first calculate an observed CLQ value
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mi>L</mi><msubsup><mi>Q</mi><mrow><mi>b</mi><mo>→</mo><mi>a</mi></mrow><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>o</mi><mi>b</mi><mi>s</mi></mrow></msubsup></mrow><annotation encoding="application/x-tex">CLQ_{b\rightarrow a}^{(l),obs}</annotation></semantics></math>
+<span class="math inline">\(CLQ_{b\rightarrow a}^{(l),obs}\)</span>
 using the true cell type labels. Please refer to the <a href="PF_Xenium.html">Detecting TLS-like CTNs in PF Xenium data</a> to
 see how <code>PF_Xenium_dat_in</code> and
 <code>PF_Xenium_cell_neighbor_results</code> were obtained.</p>
@@ -145,18 +136,19 @@ see how <code>PF_Xenium_dat_in</code> and
 <span>  dat_in <span class="op">=</span> <span class="va">Xenium_PF_dat_in</span>, min.ncell <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span></code></pre></div>
 <p>We then randomly shuffle the cell type labels for 500 times to create
 a null distribution of CLQs assuming that the cell types are distributed
-randomly.
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mi>L</mi><msubsup><mi>Q</mi><mrow><mi>b</mi><mo>→</mo><mi>a</mi></mrow><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>k</mi></mrow></msubsup><mo>,</mo><mi>k</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mi>…</mi><mo>,</mo><mn>500</mn></mrow><annotation encoding="application/x-tex">CLQ_{b\rightarrow a}^{(l),k},k = 1,2,…,500</annotation></semantics></math>.</p>
+randomly. <span class="math inline">\(CLQ_{b\rightarrow a}^{(l),k},k =
+1,2,…,500\)</span>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">CLQ_perm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_CLQ_permutated.html">compute_CLQ_permutated</a></span><span class="op">(</span></span>
 <span>  cell_neighbor_ids <span class="op">=</span> <span class="va">cell_neighbor_ids</span>, </span>
 <span>  dat_in <span class="op">=</span> <span class="va">Xenium_PF_dat_in</span>, min.ncell <span class="op">=</span> <span class="fl">500</span>,</span>
 <span>  iter.num <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span>, n_cores <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
 <p>The permutation test p-value is defined as</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>p</mi><mrow><mi>b</mi><mo>→</mo><mi>a</mi></mrow><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>=</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mn>500</mn></munderover><mrow><mi>I</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>C</mi><mi>L</mi><msubsup><mi>Q</mi><mrow><mi>b</mi><mo>→</mo><mi>a</mi></mrow><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>k</mi></mrow></msubsup><mo>&gt;</mo><mi>C</mi><mi>L</mi><msubsup><mi>Q</mi><mrow><mi>b</mi><mo>→</mo><mi>a</mi></mrow><mrow><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>o</mi><mi>b</mi><mi>s</mi></mrow></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">p_{b\rightarrow a}^{(l)} = \sum_{k=1}^{500}{I\left(CLQ_{b\rightarrow a}^{(l), k} &gt; CLQ_{b\rightarrow a}^{(l), obs}\right)},</annotation></semantics></math></p>
-<p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>I</mi><annotation encoding="application/x-tex">I</annotation></semantics></math>
-is the indicator function.</p>
+<p><span class="math display">\[p_{b\rightarrow a}^{(l)} =
+\sum_{k=1}^{500}{I\left(CLQ_{b\rightarrow a}^{(l), k} &gt;
+CLQ_{b\rightarrow a}^{(l), obs}\right)},\]</span></p>
+<p>where <span class="math inline">\(I\)</span> is the indicator
+function.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">CLQ_perm_pval</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CLQ_permutation_test.html">CLQ_permutation_test</a></span><span class="op">(</span>CLQ_obs <span class="op">=</span> <span class="va">CLQ_obs</span>, CLQ_perm <span class="op">=</span> <span class="va">CLQ_perm</span><span class="op">)</span></span></code></pre></div>
 <p>The function returns both nominal and Benjamini-Hochberg (BH)
@@ -225,8 +217,8 @@ pairs exhibit significant CLQs (adjusted p-value &lt; 0.05) in at least
 <span><span class="co">#&gt; [37] lifecycle_1.0.5     fs_1.6.7            htmlwidgets_1.6.4  </span></span>
 <span><span class="co">#&gt; [40] ragg_1.5.1          irlba_2.3.7         pkgconfig_2.0.3    </span></span>
 <span><span class="co">#&gt; [43] desc_1.4.3          pkgdown_2.2.0       pillar_1.11.1      </span></span>
-<span><span class="co">#&gt; [46] bslib_0.10.0        gtable_0.3.6        glue_1.8.0         </span></span>
-<span><span class="co">#&gt; [49] data.table_1.18.2.1 Rcpp_1.1.1          systemfonts_1.3.1  </span></span>
+<span><span class="co">#&gt; [46] bslib_0.10.0        gtable_0.3.6        data.table_1.18.2.1</span></span>
+<span><span class="co">#&gt; [49] glue_1.8.0          Rcpp_1.1.1          systemfonts_1.3.1  </span></span>
 <span><span class="co">#&gt; [52] xfun_0.57           tidyselect_1.2.1    rstudioapi_0.18.0  </span></span>
 <span><span class="co">#&gt; [55] knitr_1.51          farver_2.1.2        htmltools_0.5.9    </span></span>
 <span><span class="co">#&gt; [58] nlme_3.1-164        labeling_0.4.3      rmarkdown_2.30     </span></span>

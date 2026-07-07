@@ -25,20 +25,17 @@ data.frame(n_celltype = 3:50, n_combn = choose(3:50, 3)) %>%
 ![](Triad_prefilter_CLQ_files/figure-html/load%20packages-1.png)
 
 Following [Bouchard et al.](https://doi.org/10.1038/s41467-024-55129-6),
-the colocalization of a pair of cell types $`a`$ and $`b`$ in tissue
-section $`l`$ can be evaluated with metric
+the colocalization of a pair of cell types \\a\\ and \\b\\ in tissue
+section \\l\\ can be evaluated with metric
 
-``` math
-CLQ_{b\rightarrow a}^{(l)} = \begin{cases}
-\frac{C_{b\rightarrow a}^{(l)} / N_a^{(l)}}{N_b^{(l)} / (N^{(l)} - 1)} &
-N_a^{(l)} > 5 \mbox{ and} \ N_b^{(l)} > 5 \\
-0, & \text{otherwise}\end{cases},
-```
+\\CLQ\_{b\rightarrow a}^{(l)} = \begin{cases} \frac{C\_{b\rightarrow
+a}^{(l)} / N_a^{(l)}}{N_b^{(l)} / (N^{(l)} - 1)} & N_a^{(l)} \> 5 \mbox{
+and} \\ N_b^{(l)} \> 5 \\ 0, & \text{otherwise}\end{cases},\\
 
-where $`CLQ_{b\rightarrow a}^{(l)}`$ is the number of cells of cell type
-$`b`$ within the neighborhood of cell type $`a`$; $`N_a^{(l)}`$,
-$`N_b^{(l)}`$, and $`N^{(l)}`$ are the number of cells for cell type
-$`a`$, $`b`$ and the total number of cells in tissue section $`l`$,
+where \\CLQ\_{b\rightarrow a}^{(l)}\\ is the number of cells of cell
+type \\b\\ within the neighborhood of cell type \\a\\; \\N_a^{(l)}\\,
+\\N_b^{(l)}\\, and \\N^{(l)}\\ are the number of cells for cell type
+\\a\\, \\b\\ and the total number of cells in tissue section \\l\\,
 respectively.
 
 Here we use the 45-sample pulmonary fibrosis (PF) Xenium dataset from
@@ -48,7 +45,7 @@ how to perform CLQ permutation test. This dataset contains 47 cell
 types, which can form 16,215 potential triads.
 
 For each tissue section, we first calculate an observed CLQ value
-$`CLQ_{b\rightarrow a}^{(l),obs}`$ using the true cell type labels.
+\\CLQ\_{b\rightarrow a}^{(l),obs}\\ using the true cell type labels.
 Please refer to the [Detecting TLS-like CTNs in PF Xenium
 data](PF_Xenium.md) to see how `PF_Xenium_dat_in` and
 `PF_Xenium_cell_neighbor_results` were obtained.
@@ -81,7 +78,7 @@ CLQ_obs <- compute_CLQ_observed(
 
 We then randomly shuffle the cell type labels for 500 times to create a
 null distribution of CLQs assuming that the cell types are distributed
-randomly. $`CLQ_{b\rightarrow a}^{(l),k},k = 1,2,…,500`$.
+randomly. \\CLQ\_{b\rightarrow a}^{(l),k},k = 1,2,…,500\\.
 
 ``` r
 
@@ -93,11 +90,11 @@ CLQ_perm <- compute_CLQ_permutated(
 
 The permutation test p-value is defined as
 
-``` math
-p_{b\rightarrow a}^{(l)} = \sum_{k=1}^{500}{I\left(CLQ_{b\rightarrow a}^{(l), k} > CLQ_{b\rightarrow a}^{(l), obs}\right)},
-```
+\\p\_{b\rightarrow a}^{(l)} =
+\sum\_{k=1}^{500}{I\left(CLQ\_{b\rightarrow a}^{(l), k} \>
+CLQ\_{b\rightarrow a}^{(l), obs}\right)},\\
 
-where $`I`$ is the indicator function.
+where \\I\\ is the indicator function.
 
 ``` r
 
@@ -175,8 +172,8 @@ sessionInfo()
 #> [37] lifecycle_1.0.5     fs_1.6.7            htmlwidgets_1.6.4  
 #> [40] ragg_1.5.1          irlba_2.3.7         pkgconfig_2.0.3    
 #> [43] desc_1.4.3          pkgdown_2.2.0       pillar_1.11.1      
-#> [46] bslib_0.10.0        gtable_0.3.6        glue_1.8.0         
-#> [49] data.table_1.18.2.1 Rcpp_1.1.1          systemfonts_1.3.1  
+#> [46] bslib_0.10.0        gtable_0.3.6        data.table_1.18.2.1
+#> [49] glue_1.8.0          Rcpp_1.1.1          systemfonts_1.3.1  
 #> [52] xfun_0.57           tidyselect_1.2.1    rstudioapi_0.18.0  
 #> [55] knitr_1.51          farver_2.1.2        htmltools_0.5.9    
 #> [58] nlme_3.1-164        labeling_0.4.3      rmarkdown_2.30     

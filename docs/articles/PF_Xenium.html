@@ -6,7 +6,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Detecting TLS-like CTNs in PF Xenium data • SCOPE.CTN</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
+  window.MathJax = {
+    chtml: {
+      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
+    }
+  };
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -61,7 +67,7 @@
 
       <h1>Detecting TLS-like CTNs in PF Xenium data</h1>
             
-            <h4 data-toc-skip class="date">Compiled: 2026-07-02</h4>
+            <h4 data-toc-skip class="date">Compiled: 2026-07-07</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/YufanWu147/SCOPE.CTN/blob/HEAD/vignettes/articles/PF_Xenium.Rmd" class="external-link"><code>vignettes/articles/PF_Xenium.Rmd</code></a></small>
       <div class="d-none name"><code>PF_Xenium.Rmd</code></div>
@@ -70,10 +76,9 @@
     
     
 <p>This tutorial shows an example of detecting the tertiary lymphoid
-structure (TLS)-like niches characterized by the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mtext mathvariant="normal">B cell/CD4</mtext><mo>+</mo></msup><msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell/CD8</mtext></mrow><mo>+</mo></msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell</mtext></mrow></mrow><annotation encoding="application/x-tex">\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}</annotation></semantics></math>
-triad in the pulmonary fibrosis (PF) Xenium data using SCOPE. The
-dataset comes from <a href="https://www.nature.com/articles/s41588-025-02080-x" class="external-link">Vannan et
+structure (TLS)-like niches characterized by the <span class="math inline">\(\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T
+cell}\)</span> triad in the pulmonary fibrosis (PF) Xenium data using
+SCOPE. The dataset comes from <a href="https://www.nature.com/articles/s41588-025-02080-x" class="external-link">Vannan et
 al. <em>Nat Genet</em> 2025</a> and is composed of 35 PF and 10
 unaffected samples.</p>
 <p>First, we load the packages that will be used for the analysis and
@@ -206,13 +211,8 @@ columns:</p>
 </h2>
 <p>Next, we use the k-nearest neighbors algorithm to define the spatial
 neighborhood and compute the neighborhood cell type composition matrix.
-The default number of nearest neighbors
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
-is 20, however we can increase
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
-for larger tissues. Since this dataset contains 3-5mm lung tissue cores,
-here we set
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mn>50</mn></mrow><annotation encoding="application/x-tex">k=50</annotation></semantics></math>.</p>
+The default number of nearest neighbors <span class="math inline">\(k\)</span> is 20, however we can increase <span class="math inline">\(k\)</span> for larger tissues. Since this dataset
+contains 3-5mm lung tissue cores, here we set <span class="math inline">\(k=50\)</span>.</p>
 <p>In addition, we enforce a distance boundary for the nearest neighbors
 and exclude the cells falling outside this radius. The boundary is
 initially defined as the 99th percentile of all distances from focal
@@ -355,9 +355,9 @@ subsequent niche clustering. Here we set <code>min.n.neighbors</code> to
 <div class="section level2">
 <h2 id="cell-type-triad-niche-ctn-detection-using-scope">3. Cell type triad niche (CTN) detection using SCOPE<a class="anchor" aria-label="anchor" href="#cell-type-triad-niche-ctn-detection-using-scope"></a>
 </h2>
-<p>Next, we apply SCOPE to the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mtext mathvariant="normal">B cell/CD4</mtext><mo>+</mo></msup><msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell/CD8</mtext></mrow><mo>+</mo></msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell</mtext></mrow></mrow><annotation encoding="application/x-tex">\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}</annotation></semantics></math>
-triad using default configurations for the following parameters:</p>
+<p>Next, we apply SCOPE to the <span class="math inline">\(\mbox{B
+cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}\)</span> triad using
+default configurations for the following parameters:</p>
 <ul>
 <li>
 <code>min.prop</code>: The minimum neighborhood cell-type proportion
@@ -381,11 +381,11 @@ separate the B cell and T cell zones.</p>
 <span>  clusternum <span class="op">=</span> <span class="fl">3</span>, min.prop <span class="op">=</span> <span class="fl">0.3</span>,</span>
 <span>  linear <span class="op">=</span> <span class="cn">FALSE</span>, mgcv_df <span class="op">=</span> <span class="fl">15</span>, iter.max <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="co"># save(CTN_df, file = paste0(data_path, dataset_name, "_B_CD4T_CD8T.RData"))</span></span></code></pre></div>
-<p>Here we can see that the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mtext mathvariant="normal">B cell/CD4</mtext><mo>+</mo></msup><msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell/CD8</mtext></mrow><mo>+</mo></msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> T cell</mtext></mrow></mrow><annotation encoding="application/x-tex">\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}</annotation></semantics></math>
-CTNs closely aligns with the lymphocyte aggregates in the CRC samples,
-where CTN1 resembles the B cell zone and CTN2 resembles the surrounding
-T cell zone.</p>
+<p>Here we can see that the <span class="math inline">\(\mbox{B
+cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}\)</span> CTNs closely
+aligns with the lymphocyte aggregates in the CRC samples, where CTN1
+resembles the B cell zone and CTN2 resembles the surrounding T cell
+zone.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Number of cells per CTN</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">CTN_df</span><span class="op">$</span><span class="va">label</span><span class="op">)</span></span>

@@ -32,10 +32,10 @@ cell type proportion for each CTN with the following columns: \code{CTN} (the CT
 \item{x_expand}{A numeric vector of length two of the multiplicative range expansion factors for the x axis. See \code{\link[ggplot2:expansion]{ggplot2::expansion()}} for details.}
 }
 \description{
-\code{cowplot} and \code{ggtext} packages are required for the function.
-}
-\details{
 Dotplot visualization of cell type abundance within each cell-type triad niche (CTN).
 
+\link[cowplot:cowplot-package]{cowplot} and \link[ggtext:ggtext]{ggtext} packages are required for the function.
+}
+\details{
 Dotplot visualization of the cell type abundance of cell-type triad niches (CTN). Bubbles are colored by cell type labels, and their sizes represent relative cell type proportions with each CTN.
 }

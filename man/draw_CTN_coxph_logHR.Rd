@@ -48,12 +48,14 @@ cell type proportion for each CTN with the following columns: \code{CTN} (the CT
 A combined \link[ggplot2:ggplot]{ggplot2::ggplot} object containing both the survival lollipop plot and the cell type composition bar plot.
 }
 \description{
-\code{ggtext}, \code{forcats}, \code{cowplot}, and \code{patchwork} packages are required for the function.
-}
-\details{
 Visualizes the prognostic value and cellular composition of Cell-type Triad Niches (CTNs).
+
 The left panel features a lollipop plot where the x-axis represents the log hazard ratio (HR) from Cox regression models,
-with lines colored by P-values adjusted via the Benjamini-Hochberg method (red: FDR < 0.05; black: 0.05 \eqn{\le} FDR < 0.1).
+with lines colored by Benjamini-Hochberg adjusted P-values (red: FDR < 0.05; black: 0.05 \eqn{\le} FDR < 0.1).
+
 The right panel features an aligned bar plot illustrating the cell type composition for each CTN,
 with core cell types are highlighted with black boxes.
+
+\link[ggtext:ggtext]{ggtext}, \link[forcats:forcats-package]{forcats}, \link[cowplot:cowplot-package]{cowplot},
+and \link[patchwork:patchwork-package]{patchwork} packages are required for the function.
 }

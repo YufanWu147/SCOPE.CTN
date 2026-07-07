@@ -22,10 +22,9 @@ A list with components (See \code{\link[ggdendro:dendro_data]{ggdendro::dendro_d
 }
 }
 \description{
-\code{ggdendro} package is required for the function.
-}
-\details{
 Internal function for preparing input data to \code{\link[=draw_CTN_dendro]{draw_CTN_dendro()}} function
+
+\link[ggdendro:ggdendro-package]{ggdendro} package is required for the function.
 }
 \references{
 Atrebas. Dendrograms in R, a lightweight approach. \url{https://atrebas.github.io/post/2019-06-08-lightweight-dendrograms/}
