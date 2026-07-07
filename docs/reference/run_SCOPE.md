@@ -20,7 +20,8 @@ run_SCOPE(
   rename_CTN = TRUE,
   save_results = TRUE,
   output_dir = getwd(),
-  suffix = ""
+  suffix = "",
+  verbose = TRUE
 )
 ```
 
@@ -108,6 +109,13 @@ run_SCOPE(
 - suffix:
 
   File name suffix.
+
+- verbose:
+
+  Whether progress is printed during mini-batch k-means clustering.
+  Passed on to
+  [ClusterR::MiniBatchKmeans](https://rdrr.io/pkg/ClusterR/man/MiniBatchKmeans.html).
+  Defaults to `TRUE`.
 
 ## Value
 

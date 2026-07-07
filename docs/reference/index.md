@@ -34,3 +34,5 @@
   hierarchical clustering on Jaccard distance
 - [`run_SCOPE()`](run_SCOPE.md) : Multi-view cell type triad niche
   screening
+- [`run_SCOPE_subcluster()`](run_SCOPE_subcluster.md) : Subclustering
+  cells labeled as "CTN" in initial analysis

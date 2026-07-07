@@ -1,10 +1,9 @@
 # Detecting TLS-like CTNs in PF Xenium data
 
 This tutorial shows an example of detecting the tertiary lymphoid
-structure (TLS)-like niches characterized by the \\\mbox{B
-cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}\\ triad in the pulmonary
-fibrosis (PF) Xenium data using SCOPE. The dataset comes from [Vannan et
-al. *Nat Genet*
+structure (TLS)-like niches characterized by the B cell/CD4\\^+\\ T
+cell/CD8\\^+\\ T cell triad in the pulmonary fibrosis (PF) Xenium data
+using SCOPE. The dataset comes from [Vannan et al. *Nat Genet*
 2025](https://www.nature.com/articles/s41588-025-02080-x) and is
 composed of 35 PF and 10 unaffected samples.
 
@@ -317,9 +316,8 @@ cells_to_exclude %>%
 
 ## 3. Cell type triad niche (CTN) detection using SCOPE
 
-Next, we apply SCOPE to the \\\mbox{B cell/CD4}^+\mbox{ T
-cell/CD8}^+\mbox{ T cell}\\ triad using default configurations for the
-following parameters:
+Next, we apply SCOPE to the B cell/CD4\\^+\\ T cell/CD8\\^+\\ T cell
+triad using default configurations for the following parameters:
 
 - `min.prop`: The minimum neighborhood cell-type proportion threshold.
   Proportions below this value are set to 0 (default: 0.3).
@@ -344,10 +342,10 @@ CTN_df <- run_SCOPE(
 # save(CTN_df, file = paste0(data_path, dataset_name, "_B_CD4T_CD8T.RData"))
 ```
 
-Here we can see that the \\\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{
-T cell}\\ CTNs closely aligns with the lymphocyte aggregates in the CRC
-samples, where CTN1 resembles the B cell zone and CTN2 resembles the
-surrounding T cell zone.
+Here we can see that the B cell/CD4\\^+\\ T cell/CD8\\^+\\ T cell CTNs
+closely aligns with the lymphocyte aggregates in the CRC samples, where
+CTN1 resembles the B cell zone and CTN2 resembles the surrounding T cell
+zone.
 
 ``` r
 

@@ -12,7 +12,8 @@ mkkcEst_linear(
   iter.max = 100,
   epsilon = 1e-04,
   theta = rep(1/length(X_m_list), length(X_m_list)),
-  alpha = 0.5
+  alpha = 0.5,
+  verbose = TRUE
 )
 ```
 
@@ -46,6 +47,13 @@ mkkcEst_linear(
   = \alpha \theta^{(\scriptl)} + (1-\alpha)
   {\theta^{(\scriptl-1)}}^{EMA}, \alpha\in\[0, 1\]\\. The default value
   is 0.5.
+
+- verbose:
+
+  Whether progress is printed during mini-batch k-means clustering.
+  Passed on to
+  [ClusterR::MiniBatchKmeans](https://rdrr.io/pkg/ClusterR/man/MiniBatchKmeans.html).
+  Defaults to `TRUE`.
 
 ## Value
 

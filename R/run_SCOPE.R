@@ -17,6 +17,7 @@
 #' @param save_results Whether to save the niche screening results to the output directory. If \code{TRUE} (default) then the results for each CTN will be saved into a separate file. If \code{FALSE} then will all CTN screening results will be combined into a single data frame and returned as function output.
 #' @param output_dir Output directory. Will automatically create a new directory when the target directory doesn't exist.
 #' @param suffix File name suffix.
+#' @param verbose Whether progress is printed during mini-batch k-means clustering. Passed on to [ClusterR::MiniBatchKmeans]. Defaults to \code{TRUE}.
 #' @return
 #' \describe{
 #'   \item{res}{CTN screening results. Only returns when \code{save_results} is \code{FALSE}.}
@@ -29,7 +30,8 @@ run_SCOPE <- function(
     clusternum = 2, min.prop = 0.3,
     linear = FALSE, mgcv_df = 15,
     iter.max = 100, epsilon = 1e-04, alpha = 0.5, num_cores = 1,
-    rename_CTN = TRUE, save_results = TRUE, output_dir = getwd(), suffix = "") {
+    rename_CTN = TRUE, save_results = TRUE,
+    output_dir = getwd(), suffix = "", verbose = TRUE) {
 
   if(!dir.exists(output_dir) & save_results) { dir.create(output_dir) }
   if(!dir.exists(file.path(output_dir, "mkkcEst")) & save_results) {
@@ -75,8 +77,8 @@ run_SCOPE <- function(
     }
 
     # Clustering
-    res <- mkkcEst_linear(X_m_list, centers=clusternum, iter.max=iter.max,
-                          epsilon = epsilon, alpha = alpha)
+    res <- mkkcEst_linear(X_m_list, centers = clusternum, iter.max = iter.max,
+                          epsilon = epsilon, alpha = alpha, verbose = verbose)
     cluster_label <- res$cluster
     names(cluster_label) <- rownames(test_mat)
     CTN_table <- cbind(dat_in[rownames(test_mat), c("CellID", "Celltype"), drop = FALSE],
@@ -131,6 +133,121 @@ label_CTN <- function(CTN_table, core_celltypes = NULL, clusternum = 2) {
 
   return(CTN_table_relabeled)
 }
+
+
+#' Subclustering cells labeled as "CTN" in initial analysis
+#'
+#' @param Full_CTN_table A data frame containing spatial coordinates (\code{X}, \code{Y}), image IDs (\code{ImageID}), cell type
+#'   labels (\code{Celltype}), and niche labels for all cell-type triads
+#' @param cell_neighbor_table Same cell_neighbor_table used as the input for the initial clustering
+#' @param CTN_annotation Data frame with CTN annotations. Must contain columns \code{CTN} (initial CTN names) and \code{annot_var} (consolidated CTN names)
+#' @param annot_var A character string specicying the column name representing the consolidated CTN names in \code{CTN_annotation}
+#' @param subclusternum Number of subclusters
+#' @param output_dir Output directory used in [run_SCOPE()].
+#' @param verbose Whether progress is printed during mini-batch k-means clustering. Passed on to [ClusterR::MiniBatchKmeans]. Defaults to \code{TRUE}.
+#' @returns A list with the following attributes:
+#' \describe{
+#'  \item{Full_CTN_table_reclustered}{A data frame containing the subcluster labels with the same structure as \code{Full_CTN_table}}
+#'  \item{WCSS}{Within-cluster sum of squares}
+#' }
+#' @import dplyr ClusterR
+#' @importFrom assertthat assert_that
+#' @importFrom data.table rbindlist
+#' @export
+run_SCOPE_subcluster <- function(
+    Full_CTN_table, cell_neighbor_table,
+    CTN_annotation, annot_var = "annotation", subclusternum = 2,
+    output_dir = getwd(), verbose = TRUE) {
+
+  assert_that(subclusternum >= 2, msg = "Number of subclusters must be greater or equal to 2")
+
+  # cell_neighbor_table used as the input for the initial clustering
+  rownames(Full_CTN_table) <- Full_CTN_table$CellID
+
+  # Make sure rows of Full_CTN_table match those of H,
+  # which are the same as cell_neighbor_table rownames
+  cell_neighbor_table <- drop_na(as.data.frame(cell_neighbor_table))
+  Full_CTN_table_matched <- Full_CTN_table[rownames(cell_neighbor_table), ]
+
+  # List of cell-type triplets belonging to each merged CTNs
+  CTN_annotation_splited <- split(CTN_annotation, CTN_annotation[[annot_var]]) %>%
+    lapply(pull, "CTN")
+
+  subcluster_results <- sapply(names(CTN_annotation_splited), function(CTN_name) {
+
+    CTNs <- CTN_annotation_splited[[CTN_name]]
+    cat(
+      "===================================================================",
+      paste("Processing", CTN_name, "..."),
+      paste("Contains", length(CTNs), "cell type triplet(s), including:"),
+      paste(paste(seq_along(CTNs), CTNs), collapse = "\n"),
+      "===================================================================",
+      sep = "\n")
+
+    CTN_CellIDs <- Full_CTN_table_matched %>%
+      select(all_of(CTNs)) %>%
+      apply(1, function(x) {any(x == "CTN")})
+
+    # Retrieve the H matrix from mkkcEst_linear output for all
+    # cell-type triplets in CTN_annotation
+    H <- sapply(CTNs, function(ctn) {
+      res <- NULL
+      load(file = paste0(output_dir, "/mkkcEst/mkkcEst_", ctn, ".RData"))
+
+      H_CTN <- as.data.frame(res$H[CTN_CellIDs, ])
+      H_CTN$CellID <- names(CTN_CellIDs)[CTN_CellIDs]
+      return(H_CTN) },
+      simplify = FALSE, USE.NAMES = TRUE) %>%
+      data.table::rbindlist(idcol = "CTN") %>%
+      `rownames<-`(NULL)
+
+    H <- H %>%
+      pivot_wider(id_cols = "CellID", names_from = "CTN",
+                  values_from = setdiff(colnames(H), c("CellID", "CTN"))) %>%
+      column_to_rownames("CellID")
+
+    # Normalize H
+    Hnorm <- H / matrix(sqrt(rowSums(H^2)), nrow(H), ncol(H), byrow = FALSE)
+
+    # Reclustering Hnorm
+    km_model <- MiniBatchKmeans(Hnorm, clusters = subclusternum, batch_size = 200, num_init = 5, max_iters = 500,
+                                init_fraction = 0.2, initializer = 'kmeans++', early_stop_iter = 10,
+                                verbose = verbose)
+    cluster = predict_MBatchKMeans(Hnorm, km_model$centroids, fuzzy = FALSE)
+    WCSS <- sum(km_model$WCSS_per_cluster)
+
+    CTN_table <- data.frame(CellID = rownames(Hnorm), label_new = cluster) %>%
+      right_join(Full_CTN_table[, c("CellID", "Celltype")], by = "CellID") %>%
+      mutate(label_new = ifelse(is.na(.data$label_new), subclusternum + 1, .data$label_new)) %>%
+      label_CTN(core_celltypes = str_split_1(CTN_name, "_"),
+                clusternum = subclusternum + 1) %>%
+      select(-.data$label_new)
+
+    list(CTN_table = CTN_table, WCSS_per_cluster = km_model$WCSS_per_cluster)
+
+  }, USE.NAMES = TRUE, simplify = FALSE)
+
+  meta_cols <- setdiff(colnames(Full_CTN_table), CTN_annotation$CTN)
+  Full_CTN_table_reclustered <- lapply(subcluster_results, "[[", "CTN_table")%>%
+    data.table::rbindlist(idcol = "annotation") %>%
+    pivot_wider(names_from = "annotation", values_from = "label",
+                values_fill = "Unassigned") %>%
+    right_join(Full_CTN_table[, meta_cols], by = "CellID") %>%
+    mutate(K = subclusternum) %>%
+    # mutate_at(all_of(names(CTN_annotation_splited)), replace_na, "Unassigned") %>%
+    select(all_of(c("K", meta_cols)), everything())
+
+  WCSS <- lapply(subcluster_results, function(res) {
+    temp <- as.data.frame(res$WCSS_per_cluster)
+    colnames(temp) <- paste0("WCSS_cluster", seq_along(colnames(temp)))
+    temp$WCSS_total <- rowSums(temp)
+    return(temp) }) %>%
+    rbindlist(idcol = "CTN_merged")
+
+  return(list(Full_CTN_table_reclustered = Full_CTN_table_reclustered,
+              WCSS = WCSS))
+}
+
 
 
 

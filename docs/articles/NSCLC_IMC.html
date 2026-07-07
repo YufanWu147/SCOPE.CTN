@@ -703,8 +703,7 @@ survival and disease-free survival of NSCLC patients, respectively.</p>
 <span>  width_ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.45</span>, <span class="fl">0.55</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="NSCLC_IMC_files/figure-html/Visualize%20cox%20regression%20results%20on%20DFS-1.png" class="r-plt" alt="" width="70%" style="display: block; margin: auto;"></p>
 <p>Below are two example CTNs associated with the disease-free survival.
-One is <span class="math inline">\(\mbox{B cell/CD4}^+\mbox{ T
-cell/CD8}^+\mbox{ T cell}\)</span>, which resembles the lymphocyte
+One is B cell/CD4<span class="math inline">\(^+\)</span> T cell/CD8<span class="math inline">\(^+\)</span> T cell, which resembles the lymphocyte
 aggregates.</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p_CTN_celltype</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/draw_CTN_celltype.html">draw_CTN_celltype</a></span><span class="op">(</span></span>
@@ -717,9 +716,9 @@ aggregates.</p>
 <span><span class="va">p_CTN_celltype</span><span class="op">$</span><span class="va">p_celltype</span> <span class="op">/</span> <span class="va">p_CTN_celltype</span><span class="op">$</span><span class="va">p_CTN</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>guides <span class="op">=</span> <span class="st">"collect"</span><span class="op">)</span> </span></code></pre></div>
 <p><img src="NSCLC_IMC_files/figure-html/Visualize%20Bcell_CD4_CD8-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;">
-The other is blood endothelial <span class="math inline">\(\mbox{(BEC)/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T
-cell}\)</span>, which preferentialy co-localized with normoxic tumor
-cells compared to hypoxic tumor cells.</p>
+The other is blood endothelial (BEC)/CD4<span class="math inline">\(^+\)</span> T cell/CD8<span class="math inline">\(^+\)</span> T cell, which preferentialy
+co-localized with normoxic tumor cells compared to hypoxic tumor
+cells.</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p_CTN_celltype</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/draw_CTN_celltype.html">draw_CTN_celltype</a></span><span class="op">(</span></span>
 <span>  Full_CTN_table <span class="op">=</span> <span class="va">Full_CTN_table_mgcv_merged</span>,</span>

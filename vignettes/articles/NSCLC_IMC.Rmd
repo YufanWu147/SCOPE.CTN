@@ -615,7 +615,7 @@ draw_CTN_coxph_logHR(
   width_ratio = c(0.45, 0.55))
 ```
 
-Below are two example CTNs associated with the disease-free survival. One is $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$, which resembles the lymphocyte aggregates.
+Below are two example CTNs associated with the disease-free survival. One is B cell/CD4$^+$ T cell/CD8$^+$ T cell, which resembles the lymphocyte aggregates.
 
 ```{r Visualize Bcell_CD4_CD8, fig.width = 8, fig.height = 3}
 p_CTN_celltype <- draw_CTN_celltype(
@@ -628,7 +628,7 @@ p_CTN_celltype <- draw_CTN_celltype(
 p_CTN_celltype$p_celltype / p_CTN_celltype$p_CTN +
   plot_layout(guides = "collect") 
 ```
-The other is blood endothelial $\mbox{(BEC)/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$, which preferentialy co-localized with normoxic tumor cells compared to hypoxic tumor cells.
+The other is blood endothelial (BEC)/CD4$^+$ T cell/CD8$^+$ T cell, which preferentialy co-localized with normoxic tumor cells compared to hypoxic tumor cells.
 
 ```{r Visualize CD4_CD8_Blood, fig.width = 8, fig.height = 3}
 p_CTN_celltype <- draw_CTN_celltype(

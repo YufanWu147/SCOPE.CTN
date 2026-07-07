@@ -76,9 +76,8 @@
     
     
 <p>This tutorial shows an example of detecting the <strong>lymphocyte
-aggregate (LA)-like niches</strong> characterized by the <span class="math inline">\(\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T
-cell}\)</span> triad in the colorectal cancer (CRC) VisiumHD data using
-SCOPE. The dataset comes from <a href="https://www.nature.com/articles/s41588-025-02193-3" class="external-link">Oliveira et
+aggregate (LA)-like niches</strong> characterized by the B cell/CD4<span class="math inline">\(^+\)</span> T cell/CD8<span class="math inline">\(^+\)</span> T cell triad in the colorectal cancer
+(CRC) VisiumHD data using SCOPE. The dataset comes from <a href="https://www.nature.com/articles/s41588-025-02193-3" class="external-link">Oliveira et
 al. <em>Nat Genet</em> 2025</a> and is composed of 3 CRC and 2 normal
 adjacent tissue samples. For this tutorial, we will focus on the 3 CRC
 samples collected from different patients (P1, P2, P5).</p>
@@ -259,9 +258,8 @@ niche clustering. Here we set <code>min.n.neighbors</code> to 10.</p>
 <div class="section level2">
 <h2 id="cell-type-triad-niche-ctn-detection-using-scope">3. Cell type triad niche (CTN) detection using SCOPE<a class="anchor" aria-label="anchor" href="#cell-type-triad-niche-ctn-detection-using-scope"></a>
 </h2>
-<p>Next, we apply SCOPE to the <span class="math inline">\(\mbox{B
-cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}\)</span> triad using
-default configurations for the following parameters:</p>
+<p>Next, we apply SCOPE to the B cell/CD4<span class="math inline">\(^+\)</span> T cell/CD8<span class="math inline">\(^+\)</span> T cell triad using default
+configurations for the following parameters:</p>
 <ul>
 <li>
 <code>min.prop</code>: The minimum neighborhood cell-type proportion
@@ -285,11 +283,9 @@ separate the B cell and T cell zones.</p>
 <span>  clusternum <span class="op">=</span> <span class="fl">3</span>, min.prop <span class="op">=</span> <span class="fl">0.3</span>,</span>
 <span>  linear <span class="op">=</span> <span class="cn">FALSE</span>, mgcv_df <span class="op">=</span> <span class="fl">15</span>, iter.max <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="co"># save(CTN_df, file = paste0(data_path, dataset_name, "_B_CD4T_CD8T.RData"))</span></span></code></pre></div>
-<p>Here we can see that the <span class="math inline">\(\mbox{B
-cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}\)</span> CTNs closely
-aligns with the lymphocyte aggregates in the CRC samples, where CTN1
-resembles the B cell zone and CTN2 resembles the surrounding T cell
-zone.</p>
+<p>Here we can see that the B cell/CD4<span class="math inline">\(^+\)</span> T cell/CD8<span class="math inline">\(^+\)</span> T cell CTNs closely aligns with the
+lymphocyte aggregates in the CRC samples, where CTN1 resembles the B
+cell zone and CTN2 resembles the surrounding T cell zone.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Number of cells per CTN</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">CTN_df</span><span class="op">$</span><span class="va">label</span><span class="op">)</span></span>

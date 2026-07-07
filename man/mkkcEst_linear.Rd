@@ -10,7 +10,8 @@ mkkcEst_linear(
   iter.max = 100,
   epsilon = 1e-04,
   theta = rep(1/length(X_m_list), length(X_m_list)),
-  alpha = 0.5
+  alpha = 0.5,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ mkkcEst_linear(
 \item{theta}{Initial values for kernel coefficients. The default is 1/P for all views.}
 
 \item{alpha}{Decay rate used for computing the exponential moving average of \eqn{\theta}. In interation \eqn{\scriptl}, \eqn{{\theta^{(\scriptl)}}^{EMA} = \alpha \theta^{(\scriptl)} + (1-\alpha) {\theta^{(\scriptl-1)}}^{EMA}, \alpha\in[0, 1]}. The default value is 0.5.}
+
+\item{verbose}{Whether progress is printed during mini-batch k-means clustering. Passed on to \link[ClusterR:MiniBatchKmeans]{ClusterR::MiniBatchKmeans}. Defaults to \code{TRUE}.}
 }
 \value{
 A list contains:

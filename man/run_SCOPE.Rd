@@ -19,7 +19,8 @@ run_SCOPE(
   rename_CTN = TRUE,
   save_results = TRUE,
   output_dir = getwd(),
-  suffix = ""
+  suffix = "",
+  verbose = TRUE
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ run_SCOPE(
 \item{output_dir}{Output directory. Will automatically create a new directory when the target directory doesn't exist.}
 
 \item{suffix}{File name suffix.}
+
+\item{verbose}{Whether progress is printed during mini-batch k-means clustering. Passed on to \link[ClusterR:MiniBatchKmeans]{ClusterR::MiniBatchKmeans}. Defaults to \code{TRUE}.}
 }
 \value{
 \describe{

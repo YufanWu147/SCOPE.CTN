@@ -48,6 +48,7 @@ load(paste0(data_path, dataset_name, "_CTN_merged_jaccard_mat_hclust.RData"))
 load(paste0(data_path, dataset_name, "_CTN_merged_label.RData"))
 load(paste0(data_path, dataset_name, "_CTN_merged_celltype_proportion.RData"))
 load(paste0(data_path, dataset_name, "_Full_CTN_table_mgcv_merged.RData"))
+load(paste0(data_path, dataset_name, "_Full_CTN_table_mgcv.RData"))
  
 CTN_list <- rownames(CTN_jaccard_mat_hclust$jaccard_mat_mgcv)
 CTN_merged_list <- setdiff(colnames(Full_CTN_table_mgcv_merged),
@@ -71,7 +72,7 @@ The input data frame for SCOPE should contain the following columns:
 * `Y`: Y coordinate
 * `Celltype`: cell type labels
 
-Some cell types in this dataset are labeled with a _LC suffix, indicating "Low Confidence". In this analysis, we will merge these with their high-confidence counterparts. Additionally, we will combine all the $\mbox{CD8}^-$ T cell population excluding the regulatory T cells (i.e., the double-negative T cells `CD4.T.cell.DN` and the $\mbox{CD4}^+$ T cells `CD4.T.cell`) into one category.
+Some cell types in this dataset are labeled with a _LC suffix, indicating "Low Confidence". In this analysis, we will merge these with their high-confidence counterparts. Additionally, we will combine all the CD8$^-$ T cell population excluding the regulatory T cells (i.e., the double-negative T cells `CD4.T.cell.DN` and the CD4$^+$ T cells `CD4.T.cell`) into one category.
 
 ```{r Formatting input, eval = FALSE}
 ST_Discovery_so$cell.subtypes_combined <- str_remove(ST_Discovery_so$cell.subtypes, "_LC$")
@@ -79,7 +80,8 @@ ST_Discovery_so$cell.subtypes_combined <- str_remove(ST_Discovery_so$cell.subtyp
 
 ST_Discovery_so$CellID <- Cells(ST_Discovery_so)
 
-HGSOC_CosMx_dat_in = ST_Discovery_so@meta.data[,c("samples","CellID","cell.subtypes_combined","x","y")]
+HGSOC_CosMx_dat_in = ST_Discovery_so@meta.data[
+  ,c("samples","CellID","cell.subtypes_combined","x","y")]
 colnames(HGSOC_CosMx_dat_in) <- c("ImageID","CellID","Celltype","X","Y")
 
 HGSOC_CosMx_dat_in$Celltype <- factor(HGSOC_CosMx_dat_in$Celltype, names(HGSOC_CosMx_palette))
@@ -511,12 +513,12 @@ draw_CTN_coxph_logHR(
   width_ratio = c(0.45, 0.55)) 
 ```
 
-Below is the lymphocyte aggregate-like $\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}$ CTN that is associated with the overall survival.
+Below is the lymphocyte aggregate-like B cell/CD4$^+$ T cell/CD8$^+$ T cell CTN that is associated with the overall survival.
 
-```{r Visualize Bcell_CD4_CD8, fig.width = 6, fig.height = 2.6}
+```{r Visualize Bcell_CD4_CD8, fig.width = 6, fig.height = 2.7}
 p_CTN_celltype <- draw_CTN_celltype(
   Full_CTN_table = Full_CTN_table_mgcv_merged,
-  CTN = "B.cell_CD4.T.cell_NK.cell", 
+  CTN = "B.cell_CD4.T.cell_CD8.T.cell", 
   img_list = c("SMI_T14_F011", "SMI_T12_F001", "SMI_T11_F005", "SMI_T14_F006"),
   celltype_palette = HGSOC_CosMx_palette, 
   rename_celltype = HGSOC_CosMx_rename_celltype,
@@ -525,20 +527,73 @@ p_CTN_celltype$p_celltype / p_CTN_celltype$p_CTN +
   plot_layout(guides = "collect")
 ```
 
-Below shows the $\mbox{CD8}^+\mbox{ T cell/Fibroblast/Malignant}$ CTN which separate the stromal and malignant compartments of the tissue.
+Below shows the CD8$^+$T cell/Fibroblast/Malignant CTN which separate the stromal and malignant compartments of the tissue.
 
-```{r Visualize CD8T_Fibroblast_Malignant, fig.width = 8, fig.height = 2.6}
+```{r Visualize CD8T_Fibroblast_Malignant, fig.width = 6, fig.height = 2.7}
 p_CTN_celltype <- draw_CTN_celltype(
   Full_CTN_table = Full_CTN_table_mgcv_merged,
   CTN = "CD8.T.cell_Fibroblast_Malignant", 
-  img_list = c('SMI_T10_F001','SMI_T10_F015','SMI_T12_F001',
-               'SMI_T12_F009','SMI_T12_F016','SMI_T13_F001'),
+  img_list = c('SMI_T10_F001','SMI_T12_F001',
+               'SMI_T12_F009','SMI_T12_F016'),
   celltype_palette = HGSOC_CosMx_palette, 
   rename_celltype = HGSOC_CosMx_rename_celltype,
   scales = "fixed", legend.ncol = 1)
 p_CTN_celltype$p_celltype / p_CTN_celltype$p_CTN +
   plot_layout(guides = "collect")
 ```
+
+## 6. Subclustering CTNs
+
+Once the clincially-associated CTNs are identified, we can refit SCOPE to generate subclusters and obtain finer-grained CTN substructures. 
+
+**Note**: To use the `run_SCOPE_subcluster()` function, the `save_results` parameter must be set to `TRUE` when running `run_SCOPE()`. Additionally, please ensure that both functions share the same `output_dir` path.
+
+```{r Recluster CTNs, eval = FALSE}
+Full_CTN_table_mgcv_merged_subclustered <- run_SCOPE_subcluster(
+    Full_CTN_table = Full_CTN_table_mgcv,  # Full CTN table before merging
+    cell_neighbor_table = cell_neighbor_table_maxdist,
+    CTN_annotation = CTN_annotation_detailed,
+    annot_var = "annotation_final",
+    subclusternum = 2, 
+    verbose = FALSE,
+    output_dir = paste0(data_path, "CTN_K_2"))
+
+save(Full_CTN_table_mgcv_merged_subclustered, file = paste0(
+       data_path, dataset_name, "_Full_CTN_table_mgcv_merged_subclustered.RData"))
+```
+
+Subclusters CTN1 and CTN2 of the he B cell/CD4$^+$ T cell/CD8$^+$ T cell CTN resemble B cell and T cell aggregates, respectively.
+
+```{r Visualize Bcell_CD4_CD8 subclusters, fig.width = 6, fig.height = 2.7}
+load(paste0(data_path, dataset_name, "_Full_CTN_table_mgcv_merged_subclustered.RData"))
+p_CTN_celltype <- draw_CTN_celltype(
+  Full_CTN_table = Full_CTN_table_mgcv_merged_subclustered$Full_CTN_table_reclustered,
+  CTN = "B.cell_CD4.T.cell_CD8.T.cell", 
+  img_list = c("SMI_T14_F011", "SMI_T12_F001", "SMI_T11_F005", "SMI_T14_F006"),
+  celltype_palette = HGSOC_CosMx_palette, 
+  CTN_palette = c("CTN1" = "#E69F00", "CTN2" = "#56B4E9", "Unassigned" = "grey90"),
+  rename_celltype = HGSOC_CosMx_rename_celltype,
+  scales = "fixed", legend.ncol = 1)
+p_CTN_celltype$p_celltype / p_CTN_celltype$p_CTN +
+  plot_layout(guides = "collect")
+```
+
+The CD8$^+$ T cell/Fibroblast/Malignant CTN subclusters correspond to the tumor core ("CTN1"), the tumor-stromal boundary ("CTN2"), and the stromal compartment ("Unassigned").
+
+```{r Visualize CD8T_Fibroblast_Malignant subclusters, fig.width = 6, fig.height = 2.7}
+p_CTN_celltype <- draw_CTN_celltype(
+  Full_CTN_table = Full_CTN_table_mgcv_merged_subclustered$Full_CTN_table_reclustered,
+  CTN = "CD8.T.cell_Fibroblast_Malignant", 
+  img_list = c('SMI_T10_F001','SMI_T12_F001',
+               'SMI_T12_F009','SMI_T12_F016'),
+  celltype_palette = HGSOC_CosMx_palette, 
+  CTN_palette = c("CTN1" = "#E69F00", "CTN2" = "#56B4E9", "Unassigned" = "grey90"),
+  rename_celltype = HGSOC_CosMx_rename_celltype,
+  scales = "fixed", legend.ncol = 1)
+p_CTN_celltype$p_celltype / p_CTN_celltype$p_CTN +
+  plot_layout(guides = "collect")
+```
+
 
 ```{r session info}
 sessionInfo()

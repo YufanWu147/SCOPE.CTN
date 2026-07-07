@@ -67,7 +67,8 @@
 <span>  rename_CTN <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  save_results <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  output_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  suffix <span class="op">=</span> <span class="st">""</span></span>
+<span>  suffix <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -133,6 +134,10 @@
 
 <dt id="arg-suffix">suffix<a class="anchor" aria-label="anchor" href="#arg-suffix"></a></dt>
 <dd><p>File name suffix.</p></dd>
+
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>Whether progress is printed during mini-batch k-means clustering. Passed on to <a href="https://rdrr.io/pkg/ClusterR/man/MiniBatchKmeans.html" class="external-link">ClusterR::MiniBatchKmeans</a>. Defaults to <code>TRUE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -104,6 +104,7 @@ make_orthonormal_basis <- function(H) {
 #' @param epsilon Convergence threshold. The default is \eqn{10^{-4}}.
 #' @param theta Initial values for kernel coefficients. The default is 1/P for all views.
 #' @param alpha Decay rate used for computing the exponential moving average of \eqn{\theta}. In interation \eqn{\scriptl}, \eqn{{\theta^{(\scriptl)}}^{EMA} = \alpha \theta^{(\scriptl)} + (1-\alpha) {\theta^{(\scriptl-1)}}^{EMA}, \alpha\in[0, 1]}. The default value is 0.5.
+#' @param verbose Whether progress is printed during mini-batch k-means clustering. Passed on to [ClusterR::MiniBatchKmeans]. Defaults to \code{TRUE}.
 #' @return A list contains:
 #' \describe{
 #'   \item{cluster}{A vector of integers (from \code{1:K}) indicating the cluster to which each point is allocated.}
@@ -127,7 +128,9 @@ make_orthonormal_basis <- function(H) {
 #' @import ClusterR irlba
 #' @importFrom assertthat assert_that
 
-mkkcEst_linear <- function(X_m_list, centers, iter.max = 100, epsilon = 1e-04, theta = rep(1/length(X_m_list), length(X_m_list)), alpha = 0.5) {
+mkkcEst_linear <- function(X_m_list, centers, iter.max = 100, epsilon = 1e-04,
+                           theta = rep(1/length(X_m_list), length(X_m_list)),
+                           alpha = 0.5, verbose = TRUE) {
   # alpha: parameter for smoothing
   assert_that(centers > 0, round(centers)==centers, msg="centers should be a positive integer.")
   P <- length(X_m_list)
@@ -178,7 +181,7 @@ mkkcEst_linear <- function(X_m_list, centers, iter.max = 100, epsilon = 1e-04, t
   km_model <- MiniBatchKmeans(
     Hnorm, clusters = centers, batch_size = 200, num_init = 5, max_iters = 500,
     init_fraction = 0.2, initializer = 'kmeans++', early_stop_iter = 10,
-    verbose = TRUE)
+    verbose = verbose)
 
   cluster = predict_MBatchKMeans(Hnorm, km_model$centroids, fuzzy = FALSE)
 

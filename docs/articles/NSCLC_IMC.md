@@ -714,8 +714,8 @@ draw_CTN_coxph_logHR(
 ![](NSCLC_IMC_files/figure-html/Visualize%20cox%20regression%20results%20on%20DFS-1.png)
 
 Below are two example CTNs associated with the disease-free survival.
-One is \\\mbox{B cell/CD4}^+\mbox{ T cell/CD8}^+\mbox{ T cell}\\, which
-resembles the lymphocyte aggregates.
+One is B cell/CD4\\^+\\ T cell/CD8\\^+\\ T cell, which resembles the
+lymphocyte aggregates.
 
 ``` r
 
@@ -731,9 +731,9 @@ p_CTN_celltype$p_celltype / p_CTN_celltype$p_CTN +
 ```
 
 ![](NSCLC_IMC_files/figure-html/Visualize%20Bcell_CD4_CD8-1.png) The
-other is blood endothelial \\\mbox{(BEC)/CD4}^+\mbox{ T
-cell/CD8}^+\mbox{ T cell}\\, which preferentialy co-localized with
-normoxic tumor cells compared to hypoxic tumor cells.
+other is blood endothelial (BEC)/CD4\\^+\\ T cell/CD8\\^+\\ T cell,
+which preferentialy co-localized with normoxic tumor cells compared to
+hypoxic tumor cells.
 
 ``` r
 
