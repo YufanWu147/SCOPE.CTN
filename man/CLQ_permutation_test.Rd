@@ -2,17 +2,24 @@
 % Please edit documentation in R/SCOPE_Utilities_CLQ.R
 \name{CLQ_permutation_test}
 \alias{CLQ_permutation_test}
-\title{Computing colocation quotient (CLQ) on permutated data}
+\title{Compute colocation quotient (CLQ) on permutated data}
 \usage{
 CLQ_permutation_test(CLQ_obs, CLQ_perm)
 }
 \arguments{
 \item{CLQ_obs}{Observed CLQs computed using \code{\link[=compute_CLQ_observed]{compute_CLQ_observed()}}.}
 
-\item{CLQ_perm}{Permutated CLQs computed using \code{\link[=compute_CLQ_permutated]{compute_CLQ_permutated()}}.}
+\item{CLQ_perm}{Permutated CLQs computed using \code{\link[=compute_CLQ_permuted]{compute_CLQ_permuted()}}.}
 }
 \value{
-A data frame containing the nominal and Benjamini-Hochberg-adjusted CLQ permutation test p-values.
+A data frame containing the following columns:
+\describe{
+\item{\code{Celltype}}{Focal cell type.}
+\item{\code{Celltype_neighbor}}{Neighboring cell type.}
+\item{\code{ImageID}}{Tissue section ID.}
+\item{\code{p_perm}}{Nominal p-value of the permutation test.}
+\item{\code{p_perm.adj}}{Benjamini-Hochberg-adjusted p-value of the permutation test.}
+}
 }
 \description{
 Randomly shuffles the cell type labels within each tissue section and computes permutated CLQs between every cell type pair,
@@ -23,10 +30,14 @@ The permutation test p-value of tissue section \eqn{l} is defined as
 
 \deqn{p_{b\rightarrow a}^{(l)} = \sum_{k=1}^{\mbox{iter.num}}I(CLQ_{b\rightarrow a}^{(l), k} > CLQ_{b\rightarrow a}^{(l), obs}),}
 
-where \eqn{CLQ_{b\rightarrow a}^{(l), k}} is the permutated CLQ computed using \code{\link[=compute_CLQ_permutated]{compute_CLQ_permutated()}} on the randomly shuffled cell type labels,
-and \eqn{CLQ_{b\rightarrow a}^{(l), obs}} is the observed CLQ computed using \code{\link[=compute_CLQ_observed]{compute_CLQ_observed()}} on the true cell type labels.
+\eqn{CLQ_{b\rightarrow a}^{(l), obs}} is the observed CLQ computed using \code{\link[=compute_CLQ_observed]{compute_CLQ_observed()}} on the true cell type labels.
+
+\eqn{CLQ_{b\rightarrow a}^{(l), k}} is the permuted CLQ computed using \code{\link[=compute_CLQ_permuted]{compute_CLQ_permuted()}} on the randomly shuffled cell type labels, where \code{iter.num} is the number of permutations (defaults: 500).
 }
 \references{
 Bouchard, G. et al. A quantitative spatial cell-cell colocalizations framework enabling comparisons between in vitro assembloids and pathological specimens.
-Nat Commun 16, 1392 (2025). \url{https://doi.org/10.1038/s41467-024-55129-6}
+\emph{Nat Commun} 16, 1392 (2025). \url{https://doi.org/10.1038/s41467-024-55129-6}
+}
+\seealso{
+\link[=compute_CLQ_observed]{compute_CLQ_observed}, \link[=compute_CLQ_permuted]{compute_CLQ_permuted}
 }

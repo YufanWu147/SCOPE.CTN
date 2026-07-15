@@ -1,22 +1,24 @@
-#' Computing colocation quotient (CLQ)
+#' Compute colocation quotient (CLQ)
 #'
-#' Computes colocation quotient (CLQ) between available cell type pairs.
-#' @param interact_matrix Input
-#' @param dat_in Input data frame with \eqn{N} rows. Columns must contain \code{CellID} and \code{Celltype}.
+#' Compute colocation quotient (CLQ) between available cell type pairs.
+#' @param interact_matrix Input matrix \eqn{C^{(l)} \in T \times T}, where \eqn{T} is the number of available cell types.
+#' The element in the \eqn{a}-th row and \eqn{b}-th column \eqn{C_{b\rightarrow a}^{(l)}} represents the number of cells of cell type \eqn{b}
+#' within the neighborhood of cell type \eqn{a} in tissue section \eqn{l}.
+#' @param dat_in An input data frame with \eqn{N^{(l)}} rows, where \eqn{N^{(l)}} represents the number of cells in tissue section \eqn{l}. The columns must include \code{CellID} and \code{Celltype}.
 #' @details The colocalization of a pair of cell types \eqn{a} and \eqn{b} in tissue section \eqn{l}
 #' can be evaluated with the CLQ metric
 #'
-#' \deqn{CLQ_{b\rightarrow a} =
+#' \deqn{CLQ_{b\rightarrow a}^{(l)} =
 #' \left\{\begin{array}{ll}
-#' \frac{C_{b\rightarrow a} / N_a}{N_b / (N - 1)} & N_a > 5 \mbox{and} \ N_b > 5 \\
+#' \frac{C_{b\rightarrow a}^{(l)} / N_a^{(l)}}{N_b^{(l)} / (N^{(l)} - 1)} & N_a^{(l)} > 5 \mbox{ or} \ N_b^{(l)} > 5 \\
 #' 0, & \text{otherwise}
 #' \end{array}\right.}
 #'
-#' where \eqn{C_{b\rightarrow a}} is the number of cells of cell type \eqn{b} within the neighborhood of cell type \eqn{a},
-#' and \eqn{N_a}, \eqn{N_b}, \eqn{N} are the number of cells for cell type \eqn{a},
+#' where \eqn{C_{b\rightarrow a}^{(l)}} is the number of cells of cell type \eqn{b} within the neighborhood of cell type \eqn{a},
+#' and \eqn{N_a^{(l)}}, \eqn{N_b^{(l)}}, \eqn{N^{(l)}} are the number of cells for cell type \eqn{a},
 #' \eqn{b} and the total number of cells in tissue section \eqn{l}, respectively.
 #'
-#' @return A \eqn{T\times T} matrix containing CLQs between every cell type pair, where \eqn{T} is the number of available cell types.
+#' @return A \eqn{T\times T} matrix containing CLQs of tissue section \eqn{l} between every cell type pair, where \eqn{T} is the number of available cell types.
 #' The rows of the matrix are the focal cell types and the columns are the neighboring cell types.
 #' @keywords internal
 #' @references
@@ -36,13 +38,14 @@ compute_CLQ <- function(interact_matrix, dat_in) {
 }
 
 
-#' Computing observed colocation quotient (CLQ)
+#' Compute observed colocation quotient (CLQ)
 #'
-#' Computes the observed colocation quotient (CLQ) between available cell type pairs in each tissue section in a spatial omics dataset.
+#' Compute the observed colocation quotient (CLQ) between available cell type pairs in each tissue section in a spatial omics dataset.
 #' @param cell_neighbor_counts \eqn{N \times T} neighborhood cell type count matrix obtained using [Build_cell_neighbor_maxdist()].
 #' @param dat_in Input data frame with \eqn{N} rows. Columns must contain \code{CellID}, \code{ImageID} and \code{Celltype}.
-#' @param min.ncell Minimum cell number threshold. Tissue sections with fewer than \code{min.ncell} cells will be excluded from the analysis.
-#' @param num_cores The number of cores to use in [pbmcapply::pbmclapply()], i.e. at most how many child processes will be run simultaneously. Can only be set at 1 on Windows.
+#' @param min.ncell An integer specifying the minimum cell count threshold. Tissue sections with fewer than \code{min.ncell} cells will be excluded from the analysis.
+#' @param num_cores Number of cores to use in [pbmcapply::pbmclapply()], which determines how many tissue sections are
+#'   processed simultaneously. Windows environments only support \code{1} core.
 #' @details
 #' The colocalization of a pair of cell types \eqn{a} and \eqn{b} in tissue section \eqn{l}
 #' can be evaluated with the observed CLQ
@@ -60,6 +63,7 @@ compute_CLQ <- function(interact_matrix, dat_in) {
 #' @return A data frame of \eqn{T\times T\times L} rows containing observed CLQs between focal (\code{Celltype})
 #' and neighboring cell types (\code{Celltype_neighbor}) in each tissue section (\code{ImageID}),
 #' where \eqn{T} is the number of available cell types and \eqn{L} is the number of tissue sections.
+#' @seealso [compute_CLQ_permuted][compute_CLQ_permuted()], [CLQ_permutation_test][CLQ_permutation_test()]
 #' @import dplyr tidyr
 #' @importFrom tibble column_to_rownames
 #' @importFrom tibble rownames_to_column
@@ -107,16 +111,18 @@ compute_CLQ_observed <- function(cell_neighbor_counts, dat_in, min.ncell = 100, 
   return(CLQ_obs)
 }
 
-#' Computing colocation quotient (CLQ) on permutated data
+#' Compute colocation quotient (CLQ) on permuted data
+#' @description
+#' Randomly shuffle cell type labels within each tissue section and compute the permuted CLQs between every cell type pair.
 #'
-#' Randomly shuffles the cell type labels within each tissue section and computes permutated CLQs between every cell type pair,
-#' creating a null distribution that is compared with the observed CLQ to compute a p-value.
+#' This creates a null distribution for comparison with the observed CLQ ([compute_CLQ_observed()]) to compute a permutation p-value.
 #' @param cell_neighbor_ids Cell IDs of the nearest neighbors obtained using [Build_cell_neighbor_maxdist()].
-#' @param dat_in Input data frame with \eqn{N} rows. Columns must contain \code{CellID}, \code{ImageID} and \code{Celltype}.
-#' @param min.ncell Minimum cell number threshold. Tissue sections with fewer than \code{min.ncell} cells will be excluded from the analysis.
-#' @param num_cores The number of cores to use in [pbmcapply::pbmclapply()], i.e. at most how many child processes will be run simultaneously. Can only be set at 1 on Windows.
+#' @param dat_in An input data frame with \eqn{N} rows. Columns must contain \code{CellID}, \code{ImageID} and \code{Celltype}.
+#' @param min.ncell An integer specifying the minimum cell count threshold. Tissue sections with fewer than \code{min.ncell} cells will be excluded from the analysis.
+#' @param num_cores Number of cores to use in [pbmcapply::pbmclapply()], which determines how many permutations are
+#'   processed simultaneously. Windows environments only support \code{1} core.
 #' @param iter.num Number of permutations (default: 500).
-#' @param seed Random seed passed to [base::set.seed()].
+#' @param seed Random seed passed to [base::set.seed()] to ensure reproducibility when shuffling the cell type labels.
 #' @details
 #' In each tissue section, the cell type labels are randomly shuffled for \code{iter.num} (default: 500) times to generate permutated CLQ values
 #'
@@ -131,7 +137,7 @@ compute_CLQ_observed <- function(cell_neighbor_counts, dat_in, min.ncell = 100, 
 #' \eqn{b} and the total number of cells in tissue section \eqn{l}, respectively.
 #'
 #'
-#' @return A data frame of \eqn{T\times T\times L\times \mbox{iter.num}} rows containing the permutated CLQs between focal (\code{Celltype})
+#' @return A data frame of \eqn{T\times T\times L\times} \code{iter.num} rows containing the permutated CLQs between focal (\code{Celltype})
 #' and neighboring cell types (\code{Celltype_neighbor}) in each tissue section (\code{ImageID}),
 #' where \eqn{T} is the number of available cell types and \eqn{L} is the number of tissue sections.
 #' @import dplyr tibble tidyr
@@ -143,10 +149,13 @@ compute_CLQ_observed <- function(cell_neighbor_counts, dat_in, min.ncell = 100, 
 #' @importFrom rlang .data
 #' @importFrom pbmcapply pbmclapply
 #' @export
+#' @seealso [Build_cell_neighbor_maxdist][Build_cell_neighbor_maxdist()],
+#' [compute_CLQ_observed][compute_CLQ_observed()],
+#' [CLQ_permutation_test][CLQ_permutation_test()]
 #' @references
 #' Bouchard, G. et al. A quantitative spatial cell-cell colocalizations framework enabling comparisons between in vitro assembloids and pathological specimens.
-#' Nat Commun 16, 1392 (2025). \url{https://doi.org/10.1038/s41467-024-55129-6}
-compute_CLQ_permutated <- function(cell_neighbor_ids, dat_in, min.ncell = 100, num_cores = 5,
+#' \emph{Nat Commun} 16, 1392 (2025). \url{https://doi.org/10.1038/s41467-024-55129-6}
+compute_CLQ_permuted <- function(cell_neighbor_ids, dat_in, min.ncell = 100, num_cores = 5,
                                    iter.num = 500, seed = 42) {
   set.seed(seed)
   ImageID <- CellID <- Celltype <- N <- Celltype_neighbor <- NULL
@@ -194,29 +203,37 @@ compute_CLQ_permutated <- function(cell_neighbor_ids, dat_in, min.ncell = 100, n
   return(CLQ_perm)
 }
 
-#' Computing colocation quotient (CLQ) on permutated data
+#' Compute colocation quotient (CLQ) on permutated data
 #'
 #' Randomly shuffles the cell type labels within each tissue section and computes permutated CLQs between every cell type pair,
 #' creating a null distribution that is compared with the observed CLQ to compute a permutation test p-value.
 #' @param CLQ_obs Observed CLQs computed using [compute_CLQ_observed()].
-#' @param CLQ_perm Permutated CLQs computed using [compute_CLQ_permutated()].
+#' @param CLQ_perm Permutated CLQs computed using [compute_CLQ_permuted()].
 #' @details
 #' The permutation test p-value of tissue section \eqn{l} is defined as
 #'
 #' \deqn{p_{b\rightarrow a}^{(l)} = \sum_{k=1}^{\mbox{iter.num}}I(CLQ_{b\rightarrow a}^{(l), k} > CLQ_{b\rightarrow a}^{(l), obs}),}
 #'
-#' where \eqn{CLQ_{b\rightarrow a}^{(l), k}} is the permutated CLQ computed using [compute_CLQ_permutated()] on the randomly shuffled cell type labels,
-#' and \eqn{CLQ_{b\rightarrow a}^{(l), obs}} is the observed CLQ computed using [compute_CLQ_observed()] on the true cell type labels.
+#' \eqn{CLQ_{b\rightarrow a}^{(l), obs}} is the observed CLQ computed using [compute_CLQ_observed()] on the true cell type labels.
 #'
+#' \eqn{CLQ_{b\rightarrow a}^{(l), k}} is the permuted CLQ computed using [compute_CLQ_permuted()] on the randomly shuffled cell type labels, where \code{iter.num} is the number of permutations (defaults: 500).
 #'
-#' @return A data frame containing the nominal and Benjamini-Hochberg-adjusted CLQ permutation test p-values.
+#' @return A data frame containing the following columns:
+#' \describe{
+#'  \item{\code{Celltype}}{Focal cell type.}
+#'  \item{\code{Celltype_neighbor}}{Neighboring cell type.}
+#'  \item{\code{ImageID}}{Tissue section ID.}
+#'  \item{\code{p_perm}}{Nominal p-value of the permutation test.}
+#'  \item{\code{p_perm.adj}}{Benjamini-Hochberg-adjusted p-value of the permutation test.}
+#' }
+#' @seealso [compute_CLQ_observed][compute_CLQ_observed()], [compute_CLQ_permuted][compute_CLQ_permuted()]
 #' @import dplyr tibble tidyr
 #' @importFrom stats p.adjust
 #' @importFrom rlang .data
 #' @export
 #' @references
 #' Bouchard, G. et al. A quantitative spatial cell-cell colocalizations framework enabling comparisons between in vitro assembloids and pathological specimens.
-#' Nat Commun 16, 1392 (2025). \url{https://doi.org/10.1038/s41467-024-55129-6}
+#' \emph{Nat Commun} 16, 1392 (2025). \url{https://doi.org/10.1038/s41467-024-55129-6}
 CLQ_permutation_test <- function(CLQ_obs, CLQ_perm) {
   CLQ_pval <- CLQ_perm %>%
     left_join(CLQ_obs, by = c("Celltype", "Celltype_neighbor", "ImageID"),

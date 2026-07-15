@@ -18,7 +18,8 @@ draw_silhoutte_score(hclust_silhouette, num_clusters)
 
   A data frame containing the average (`avg_si`) and median Silhouette
   score (`median_si`) under cluster number `K`. Output of the
-  [`jaccard_dist_hclust()`](jaccard_dist_hclust.md) function.
+  [`jaccard_dist_hclust()`](https://github.com/YufanWu147/SCOPE.CTN/reference/jaccard_dist_hclust.md)
+  function.
 
 - num_clusters:
 

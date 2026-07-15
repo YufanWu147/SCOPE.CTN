@@ -44,7 +44,8 @@ run_SCOPE_subcluster(
 
 - output_dir:
 
-  Output directory used in [`run_SCOPE()`](run_SCOPE.md).
+  Output directory used in
+  [`run_SCOPE()`](https://github.com/YufanWu147/SCOPE.CTN/reference/run_SCOPE.md).
 
 - verbose:
 

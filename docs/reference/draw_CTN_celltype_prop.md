@@ -31,7 +31,9 @@ draw_CTN_celltype_prop(
 
 - CTN_dend:
 
-  Output of the [`draw_CTN_dendro()`](draw_CTN_dendro.md) function
+  Output of the
+  [`draw_CTN_dendro()`](https://github.com/YufanWu147/SCOPE.CTN/reference/draw_CTN_dendro.md)
+  function
 
 - facet_var:
 

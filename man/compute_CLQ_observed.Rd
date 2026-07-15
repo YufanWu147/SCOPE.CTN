@@ -2,7 +2,7 @@
 % Please edit documentation in R/SCOPE_Utilities_CLQ.R
 \name{compute_CLQ_observed}
 \alias{compute_CLQ_observed}
-\title{Computing observed colocation quotient (CLQ)}
+\title{Compute observed colocation quotient (CLQ)}
 \usage{
 compute_CLQ_observed(
   cell_neighbor_counts,
@@ -16,9 +16,10 @@ compute_CLQ_observed(
 
 \item{dat_in}{Input data frame with \eqn{N} rows. Columns must contain \code{CellID}, \code{ImageID} and \code{Celltype}.}
 
-\item{min.ncell}{Minimum cell number threshold. Tissue sections with fewer than \code{min.ncell} cells will be excluded from the analysis.}
+\item{min.ncell}{An integer specifying the minimum cell count threshold. Tissue sections with fewer than \code{min.ncell} cells will be excluded from the analysis.}
 
-\item{num_cores}{The number of cores to use in \code{\link[pbmcapply:pbmclapply]{pbmcapply::pbmclapply()}}, i.e. at most how many child processes will be run simultaneously. Can only be set at 1 on Windows.}
+\item{num_cores}{Number of cores to use in \code{\link[pbmcapply:pbmclapply]{pbmcapply::pbmclapply()}}, which determines how many tissue sections are
+processed simultaneously. Windows environments only support \code{1} core.}
 }
 \value{
 A data frame of \eqn{T\times T\times L} rows containing observed CLQs between focal (\code{Celltype})
@@ -26,7 +27,7 @@ and neighboring cell types (\code{Celltype_neighbor}) in each tissue section (\c
 where \eqn{T} is the number of available cell types and \eqn{L} is the number of tissue sections.
 }
 \description{
-Computes the observed colocation quotient (CLQ) between available cell type pairs in each tissue section in a spatial omics dataset.
+Compute the observed colocation quotient (CLQ) between available cell type pairs in each tissue section in a spatial omics dataset.
 }
 \details{
 The colocalization of a pair of cell types \eqn{a} and \eqn{b} in tissue section \eqn{l}
@@ -45,4 +46,7 @@ and \eqn{N_a^{(l)}}, \eqn{N_b^{(l)}}, \eqn{N^{(l)}} are the number of cells for 
 \references{
 Bouchard, G. et al. A quantitative spatial cell-cell colocalizations framework enabling comparisons between in vitro assembloids and pathological specimens.
 Nat Commun 16, 1392 (2025). \url{https://doi.org/10.1038/s41467-024-55129-6}
+}
+\seealso{
+\link[=compute_CLQ_permuted]{compute_CLQ_permuted}, \link[=CLQ_permutation_test]{CLQ_permutation_test}
 }

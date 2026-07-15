@@ -23,7 +23,7 @@ compute_CLQ_permutated(
 - cell_neighbor_ids:
 
   Cell IDs of the nearest neighbors obtained using
-  [`Build_cell_neighbor_maxdist()`](Build_cell_neighbor_maxdist.md).
+  [`Build_cell_neighbor_maxdist()`](https://github.com/YufanWu147/SCOPE.CTN/reference/Build_cell_neighbor_maxdist.md).
 
 - dat_in:
 

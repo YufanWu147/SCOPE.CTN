@@ -1,4 +1,4 @@
-# Constructing neighborhood cell type count and proportion matrices
+# Construct neighborhood cell type count and proportion matrices
 
 Define spatial neighborhood using
 [`FNN::get.knn()`](https://rdrr.io/pkg/FNN/man/get.knn.html) and compute

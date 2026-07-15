@@ -1,6 +1,6 @@
-# Computing colocation quotient (CLQ)
+# Compute colocation quotient (CLQ)
 
-Computes colocation quotient (CLQ) between available cell type pairs.
+Compute colocation quotient (CLQ) between available cell type pairs.
 
 ## Usage
 
@@ -12,33 +12,40 @@ compute_CLQ(interact_matrix, dat_in)
 
 - interact_matrix:
 
-  Input
+  Input matrix \\C^{(l)} \in T \times T\\, where \\T\\ is the number of
+  available cell types. The element in the \\a\\-th row and \\b\\-th
+  column \\C\_{b\rightarrow a}^{(l)}\\ represents the number of cells of
+  cell type \\b\\ within the neighborhood of cell type \\a\\ in tissue
+  section \\l\\.
 
 - dat_in:
 
-  Input data frame with \\N\\ rows. Columns must contain `CellID` and
-  `Celltype`.
+  An input data frame with \\N^{(l)}\\ rows, where \\N^{(l)}\\
+  represents the number of cells in tissue section \\l\\. The columns
+  must include `CellID` and `Celltype`.
 
 ## Value
 
-A \\T\times T\\ matrix containing CLQs between every cell type pair,
-where \\T\\ is the number of available cell types. The rows of the
-matrix are the focal cell types and the columns are the neighboring cell
-types.
+A \\T\times T\\ matrix containing CLQs of tissue section \\l\\ between
+every cell type pair, where \\T\\ is the number of available cell types.
+The rows of the matrix are the focal cell types and the columns are the
+neighboring cell types.
 
 ## Details
 
 The colocalization of a pair of cell types \\a\\ and \\b\\ in tissue
 section \\l\\ can be evaluated with the CLQ metric
 
-\$\$CLQ\_{b\rightarrow a} = \left\\\begin{array}{ll}
-\frac{C\_{b\rightarrow a} / N_a}{N_b / (N - 1)} & N_a \> 5 \mbox{and} \\
-N_b \> 5 \\ 0, & \text{otherwise} \end{array}\right.\$\$
+\$\$CLQ\_{b\rightarrow a}^{(l)} = \left\\\begin{array}{ll}
+\frac{C\_{b\rightarrow a}^{(l)} / N_a^{(l)}}{N_b^{(l)} / (N^{(l)} - 1)}
+& N_a^{(l)} \> 5 \mbox{ or} \\ N_b^{(l)} \> 5 \\ 0, & \text{otherwise}
+\end{array}\right.\$\$
 
-where \\C\_{b\rightarrow a}\\ is the number of cells of cell type \\b\\
-within the neighborhood of cell type \\a\\, and \\N_a\\, \\N_b\\, \\N\\
-are the number of cells for cell type \\a\\, \\b\\ and the total number
-of cells in tissue section \\l\\, respectively.
+where \\C\_{b\rightarrow a}^{(l)}\\ is the number of cells of cell type
+\\b\\ within the neighborhood of cell type \\a\\, and \\N_a^{(l)}\\,
+\\N_b^{(l)}\\, \\N^{(l)}\\ are the number of cells for cell type \\a\\,
+\\b\\ and the total number of cells in tissue section \\l\\,
+respectively.
 
 ## References
 

@@ -1,6 +1,6 @@
-# Computing observed colocation quotient (CLQ)
+# Compute observed colocation quotient (CLQ)
 
-Computes the observed colocation quotient (CLQ) between available cell
+Compute the observed colocation quotient (CLQ) between available cell
 type pairs in each tissue section in a spatial omics dataset.
 
 ## Usage
@@ -19,7 +19,7 @@ compute_CLQ_observed(
 - cell_neighbor_counts:
 
   \\N \times T\\ neighborhood cell type count matrix obtained using
-  [`Build_cell_neighbor_maxdist()`](Build_cell_neighbor_maxdist.md).
+  [`Build_cell_neighbor_maxdist()`](https://github.com/YufanWu147/SCOPE.CTN/reference/Build_cell_neighbor_maxdist.md).
 
 - dat_in:
 
@@ -28,15 +28,16 @@ compute_CLQ_observed(
 
 - min.ncell:
 
-  Minimum cell number threshold. Tissue sections with fewer than
-  `min.ncell` cells will be excluded from the analysis.
+  An integer specifying the minimum cell count threshold. Tissue
+  sections with fewer than `min.ncell` cells will be excluded from the
+  analysis.
 
 - num_cores:
 
-  The number of cores to use in
+  Number of cores to use in
   [`pbmcapply::pbmclapply()`](https://rdrr.io/pkg/pbmcapply/man/pbmclapply.html),
-  i.e. at most how many child processes will be run simultaneously. Can
-  only be set at 1 on Windows.
+  which determines how many tissue sections are processed
+  simultaneously. Windows environments only support `1` core.
 
 ## Value
 
@@ -68,3 +69,8 @@ Bouchard, G. et al. A quantitative spatial cell-cell colocalizations
 framework enabling comparisons between in vitro assembloids and
 pathological specimens. Nat Commun 16, 1392 (2025).
 <https://doi.org/10.1038/s41467-024-55129-6>
+
+## See also
+
+[compute_CLQ_permuted](https://github.com/YufanWu147/SCOPE.CTN/reference/compute_CLQ_permuted.md),
+[CLQ_permutation_test](https://github.com/YufanWu147/SCOPE.CTN/reference/CLQ_permutation_test.md)

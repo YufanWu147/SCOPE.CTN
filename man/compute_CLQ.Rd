@@ -2,34 +2,36 @@
 % Please edit documentation in R/SCOPE_Utilities_CLQ.R
 \name{compute_CLQ}
 \alias{compute_CLQ}
-\title{Computing colocation quotient (CLQ)}
+\title{Compute colocation quotient (CLQ)}
 \usage{
 compute_CLQ(interact_matrix, dat_in)
 }
 \arguments{
-\item{interact_matrix}{Input}
+\item{interact_matrix}{Input matrix \eqn{C^{(l)} \in T \times T}, where \eqn{T} is the number of available cell types.
+The element in the \eqn{a}-th row and \eqn{b}-th column \eqn{C_{b\rightarrow a}^{(l)}} represents the number of cells of cell type \eqn{b}
+within the neighborhood of cell type \eqn{a} in tissue section \eqn{l}.}
 
-\item{dat_in}{Input data frame with \eqn{N} rows. Columns must contain \code{CellID} and \code{Celltype}.}
+\item{dat_in}{An input data frame with \eqn{N^{(l)}} rows, where \eqn{N^{(l)}} represents the number of cells in tissue section \eqn{l}. The columns must include \code{CellID} and \code{Celltype}.}
 }
 \value{
-A \eqn{T\times T} matrix containing CLQs between every cell type pair, where \eqn{T} is the number of available cell types.
+A \eqn{T\times T} matrix containing CLQs of tissue section \eqn{l} between every cell type pair, where \eqn{T} is the number of available cell types.
 The rows of the matrix are the focal cell types and the columns are the neighboring cell types.
 }
 \description{
-Computes colocation quotient (CLQ) between available cell type pairs.
+Compute colocation quotient (CLQ) between available cell type pairs.
 }
 \details{
 The colocalization of a pair of cell types \eqn{a} and \eqn{b} in tissue section \eqn{l}
 can be evaluated with the CLQ metric
 
-\deqn{CLQ_{b\rightarrow a} =
+\deqn{CLQ_{b\rightarrow a}^{(l)} =
 \left\{\begin{array}{ll}
-\frac{C_{b\rightarrow a} / N_a}{N_b / (N - 1)} & N_a > 5 \mbox{and} \ N_b > 5 \\
+\frac{C_{b\rightarrow a}^{(l)} / N_a^{(l)}}{N_b^{(l)} / (N^{(l)} - 1)} & N_a^{(l)} > 5 \mbox{ or} \ N_b^{(l)} > 5 \\
 0, & \text{otherwise}
 \end{array}\right.}
 
-where \eqn{C_{b\rightarrow a}} is the number of cells of cell type \eqn{b} within the neighborhood of cell type \eqn{a},
-and \eqn{N_a}, \eqn{N_b}, \eqn{N} are the number of cells for cell type \eqn{a},
+where \eqn{C_{b\rightarrow a}^{(l)}} is the number of cells of cell type \eqn{b} within the neighborhood of cell type \eqn{a},
+and \eqn{N_a^{(l)}}, \eqn{N_b^{(l)}}, \eqn{N^{(l)}} are the number of cells for cell type \eqn{a},
 \eqn{b} and the total number of cells in tissue section \eqn{l}, respectively.
 }
 \references{

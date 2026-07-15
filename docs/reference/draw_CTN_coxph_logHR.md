@@ -43,7 +43,8 @@ draw_CTN_coxph_logHR(
 
   A data frame representing the Cox proportional hazards regression
   results on patient-level CTN presence. Output of the
-  [`CTN_presence_coxph()`](CTN_presence_coxph.md) function
+  [`CTN_presence_coxph()`](https://github.com/YufanWu147/SCOPE.CTN/reference/CTN_presence_coxph.md)
+  function
 
 - CTN_merged_celltype_prop:
 
@@ -67,14 +68,16 @@ draw_CTN_coxph_logHR(
 
 - celltype_palette:
 
-  Input of the [`color_CTN_names()`](color_CTN_names.md) function. A
-  named vector with colors as values and cell type labels as names. Must
-  contain all cell types.
+  Input of the
+  [`color_CTN_names()`](https://github.com/YufanWu147/SCOPE.CTN/reference/color_CTN_names.md)
+  function. A named vector with colors as values and cell type labels as
+  names. Must contain all cell types.
 
 - dot_fontsize:
 
-  Input of the [`color_CTN_names()`](color_CTN_names.md) function. Size
-  of the dots. Default is 16pt.
+  Input of the
+  [`color_CTN_names()`](https://github.com/YufanWu147/SCOPE.CTN/reference/color_CTN_names.md)
+  function. Size of the dots. Default is 16pt.
 
 - rename_celltype:
 

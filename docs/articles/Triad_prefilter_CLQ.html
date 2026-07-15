@@ -67,7 +67,7 @@
 
       <h1>Prefiltering cell type triads using CLQ permutation test</h1>
             
-            <h4 data-toc-skip class="date">Compiled: 2026-07-07</h4>
+            <h4 data-toc-skip class="date">Compiled: 2026-07-15</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/YufanWu147/SCOPE.CTN/blob/HEAD/vignettes/articles/Triad_prefilter_CLQ.Rmd" class="external-link"><code>vignettes/articles/Triad_prefilter_CLQ.Rmd</code></a></small>
       <div class="d-none name"><code>Triad_prefilter_CLQ.Rmd</code></div>
@@ -139,7 +139,7 @@ a null distribution of CLQs assuming that the cell types are distributed
 randomly. <span class="math inline">\(CLQ_{b\rightarrow a}^{(l),k},k =
 1,2,…,500\)</span>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">CLQ_perm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_CLQ_permutated.html">compute_CLQ_permutated</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">CLQ_perm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_CLQ_permuted.html">compute_CLQ_permuted</a></span><span class="op">(</span></span>
 <span>  cell_neighbor_ids <span class="op">=</span> <span class="va">cell_neighbor_ids</span>, </span>
 <span>  dat_in <span class="op">=</span> <span class="va">Xenium_PF_dat_in</span>, min.ncell <span class="op">=</span> <span class="fl">500</span>,</span>
 <span>  iter.num <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span>, n_cores <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
@@ -181,7 +181,7 @@ pairs exhibit significant CLQs (adjusted p-value &lt; 0.05) in at least
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.4.1 (2024-06-14)</span></span>
 <span><span class="co">#&gt; Platform: aarch64-apple-darwin20</span></span>
-<span><span class="co">#&gt; Running under: macOS 26.5.1</span></span>
+<span><span class="co">#&gt; Running under: macOS 26.5.2</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Matrix products: default</span></span>
 <span><span class="co">#&gt; BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib </span></span>

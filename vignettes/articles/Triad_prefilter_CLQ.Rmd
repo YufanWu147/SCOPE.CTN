@@ -71,7 +71,7 @@ CLQ_obs <- compute_CLQ_observed(
 We then randomly shuffle the cell type labels for 500 times to create a null distribution of CLQs assuming that the cell types are distributed randomly. $CLQ_{b\rightarrow a}^{(l),k},k = 1,2,…,500$. 
 
 ```{r permutated CLQ, eval = FALSE}
-CLQ_perm <- compute_CLQ_permutated(
+CLQ_perm <- compute_CLQ_permuted(
   cell_neighbor_ids = cell_neighbor_ids, 
   dat_in = Xenium_PF_dat_in, min.ncell = 500,
   iter.num = 500, seed = 42, n_cores = 5)

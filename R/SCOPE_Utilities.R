@@ -1,4 +1,4 @@
-#' Constructing neighborhood cell type count and proportion matrices
+#' Construct neighborhood cell type count and proportion matrices
 #'
 #' Define spatial neighborhood using [FNN::get.knn()] and compute neighborhood cell counts and proportions by all available cell types.
 #' @param dat_slide Input data frame for a single tissue section. Must contain columns including cell ids (\code{CellID}), spatial coordinates (\code{X}, \code{Y}), and cell type labels (\code{Celltype}).
@@ -163,7 +163,7 @@ jaccard_dist_hclust <- function(Full_CTN_table, CTN_ls, num_cores = 1) {
               hclust_silhouette = hclust_silhouette))
 }
 
-#' Rename Consolidated CTNs Based on Dominant Cell Types
+#' Rename consolidated CTNs based on dominant cell types
 #'
 #' Renaming the consolidated Cell-type Triads Niches (CTNs) using the most frequent core
 #' cell types within the original triads. If a tie occurs, the function resolves

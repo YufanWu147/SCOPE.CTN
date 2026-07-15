@@ -47,8 +47,9 @@ types, which can form 16,215 potential triads.
 For each tissue section, we first calculate an observed CLQ value
 \\CLQ\_{b\rightarrow a}^{(l),obs}\\ using the true cell type labels.
 Please refer to the [Detecting TLS-like CTNs in PF Xenium
-data](PF_Xenium.md) to see how `PF_Xenium_dat_in` and
-`PF_Xenium_cell_neighbor_results` were obtained.
+data](https://github.com/YufanWu147/SCOPE.CTN/articles/PF_Xenium.md) to
+see how `PF_Xenium_dat_in` and `PF_Xenium_cell_neighbor_results` were
+obtained.
 
 ``` r
 
@@ -82,7 +83,7 @@ randomly. \\CLQ\_{b\rightarrow a}^{(l),k},k = 1,2,…,500\\.
 
 ``` r
 
-CLQ_perm <- compute_CLQ_permutated(
+CLQ_perm <- compute_CLQ_permuted(
   cell_neighbor_ids = cell_neighbor_ids, 
   dat_in = Xenium_PF_dat_in, min.ncell = 500,
   iter.num = 500, seed = 42, n_cores = 5)
@@ -136,7 +137,7 @@ print("Number of cell type triads: ", nrow(combination_table_filtered))
 sessionInfo()
 #> R version 4.4.1 (2024-06-14)
 #> Platform: aarch64-apple-darwin20
-#> Running under: macOS 26.5.1
+#> Running under: macOS 26.5.2
 #> 
 #> Matrix products: default
 #> BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 

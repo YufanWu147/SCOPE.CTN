@@ -1,7 +1,8 @@
 # Prepare input data CTN dendrogram
 
 Internal function for preparing input data to
-[`draw_CTN_dendro()`](draw_CTN_dendro.md) function
+[`draw_CTN_dendro()`](https://github.com/YufanWu147/SCOPE.CTN/reference/draw_CTN_dendro.md)
+function
 
 [ggdendro](https://andrie.github.io/ggdendro/reference/ggdendro-package.html)
 package is required for the function.
@@ -18,7 +19,8 @@ prepare_dendro_data(cl, h, k = NULL)
 
   An object of class "hclust" which describes the tree produced by the
   clustering process. Output of the
-  [`jaccard_dist_hclust()`](jaccard_dist_hclust.md) function.
+  [`jaccard_dist_hclust()`](https://github.com/YufanWu147/SCOPE.CTN/reference/jaccard_dist_hclust.md)
+  function.
 
 - h:
 

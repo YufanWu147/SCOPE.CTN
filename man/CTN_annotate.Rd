@@ -2,7 +2,7 @@
 % Please edit documentation in R/SCOPE_Utilities.R
 \name{CTN_annotate}
 \alias{CTN_annotate}
-\title{Rename Consolidated CTNs Based on Dominant Cell Types}
+\title{Rename consolidated CTNs based on dominant cell types}
 \usage{
 CTN_annotate(CTN_cluster_label, CTN_merged_celltype_prop, celltype_levs)
 }

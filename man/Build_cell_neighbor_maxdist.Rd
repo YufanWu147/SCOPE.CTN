@@ -2,7 +2,7 @@
 % Please edit documentation in R/SCOPE_Utilities.R
 \name{Build_cell_neighbor_maxdist}
 \alias{Build_cell_neighbor_maxdist}
-\title{Constructing neighborhood cell type count and proportion matrices}
+\title{Construct neighborhood cell type count and proportion matrices}
 \usage{
 Build_cell_neighbor_maxdist(
   dat_slide,

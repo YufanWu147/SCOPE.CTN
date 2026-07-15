@@ -1,4 +1,4 @@
-# Rename Consolidated CTNs Based on Dominant Cell Types
+# Rename consolidated CTNs based on dominant cell types
 
 Renaming the consolidated Cell-type Triads Niches (CTNs) using the most
 frequent core cell types within the original triads. If a tie occurs,

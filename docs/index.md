@@ -21,3 +21,11 @@ Install `SCOPE.CTN` from GitHub:
 install.packages("devtools")
 devtools::install_github("YufanWu147/SCOPE.CTN")
 ```
+
+## Resources
+
+Documentation and tutorials can be found at
+<https://yufanwu147.github.io/SCOPE.CTN/>. Specifically,
+
+- [Documentation](https://yufanwu147.github.io/SCOPE.CTN/reference/index.html)
+- [Tutorials](https://yufanwu147.github.io/SCOPE.CTN/articles/)
