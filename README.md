@@ -17,7 +17,7 @@ spatially resolved single-cell data.
 
 ## Installation
 
-Install `SCOPE.CTN` from GitHub:
+`SCOPE.CTN` requires R ≥ 4.4.0 and supports Windows, macOS, and Linux. You can install `SCOPE.CTN` directly from GitHub:
 
 ``` r
 install.packages("devtools")
@@ -26,7 +26,9 @@ devtools::install_github("YufanWu147/SCOPE.CTN")
 
 ## Resources
 
-Documentation and tutorials can be found at https://yufanwu147.github.io/SCOPE.CTN/. Specifically,
+Documentation and tutorials can be found at https://yufanwu147.github.io/SCOPE.CTN/. 
+
+Specifically,
 
 * [Documentation](https://yufanwu147.github.io/SCOPE.CTN/reference/index.html) 
 * [Tutorials](https://yufanwu147.github.io/SCOPE.CTN/articles/)

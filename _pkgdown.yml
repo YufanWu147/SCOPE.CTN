@@ -1,6 +1,32 @@
-url: https://github.com/YufanWu147/SCOPE.CTN
+url: https://yufanwu147.github.io/SCOPE.CTN/
 template:
   bootstrap: 5
   math-rendering: mathjax
-
-
+navbar:
+  structure:
+    left:
+    - reference
+    - articles
+    right:
+    - search
+    - github
+    - lightswitch
+  components:
+    reference:
+      text: Functions
+      href: reference/index.html
+    search:
+      search: []
+    articles:
+      text: Tutorials
+      menu:
+      - text: Detecting lymphocyte aggregate-like niches in CRC VisiumHD data
+        href: articles/CRC_VisiumHD.html
+      - text: Detecting TLS-like CTNs in PF Xenium data
+        href: articles/PF_Xenium.html
+      - text: Systematic CTN screening in HGSOC CosMx data
+        href: articles/HGSOC_CosMx.html
+      - text: Systematic CTN screening in NSCLC IMC data
+        href: articles/NSCLC_IMC.html
+      - text: Prefiltering cell type triads using CLQ permutation test
+        href: articles/Triad_prefilter_CLQ.html

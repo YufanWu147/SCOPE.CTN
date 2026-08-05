@@ -16,12 +16,12 @@ CLQ_permutation_test(CLQ_obs, CLQ_perm)
 - CLQ_obs:
 
   Observed CLQs computed using
-  [`compute_CLQ_observed()`](https://github.com/YufanWu147/SCOPE.CTN/reference/compute_CLQ_observed.md).
+  [`compute_CLQ_observed()`](https://yufanwu147.github.io/SCOPE.CTN/reference/compute_CLQ_observed.md).
 
 - CLQ_perm:
 
   Permutated CLQs computed using
-  [`compute_CLQ_permuted()`](https://github.com/YufanWu147/SCOPE.CTN/reference/compute_CLQ_permuted.md).
+  [`compute_CLQ_permuted()`](https://yufanwu147.github.io/SCOPE.CTN/reference/compute_CLQ_permuted.md).
 
 ## Value
 
@@ -56,11 +56,11 @@ The permutation test p-value of tissue section \\l\\ is defined as
 CLQ\_{b\rightarrow a}^{(l), obs}),\$\$
 
 \\CLQ\_{b\rightarrow a}^{(l), obs}\\ is the observed CLQ computed using
-[`compute_CLQ_observed()`](https://github.com/YufanWu147/SCOPE.CTN/reference/compute_CLQ_observed.md)
+[`compute_CLQ_observed()`](https://yufanwu147.github.io/SCOPE.CTN/reference/compute_CLQ_observed.md)
 on the true cell type labels.
 
 \\CLQ\_{b\rightarrow a}^{(l), k}\\ is the permuted CLQ computed using
-[`compute_CLQ_permuted()`](https://github.com/YufanWu147/SCOPE.CTN/reference/compute_CLQ_permuted.md)
+[`compute_CLQ_permuted()`](https://yufanwu147.github.io/SCOPE.CTN/reference/compute_CLQ_permuted.md)
 on the randomly shuffled cell type labels, where `iter.num` is the
 number of permutations (defaults: 500).
 
@@ -73,5 +73,5 @@ pathological specimens. *Nat Commun* 16, 1392 (2025).
 
 ## See also
 
-[compute_CLQ_observed](https://github.com/YufanWu147/SCOPE.CTN/reference/compute_CLQ_observed.md),
-[compute_CLQ_permuted](https://github.com/YufanWu147/SCOPE.CTN/reference/compute_CLQ_permuted.md)
+[compute_CLQ_observed](https://yufanwu147.github.io/SCOPE.CTN/reference/compute_CLQ_observed.md),
+[compute_CLQ_permuted](https://yufanwu147.github.io/SCOPE.CTN/reference/compute_CLQ_permuted.md)

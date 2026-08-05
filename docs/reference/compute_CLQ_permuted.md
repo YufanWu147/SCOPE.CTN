@@ -4,7 +4,7 @@ Randomly shuffle cell type labels within each tissue section and compute
 the permuted CLQs between every cell type pair.
 
 This creates a null distribution for comparison with the observed CLQ
-([`compute_CLQ_observed()`](https://github.com/YufanWu147/SCOPE.CTN/reference/compute_CLQ_observed.md))
+([`compute_CLQ_observed()`](https://yufanwu147.github.io/SCOPE.CTN/reference/compute_CLQ_observed.md))
 to compute a permutation p-value.
 
 ## Usage
@@ -25,7 +25,7 @@ compute_CLQ_permuted(
 - cell_neighbor_ids:
 
   Cell IDs of the nearest neighbors obtained using
-  [`Build_cell_neighbor_maxdist()`](https://github.com/YufanWu147/SCOPE.CTN/reference/Build_cell_neighbor_maxdist.md).
+  [`Build_cell_neighbor_maxdist()`](https://yufanwu147.github.io/SCOPE.CTN/reference/Build_cell_neighbor_maxdist.md).
 
 - dat_in:
 
@@ -88,6 +88,6 @@ pathological specimens. *Nat Commun* 16, 1392 (2025).
 
 ## See also
 
-[Build_cell_neighbor_maxdist](https://github.com/YufanWu147/SCOPE.CTN/reference/Build_cell_neighbor_maxdist.md),
-[compute_CLQ_observed](https://github.com/YufanWu147/SCOPE.CTN/reference/compute_CLQ_observed.md),
-[CLQ_permutation_test](https://github.com/YufanWu147/SCOPE.CTN/reference/CLQ_permutation_test.md)
+[Build_cell_neighbor_maxdist](https://yufanwu147.github.io/SCOPE.CTN/reference/Build_cell_neighbor_maxdist.md),
+[compute_CLQ_observed](https://yufanwu147.github.io/SCOPE.CTN/reference/compute_CLQ_observed.md),
+[CLQ_permutation_test](https://yufanwu147.github.io/SCOPE.CTN/reference/CLQ_permutation_test.md)

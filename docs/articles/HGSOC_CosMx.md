@@ -324,7 +324,7 @@ save(CTN_merged_label, file= paste0(data_path, dataset_name, "_CTN_merged_label.
 After merging highly overlapping initial CTNs using hierarchical
 clustering, the next step is to assign new names to these consolidated
 niches. The package uses the
-[`CTN_annotate()`](https://github.com/YufanWu147/SCOPE.CTN/reference/CTN_annotate.md)
+[`CTN_annotate()`](https://yufanwu147.github.io/SCOPE.CTN/reference/CTN_annotate.md)
 function to rename consolidated CTNs based on the most frequent core
 cell types within their original triads. If a tie occurs between cell
 types, the function automatically resolves it by identifying the cell
@@ -332,7 +332,7 @@ type with the highest overall proportion within the consolidated CTN.
 
 First, we compute the cell type proportion within the newly consolidated
 CTNs, which will be used as one of the inputs to the
-[`CTN_annotate()`](https://github.com/YufanWu147/SCOPE.CTN/reference/CTN_annotate.md)
+[`CTN_annotate()`](https://yufanwu147.github.io/SCOPE.CTN/reference/CTN_annotate.md)
 function.
 
 ``` r
@@ -661,10 +661,10 @@ Once the clincially-associated CTNs are identified, we can refit SCOPE
 to generate subclusters and obtain finer-grained CTN substructures.
 
 **Note**: To use the
-[`run_SCOPE_subcluster()`](https://github.com/YufanWu147/SCOPE.CTN/reference/run_SCOPE_subcluster.md)
+[`run_SCOPE_subcluster()`](https://yufanwu147.github.io/SCOPE.CTN/reference/run_SCOPE_subcluster.md)
 function, the `save_results` parameter must be set to `TRUE` when
 running
-[`run_SCOPE()`](https://github.com/YufanWu147/SCOPE.CTN/reference/run_SCOPE.md).
+[`run_SCOPE()`](https://yufanwu147.github.io/SCOPE.CTN/reference/run_SCOPE.md).
 Additionally, please ensure that both functions share the same
 `output_dir` path.
 

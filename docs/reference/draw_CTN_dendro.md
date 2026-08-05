@@ -34,7 +34,7 @@ draw_CTN_dendro(
 
   An object of class "hclust" which describes the tree produced by the
   clustering process. Output of the
-  [`jaccard_dist_hclust()`](https://github.com/YufanWu147/SCOPE.CTN/reference/jaccard_dist_hclust.md)
+  [`jaccard_dist_hclust()`](https://yufanwu147.github.io/SCOPE.CTN/reference/jaccard_dist_hclust.md)
   function.
 
 - h:
@@ -72,14 +72,14 @@ draw_CTN_dendro(
 - celltype_palette:
 
   Input of the
-  [`color_CTN_names()`](https://github.com/YufanWu147/SCOPE.CTN/reference/color_CTN_names.md)
+  [`color_CTN_names()`](https://yufanwu147.github.io/SCOPE.CTN/reference/color_CTN_names.md)
   function. A named vector with colors as values and cell type labels as
   names. Must contain all cell types.
 
 - dot_fontsize:
 
   Input of the
-  [`color_CTN_names()`](https://github.com/YufanWu147/SCOPE.CTN/reference/color_CTN_names.md)
+  [`color_CTN_names()`](https://yufanwu147.github.io/SCOPE.CTN/reference/color_CTN_names.md)
   function. Size of the dots. Default is 16pt.
 
 - show_text:

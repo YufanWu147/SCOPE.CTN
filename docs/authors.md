@@ -10,17 +10,14 @@
 
 ## Citation
 
-Source:
-[`DESCRIPTION`](https://github.com/YufanWu147/SCOPE.CTN/blob/HEAD/DESCRIPTION)
-
 Wu Y, Pan Y, Shang L (2026). *SCOPE.CTN: SCOPE (SystematiC prOfiling of
 disease-relevant sPatial nichEs)*. R package version 0.0.1,
-<https://github.com/YufanWu147/SCOPE.CTN>.
+<https://yufanwu147.github.io/SCOPE.CTN/>.
 
     @Manual{,
       title = {SCOPE.CTN: SCOPE (SystematiC prOfiling of disease-relevant sPatial nichEs)},
       author = {Yufan Wu and Yutong Pan and Lulu Shang},
       year = {2026},
       note = {R package version 0.0.1},
-      url = {https://github.com/YufanWu147/SCOPE.CTN},
+      url = {https://yufanwu147.github.io/SCOPE.CTN/},
     }

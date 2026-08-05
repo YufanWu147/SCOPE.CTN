@@ -47,7 +47,7 @@ types, which can form 16,215 potential triads.
 For each tissue section, we first calculate an observed CLQ value
 \\CLQ\_{b\rightarrow a}^{(l),obs}\\ using the true cell type labels.
 Please refer to the [Detecting TLS-like CTNs in PF Xenium
-data](https://github.com/YufanWu147/SCOPE.CTN/articles/PF_Xenium.md) to
+data](https://yufanwu147.github.io/SCOPE.CTN/articles/PF_Xenium.md) to
 see how `PF_Xenium_dat_in` and `PF_Xenium_cell_neighbor_results` were
 obtained.
 

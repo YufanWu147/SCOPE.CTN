@@ -19,7 +19,7 @@ compute_CLQ_observed(
 - cell_neighbor_counts:
 
   \\N \times T\\ neighborhood cell type count matrix obtained using
-  [`Build_cell_neighbor_maxdist()`](https://github.com/YufanWu147/SCOPE.CTN/reference/Build_cell_neighbor_maxdist.md).
+  [`Build_cell_neighbor_maxdist()`](https://yufanwu147.github.io/SCOPE.CTN/reference/Build_cell_neighbor_maxdist.md).
 
 - dat_in:
 
@@ -72,5 +72,5 @@ pathological specimens. Nat Commun 16, 1392 (2025).
 
 ## See also
 
-[compute_CLQ_permuted](https://github.com/YufanWu147/SCOPE.CTN/reference/compute_CLQ_permuted.md),
-[CLQ_permutation_test](https://github.com/YufanWu147/SCOPE.CTN/reference/CLQ_permutation_test.md)
+[compute_CLQ_permuted](https://yufanwu147.github.io/SCOPE.CTN/reference/compute_CLQ_permuted.md),
+[CLQ_permutation_test](https://yufanwu147.github.io/SCOPE.CTN/reference/CLQ_permutation_test.md)
