@@ -26,7 +26,7 @@ devtools::install_github("YufanWu147/SCOPE.CTN")
 
 ## Requirements
 
-`SCOPE.CTN` requires R ≥ 4.4.0 and supports Windows, macOS, and Linux. The package has been tested on the following systems:
+`SCOPE.CTN` requires R $\ge$ 4.4.0 and supports Windows, macOS, and Linux. The package has been tested on the following systems:
 
 * macOS: 26.5.1
 * Linux: Red Hat Enterprise Linux 8.7 (Ootpa)

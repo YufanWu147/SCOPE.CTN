@@ -28,7 +28,7 @@ source(paste0(data_path, dataset_name, "_celltype_palette.R")) # cell type color
 ## 1. Preparing input data
 
 The `rds` file containing a Seurat object of this dataset can be
-downloaded from Gene Expression Omnibus (GEO) under accesssion number
+downloaded from Gene Expression Omnibus (GEO) under accession number
 [GSE250346](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE250346).
 We downloaded the
 `GSE250346_Seurat_GSE250346_CORRECTED_SEE_RDS_README_082024.rds` file
@@ -467,7 +467,7 @@ cluster_eval_metrics
 sessionInfo()
 #> R version 4.4.1 (2024-06-14)
 #> Platform: aarch64-apple-darwin20
-#> Running under: macOS 26.5.1
+#> Running under: macOS 26.5.2
 #> 
 #> Matrix products: default
 #> BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
