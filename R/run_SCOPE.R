@@ -1,3 +1,29 @@
+#' Generate a Thin Plate Spline Basis Matrix
+#'
+#' Internal function to converts a spatial neighborhood cell type proportion matrix
+#' into a thin plate regression spline basis matrix.
+#'
+#' @param dat Neighborhood cell type proportion matrix
+#' @param mgcv_df The dimension of the basis used to represent the thin plate regression spline smooth term. The default is 15. See [mgcv::s] for details.
+#'
+#' @return A numeric matrix containing the smoothed cell type proportions,
+#'   with row names preserved from the original input.
+#'
+#' @keywords internal
+
+apply_smoothing <- function(dat, mgcv_df) {
+  dat <- as.data.frame(dat)
+  colnames(dat) <- paste0("V", seq_len(ncol(dat)))
+
+  all_args <- c(lapply(colnames(dat), as.name), list(k = mgcv_df, fx = TRUE, bs = "tp"))
+  smooth_call <- as.call(c(list(quote(mgcv::s)), all_args))
+  sm <- eval(bquote(mgcv::smoothCon(.(smooth_call), data = dat)[[1]]), envir = environment())
+  basis_matrix <- as.data.frame(sm$X)
+  row.names(basis_matrix) <- rownames(dat)
+  dat <- as.matrix(basis_matrix)
+  return(dat)
+}
+
 #' Multi-view cell type triad niche screening
 #'
 #' Cell type triad niche (CTN) detection using SCOPE.
@@ -48,33 +74,22 @@ run_SCOPE <- function(
     # Prepare matrices for clustering
     test_mat <- drop_na(as.data.frame(cell_neighbor_table))
     test_mat[test_mat < min.prop] <- 0
-    CTN_index <- match(combination_table[i,], colnames(test_mat))
 
-    dat1 <- test_mat[,CTN_index]
-    dat2 <- test_mat[,CTN_index[c(1,2)]]
-    dat3 <- test_mat[,CTN_index[c(2,3)]]
-    dat4 <- test_mat[,CTN_index[c(1,3)]]
+    n_celltypes <- ncol(combination_table)
+    index_all_celltypes <- match(combination_table[i,], colnames(test_mat))
+    index_omit_1celltype <- t(combn(index_all_celltypes, n_celltypes - 1))
 
-    if(any(colSums(dat1) == 0)) {return(NULL)}
+    dat_all_celltypes <- test_mat[, index_all_celltypes, drop = FALSE]
+    if(any(colSums(dat_all_celltypes) == 0)) {return(NULL)}
+    if(!linear) {dat_all_celltypes <- apply_smoothing(dat_all_celltypes, mgcv_df = mgcv_df)}
 
-    X_m_list <- list(dat1, dat2, dat3, dat4)
+    dat_omit_1celltype <- lapply(1:nrow(index_omit_1celltype), function(k) {
+      dat <- test_mat[, index_omit_1celltype[k, ]]
+      if(!linear) {dat <- apply_smoothing(dat, mgcv_df = mgcv_df)}
+      return(dat)
+    })
 
-    if(!linear) {
-      V1 <- V2 <- V3 <- NULL
-      X_m_list <- lapply(X_m_list, function(dat) {
-        dat <- as.data.frame(dat)
-        colnames(dat) <- paste0("V", seq_len(ncol(dat)))
-        if(ncol(dat) == 3) {
-          sm <- smoothCon(s(V1, V2, V3, k=mgcv_df, fx=TRUE, bs='tp'), data=dat)[[1]]}
-        else if(ncol(dat) == 2) {
-          sm <- smoothCon(s(V1, V2, k=mgcv_df, fx=TRUE, bs='tp'), data=dat)[[1]]
-        }
-        else {message(sprintf("Incorrect dimensions"))}
-        basis_matrix <- as.matrix(sm$X)
-        rownames(basis_matrix) <- rownames(dat)
-        return(basis_matrix)
-      })
-    }
+    X_m_list <- c(list(dat_all_celltypes), dat_omit_1celltype)
 
     # Clustering
     res <- mkkcEst_linear(X_m_list, centers = clusternum, iter.max = iter.max,
@@ -98,7 +113,7 @@ run_SCOPE <- function(
    }, mc.cores = num_cores)
 
   if(!save_results) {
-    CTN_res <- do.call(rbind, CTN_res)
+    CTN_res <- do.call(bind_rows, CTN_res)
     return(CTN_res)
   }
 
