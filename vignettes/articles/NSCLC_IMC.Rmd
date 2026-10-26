@@ -81,7 +81,7 @@ NSCLC_IMC_dat_in <- as.data.frame(NSCLC_IMC_dat_in)
 
 # Rename the columns
 colnames(NSCLC_IMC_dat_in) <- c("ImageID","CellID","Celltype","X","Y")
-NSCLC_IMC_dat_in$Celltype <- factor(NSCLC_IMC_dat_in$Celltype, NSCLC_IMC_celltype_levs)
+NSCLC_IMC_dat_in$Celltype <- factor(NSCLC_IMC_dat_in$Celltype, NSCLC_IMC_celltype_levs_raw)
 ```
 
 We exclude the images with low cell counts (< 500) from further analysis.
@@ -224,7 +224,7 @@ celltype_to_exclude <- c(names(which(ncell_by_celltype < 500)), "Other")
 print(paste("Cell type(s) to exclude:", celltype_to_exclude))
 
 # All combinations of the rest of the cell types
-celltype_combs <- combn(setdiff(NSCLC_IMC_celltype_levs,
+celltype_combs <- combn(setdiff(NSCLC_IMC_celltype_levs_raw,
                                 celltype_to_exclude), 3) %>%
   t() %>% as.data.frame()
 

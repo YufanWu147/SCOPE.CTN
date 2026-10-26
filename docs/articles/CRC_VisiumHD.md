@@ -322,7 +322,7 @@ CTN_df %>%
 sessionInfo()
 #> R version 4.4.1 (2024-06-14)
 #> Platform: aarch64-apple-darwin20
-#> Running under: macOS 26.5.1
+#> Running under: macOS 26.7.1
 #> 
 #> Matrix products: default
 #> BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
@@ -341,7 +341,7 @@ sessionInfo()
 #>  [1] cowplot_1.2.0       ggtext_0.1.2        lubridate_1.9.5    
 #>  [4] forcats_1.0.1       stringr_1.6.0       dplyr_1.2.0        
 #>  [7] purrr_1.2.1         readr_2.2.0         tidyr_1.3.2        
-#> [10] tibble_3.3.1        ggplot2_4.0.2.9000  tidyverse_2.0.0    
+#> [10] tibble_3.3.1        ggplot2_4.0.2       tidyverse_2.0.0    
 #> [13] data.table_1.18.2.1 SCOPE.CTN_0.0.1    
 #> 
 #> loaded via a namespace (and not attached):

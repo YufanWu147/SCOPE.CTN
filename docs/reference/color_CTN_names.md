@@ -40,6 +40,7 @@ color_CTN_names(
 
 ``` r
 library(ggplot2)
+#> Warning: package ‘ggplot2’ was built under R version 4.4.3
 library(ggtext)
 
 CTN_colored <- color_CTN_names(

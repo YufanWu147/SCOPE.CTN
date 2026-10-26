@@ -56,7 +56,7 @@ NSCLC_IMC_dat_in <- as.data.frame(NSCLC_IMC_dat_in)
 
 # Rename the columns
 colnames(NSCLC_IMC_dat_in) <- c("ImageID","CellID","Celltype","X","Y")
-NSCLC_IMC_dat_in$Celltype <- factor(NSCLC_IMC_dat_in$Celltype, NSCLC_IMC_celltype_levs)
+NSCLC_IMC_dat_in$Celltype <- factor(NSCLC_IMC_dat_in$Celltype, NSCLC_IMC_celltype_levs_raw)
 ```
 
 We exclude the images with low cell counts (\< 500) from further
@@ -228,11 +228,11 @@ head(CLQ_perm_pval, 5)
 #> # Groups:   Celltype, Celltype_neighbor [1]
 #>   Celltype Celltype_neighbor ImageID  p_perm p_perm.adj
 #>   <chr>    <chr>             <chr>     <dbl>      <dbl>
-#> 1 _cell    _lood             175A_1    0         0     
-#> 2 _cell    _lood             175A_10   1         1     
-#> 3 _cell    _lood             175A_100  0.002     0.0281
-#> 4 _cell    _lood             175A_102  0         0     
-#> 5 _cell    _lood             175A_103  0.422     1
+#> 1 Bcell    Blood             175A_1    0         0     
+#> 2 Bcell    Blood             175A_10   1         1     
+#> 3 Bcell    Blood             175A_100  0.002     0.0281
+#> 4 Bcell    Blood             175A_102  0         0     
+#> 5 Bcell    Blood             175A_103  0.422     1
 ```
 
 ``` r
@@ -244,7 +244,7 @@ print(paste("Cell type(s) to exclude:", celltype_to_exclude))
 #> [1] "Cell type(s) to exclude: Other"
 
 # All combinations of the rest of the cell types
-celltype_combs <- combn(setdiff(NSCLC_IMC_celltype_levs,
+celltype_combs <- combn(setdiff(NSCLC_IMC_celltype_levs_raw,
                                 celltype_to_exclude), 3) %>%
   t() %>% as.data.frame()
 
@@ -274,7 +274,7 @@ combination_table_filtered = celltype_combs_w_pval %>% ungroup %>%
   select(-n)
 
 print(paste("No of remaining CTs:", nrow(combination_table_filtered)))
-#> [1] "No of remaining CTs: 0"
+#> [1] "No of remaining CTs: 166"
 
 # save(combination_table_filtered, 
 #     file = paste0(data_path, dataset_name, "_combination_table_filtered.RData"))
@@ -757,7 +757,7 @@ p_CTN_celltype$p_celltype / p_CTN_celltype$p_CTN +
 sessionInfo()
 #> R version 4.4.1 (2024-06-14)
 #> Platform: aarch64-apple-darwin20
-#> Running under: macOS 26.5.1
+#> Running under: macOS 26.7.1
 #> 
 #> Matrix products: default
 #> BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
@@ -778,7 +778,7 @@ sessionInfo()
 #>  [4] ggdendro_0.2.0        cowplot_1.2.0         lubridate_1.9.5      
 #>  [7] forcats_1.0.1         stringr_1.6.0         dplyr_1.2.0          
 #> [10] purrr_1.2.1           readr_2.2.0           tidyr_1.3.2          
-#> [13] tibble_3.3.1          ggplot2_4.0.2.9000    tidyverse_2.0.0      
+#> [13] tibble_3.3.1          ggplot2_4.0.2         tidyverse_2.0.0      
 #> [16] data.table_1.18.2.1   SCOPE.CTN_0.0.1      
 #> 
 #> loaded via a namespace (and not attached):

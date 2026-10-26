@@ -137,7 +137,7 @@ print("Number of cell type triads: ", nrow(combination_table_filtered))
 sessionInfo()
 #> R version 4.4.1 (2024-06-14)
 #> Platform: aarch64-apple-darwin20
-#> Running under: macOS 26.5.2
+#> Running under: macOS 26.7.1
 #> 
 #> Matrix products: default
 #> BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
@@ -153,9 +153,9 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#>  [1] cowplot_1.2.0      lubridate_1.9.5    forcats_1.0.1      stringr_1.6.0     
-#>  [5] dplyr_1.2.0        purrr_1.2.1        readr_2.2.0        tidyr_1.3.2       
-#>  [9] tibble_3.3.1       ggplot2_4.0.2.9000 tidyverse_2.0.0    SCOPE.CTN_0.0.1   
+#>  [1] cowplot_1.2.0   lubridate_1.9.5 forcats_1.0.1   stringr_1.6.0  
+#>  [5] dplyr_1.2.0     purrr_1.2.1     readr_2.2.0     tidyr_1.3.2    
+#>  [9] tibble_3.3.1    ggplot2_4.0.2   tidyverse_2.0.0 SCOPE.CTN_0.0.1
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] gmp_0.7-5.1         sass_0.4.10         generics_0.1.4     
