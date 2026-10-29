@@ -49,6 +49,7 @@ apply_smoothing <- function(dat, mgcv_df) {
 #'   \item{res}{CTN screening results. Only returns when \code{save_results} is \code{FALSE}.}
 #' }
 #' @import mgcv dplyr stringr tidyr pbmcapply
+#' @importFrom assertthat assert_that
 #' @export
 
 run_SCOPE <- function(
@@ -63,6 +64,8 @@ run_SCOPE <- function(
   if(!dir.exists(file.path(output_dir, "mkkcEst")) & save_results) {
     dir.create(file.path(output_dir, "mkkcEst")) }
 
+  assert_that(!linear | clusternum == 2, msg = "clusternum must be 2 in linear mode")
+
   dat_in <- as.data.frame(dat_in)
   rownames(dat_in) <- dat_in$CellID
 
@@ -73,6 +76,7 @@ run_SCOPE <- function(
 
     # Prepare matrices for clustering
     test_mat <- drop_na(as.data.frame(cell_neighbor_table))
+    test_mat <- as.matrix(test_mat)
     test_mat[test_mat < min.prop] <- 0
 
     n_celltypes <- ncol(combination_table)
